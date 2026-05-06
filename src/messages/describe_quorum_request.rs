@@ -7,22 +7,22 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 0-2
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct DescribeQuorumRequest {
     /// The topics to describe.
-    ///
+    /// 
     /// Supported API versions: 0-2
     pub topics: Vec<TopicData>,
 
@@ -32,21 +32,22 @@ pub struct DescribeQuorumRequest {
 
 impl DescribeQuorumRequest {
     /// Sets `topics` to the passed value.
-    ///
+    /// 
     /// The topics to describe.
-    ///
+    /// 
     /// Supported API versions: 0-2
-    pub fn with_topics(mut self, value: Vec<TopicData>) -> Self {
+    pub fn with_topics(mut self, value: Vec<TopicData>) -> Self
+    {
         self.topics = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -61,10 +62,7 @@ impl Encodable for DescribeQuorumRequest {
         types::CompactArray(types::Struct { version }).encode(buf, &self.topics)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -76,10 +74,7 @@ impl Encodable for DescribeQuorumRequest {
         total_size += types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -129,7 +124,7 @@ impl Message for DescribeQuorumRequest {
 #[derive(Debug, Clone, PartialEq)]
 pub struct PartitionData {
     /// The partition index.
-    ///
+    /// 
     /// Supported API versions: 0-2
     pub partition_index: i32,
 
@@ -139,21 +134,22 @@ pub struct PartitionData {
 
 impl PartitionData {
     /// Sets `partition_index` to the passed value.
-    ///
+    /// 
     /// The partition index.
-    ///
+    /// 
     /// Supported API versions: 0-2
-    pub fn with_partition_index(mut self, value: i32) -> Self {
+    pub fn with_partition_index(mut self, value: i32) -> Self
+    {
         self.partition_index = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -168,10 +164,7 @@ impl Encodable for PartitionData {
         types::Int32.encode(buf, &self.partition_index)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -183,10 +176,7 @@ impl Encodable for PartitionData {
         total_size += types::Int32.compute_size(&self.partition_index)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -236,12 +226,12 @@ impl Message for PartitionData {
 #[derive(Debug, Clone, PartialEq)]
 pub struct TopicData {
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 0-2
     pub topic_name: super::TopicName,
 
     /// The partitions to describe.
-    ///
+    /// 
     /// Supported API versions: 0-2
     pub partitions: Vec<PartitionData>,
 
@@ -251,30 +241,31 @@ pub struct TopicData {
 
 impl TopicData {
     /// Sets `topic_name` to the passed value.
-    ///
+    /// 
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 0-2
-    pub fn with_topic_name(mut self, value: super::TopicName) -> Self {
+    pub fn with_topic_name(mut self, value: super::TopicName) -> Self
+    {
         self.topic_name = value;
         self
-    }
-    /// Sets `partitions` to the passed value.
-    ///
+    }/// Sets `partitions` to the passed value.
+    /// 
     /// The partitions to describe.
-    ///
+    /// 
     /// Supported API versions: 0-2
-    pub fn with_partitions(mut self, value: Vec<PartitionData>) -> Self {
+    pub fn with_partitions(mut self, value: Vec<PartitionData>) -> Self
+    {
         self.partitions = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -290,10 +281,7 @@ impl Encodable for TopicData {
         types::CompactArray(types::Struct { version }).encode(buf, &self.partitions)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -303,14 +291,10 @@ impl Encodable for TopicData {
     fn compute_size(&self, version: i16) -> Result<usize> {
         let mut total_size = 0;
         total_size += types::CompactString.compute_size(&self.topic_name)?;
-        total_size +=
-            types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
+        total_size += types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -363,3 +347,4 @@ impl HeaderVersion for DescribeQuorumRequest {
         2
     }
 }
+

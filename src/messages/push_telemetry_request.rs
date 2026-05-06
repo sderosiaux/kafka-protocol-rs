@@ -7,42 +7,42 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 0
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct PushTelemetryRequest {
     /// Unique id for this client instance.
-    ///
+    /// 
     /// Supported API versions: 0
     pub client_instance_id: Uuid,
 
     /// Unique identifier for the current subscription.
-    ///
+    /// 
     /// Supported API versions: 0
     pub subscription_id: i32,
 
     /// Client is terminating the connection.
-    ///
+    /// 
     /// Supported API versions: 0
     pub terminating: bool,
 
     /// Compression codec used to compress the metrics.
-    ///
+    /// 
     /// Supported API versions: 0
     pub compression_type: i8,
 
     /// Metrics encoded in OpenTelemetry MetricsData v1 protobuf format.
-    ///
+    /// 
     /// Supported API versions: 0
     pub metrics: Bytes,
 
@@ -52,57 +52,58 @@ pub struct PushTelemetryRequest {
 
 impl PushTelemetryRequest {
     /// Sets `client_instance_id` to the passed value.
-    ///
+    /// 
     /// Unique id for this client instance.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_client_instance_id(mut self, value: Uuid) -> Self {
+    pub fn with_client_instance_id(mut self, value: Uuid) -> Self
+    {
         self.client_instance_id = value;
         self
-    }
-    /// Sets `subscription_id` to the passed value.
-    ///
+    }/// Sets `subscription_id` to the passed value.
+    /// 
     /// Unique identifier for the current subscription.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_subscription_id(mut self, value: i32) -> Self {
+    pub fn with_subscription_id(mut self, value: i32) -> Self
+    {
         self.subscription_id = value;
         self
-    }
-    /// Sets `terminating` to the passed value.
-    ///
+    }/// Sets `terminating` to the passed value.
+    /// 
     /// Client is terminating the connection.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_terminating(mut self, value: bool) -> Self {
+    pub fn with_terminating(mut self, value: bool) -> Self
+    {
         self.terminating = value;
         self
-    }
-    /// Sets `compression_type` to the passed value.
-    ///
+    }/// Sets `compression_type` to the passed value.
+    /// 
     /// Compression codec used to compress the metrics.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_compression_type(mut self, value: i8) -> Self {
+    pub fn with_compression_type(mut self, value: i8) -> Self
+    {
         self.compression_type = value;
         self
-    }
-    /// Sets `metrics` to the passed value.
-    ///
+    }/// Sets `metrics` to the passed value.
+    /// 
     /// Metrics encoded in OpenTelemetry MetricsData v1 protobuf format.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_metrics(mut self, value: Bytes) -> Self {
+    pub fn with_metrics(mut self, value: Bytes) -> Self
+    {
         self.metrics = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -121,10 +122,7 @@ impl Encodable for PushTelemetryRequest {
         types::CompactBytes.encode(buf, &self.metrics)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -140,10 +138,7 @@ impl Encodable for PushTelemetryRequest {
         total_size += types::CompactBytes.compute_size(&self.metrics)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -205,3 +200,4 @@ impl HeaderVersion for PushTelemetryRequest {
         2
     }
 }
+

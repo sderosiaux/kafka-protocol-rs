@@ -7,32 +7,32 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 0-1
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct EndQuorumEpochResponse {
     /// The top level error code.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub error_code: i16,
 
     /// The topic data.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub topics: Vec<TopicData>,
 
     /// Endpoints for all leaders enumerated in PartitionData.
-    ///
+    /// 
     /// Supported API versions: 1
     pub node_endpoints: Vec<NodeEndpoint>,
 
@@ -42,39 +42,40 @@ pub struct EndQuorumEpochResponse {
 
 impl EndQuorumEpochResponse {
     /// Sets `error_code` to the passed value.
-    ///
+    /// 
     /// The top level error code.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_error_code(mut self, value: i16) -> Self {
+    pub fn with_error_code(mut self, value: i16) -> Self
+    {
         self.error_code = value;
         self
-    }
-    /// Sets `topics` to the passed value.
-    ///
+    }/// Sets `topics` to the passed value.
+    /// 
     /// The topic data.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_topics(mut self, value: Vec<TopicData>) -> Self {
+    pub fn with_topics(mut self, value: Vec<TopicData>) -> Self
+    {
         self.topics = value;
         self
-    }
-    /// Sets `node_endpoints` to the passed value.
-    ///
+    }/// Sets `node_endpoints` to the passed value.
+    /// 
     /// Endpoints for all leaders enumerated in PartitionData.
-    ///
+    /// 
     /// Supported API versions: 1
-    pub fn with_node_endpoints(mut self, value: Vec<NodeEndpoint>) -> Self {
+    pub fn with_node_endpoints(mut self, value: Vec<NodeEndpoint>) -> Self
+    {
         self.node_endpoints = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -98,20 +99,13 @@ impl Encodable for EndQuorumEpochResponse {
                 num_tagged_fields += 1;
             }
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
             if !self.node_endpoints.is_empty() {
-                let computed_size = types::CompactArray(types::Struct { version })
-                    .compute_size(&self.node_endpoints)?;
+                let computed_size = types::CompactArray(types::Struct { version }).compute_size(&self.node_endpoints)?;
                 if computed_size > std::u32::MAX as usize {
-                    bail!(
-                        "Tagged field is too large to encode ({} bytes)",
-                        computed_size
-                    );
+                    bail!("Tagged field is too large to encode ({} bytes)", computed_size);
                 }
                 types::UnsignedVarInt.encode(buf, 0)?;
                 types::UnsignedVarInt.encode(buf, computed_size as u32)?;
@@ -126,8 +120,7 @@ impl Encodable for EndQuorumEpochResponse {
         let mut total_size = 0;
         total_size += types::Int16.compute_size(&self.error_code)?;
         if version >= 1 {
-            total_size +=
-                types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
+            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
         } else {
             total_size += types::Array(types::Struct { version }).compute_size(&self.topics)?;
         }
@@ -137,20 +130,13 @@ impl Encodable for EndQuorumEpochResponse {
                 num_tagged_fields += 1;
             }
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
             if !self.node_endpoints.is_empty() {
-                let computed_size = types::CompactArray(types::Struct { version })
-                    .compute_size(&self.node_endpoints)?;
+                let computed_size = types::CompactArray(types::Struct { version }).compute_size(&self.node_endpoints)?;
                 if computed_size > std::u32::MAX as usize {
-                    bail!(
-                        "Tagged field is too large to encode ({} bytes)",
-                        computed_size
-                    );
+                    bail!("Tagged field is too large to encode ({} bytes)", computed_size);
                 }
                 total_size += types::UnsignedVarInt.compute_size(0)?;
                 total_size += types::UnsignedVarInt.compute_size(computed_size as u32)?;
@@ -184,9 +170,8 @@ impl Decodable for EndQuorumEpochResponse {
                 let size: u32 = types::UnsignedVarInt.decode(buf)?;
                 match tag {
                     0 => {
-                        node_endpoints =
-                            types::CompactArray(types::Struct { version }).decode(buf)?;
-                    }
+                        node_endpoints = types::CompactArray(types::Struct { version }).decode(buf)?;
+                    },
                     _ => {
                         let unknown_value = buf.try_get_bytes(size as usize)?;
                         unknown_tagged_fields.insert(tag as i32, unknown_value);
@@ -224,17 +209,17 @@ impl Message for EndQuorumEpochResponse {
 #[derive(Debug, Clone, PartialEq)]
 pub struct NodeEndpoint {
     /// The ID of the associated node.
-    ///
+    /// 
     /// Supported API versions: 1
     pub node_id: super::BrokerId,
 
     /// The node's hostname.
-    ///
+    /// 
     /// Supported API versions: 1
     pub host: StrBytes,
 
     /// The node's port.
-    ///
+    /// 
     /// Supported API versions: 1
     pub port: u16,
 
@@ -244,39 +229,40 @@ pub struct NodeEndpoint {
 
 impl NodeEndpoint {
     /// Sets `node_id` to the passed value.
-    ///
+    /// 
     /// The ID of the associated node.
-    ///
+    /// 
     /// Supported API versions: 1
-    pub fn with_node_id(mut self, value: super::BrokerId) -> Self {
+    pub fn with_node_id(mut self, value: super::BrokerId) -> Self
+    {
         self.node_id = value;
         self
-    }
-    /// Sets `host` to the passed value.
-    ///
+    }/// Sets `host` to the passed value.
+    /// 
     /// The node's hostname.
-    ///
+    /// 
     /// Supported API versions: 1
-    pub fn with_host(mut self, value: StrBytes) -> Self {
+    pub fn with_host(mut self, value: StrBytes) -> Self
+    {
         self.host = value;
         self
-    }
-    /// Sets `port` to the passed value.
-    ///
+    }/// Sets `port` to the passed value.
+    /// 
     /// The node's port.
-    ///
+    /// 
     /// Supported API versions: 1
-    pub fn with_port(mut self, value: u16) -> Self {
+    pub fn with_port(mut self, value: u16) -> Self
+    {
         self.port = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -312,10 +298,7 @@ impl Encodable for NodeEndpoint {
         if version >= 1 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -349,10 +332,7 @@ impl Encodable for NodeEndpoint {
         if version >= 1 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -423,22 +403,22 @@ impl Message for NodeEndpoint {
 #[derive(Debug, Clone, PartialEq)]
 pub struct PartitionData {
     /// The partition index.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub partition_index: i32,
 
     /// The partition level error code.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub error_code: i16,
 
     /// The ID of the current leader or -1 if the leader is unknown.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub leader_id: super::BrokerId,
 
     /// The latest known leader epoch.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub leader_epoch: i32,
 
@@ -448,48 +428,49 @@ pub struct PartitionData {
 
 impl PartitionData {
     /// Sets `partition_index` to the passed value.
-    ///
+    /// 
     /// The partition index.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_partition_index(mut self, value: i32) -> Self {
+    pub fn with_partition_index(mut self, value: i32) -> Self
+    {
         self.partition_index = value;
         self
-    }
-    /// Sets `error_code` to the passed value.
-    ///
+    }/// Sets `error_code` to the passed value.
+    /// 
     /// The partition level error code.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_error_code(mut self, value: i16) -> Self {
+    pub fn with_error_code(mut self, value: i16) -> Self
+    {
         self.error_code = value;
         self
-    }
-    /// Sets `leader_id` to the passed value.
-    ///
+    }/// Sets `leader_id` to the passed value.
+    /// 
     /// The ID of the current leader or -1 if the leader is unknown.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_leader_id(mut self, value: super::BrokerId) -> Self {
+    pub fn with_leader_id(mut self, value: super::BrokerId) -> Self
+    {
         self.leader_id = value;
         self
-    }
-    /// Sets `leader_epoch` to the passed value.
-    ///
+    }/// Sets `leader_epoch` to the passed value.
+    /// 
     /// The latest known leader epoch.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_leader_epoch(mut self, value: i32) -> Self {
+    pub fn with_leader_epoch(mut self, value: i32) -> Self
+    {
         self.leader_epoch = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -508,10 +489,7 @@ impl Encodable for PartitionData {
         if version >= 1 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -528,10 +506,7 @@ impl Encodable for PartitionData {
         if version >= 1 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -593,12 +568,12 @@ impl Message for PartitionData {
 #[derive(Debug, Clone, PartialEq)]
 pub struct TopicData {
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub topic_name: super::TopicName,
 
     /// The partition data.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub partitions: Vec<PartitionData>,
 
@@ -608,30 +583,31 @@ pub struct TopicData {
 
 impl TopicData {
     /// Sets `topic_name` to the passed value.
-    ///
+    /// 
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_topic_name(mut self, value: super::TopicName) -> Self {
+    pub fn with_topic_name(mut self, value: super::TopicName) -> Self
+    {
         self.topic_name = value;
         self
-    }
-    /// Sets `partitions` to the passed value.
-    ///
+    }/// Sets `partitions` to the passed value.
+    /// 
     /// The partition data.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_partitions(mut self, value: Vec<PartitionData>) -> Self {
+    pub fn with_partitions(mut self, value: Vec<PartitionData>) -> Self
+    {
         self.partitions = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -656,10 +632,7 @@ impl Encodable for TopicData {
         if version >= 1 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -675,18 +648,14 @@ impl Encodable for TopicData {
             total_size += types::String.compute_size(&self.topic_name)?;
         }
         if version >= 1 {
-            total_size +=
-                types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
+            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
         } else {
             total_size += types::Array(types::Struct { version }).compute_size(&self.partitions)?;
         }
         if version >= 1 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -754,3 +723,4 @@ impl HeaderVersion for EndQuorumEpochResponse {
         }
     }
 }
+

@@ -7,32 +7,32 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 0-2
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct DescribeClusterRequest {
     /// Whether to include cluster authorized operations.
-    ///
+    /// 
     /// Supported API versions: 0-2
     pub include_cluster_authorized_operations: bool,
 
     /// The endpoint type to describe. 1=brokers, 2=controllers.
-    ///
+    /// 
     /// Supported API versions: 1-2
     pub endpoint_type: i8,
 
     /// Whether to include fenced brokers when listing brokers.
-    ///
+    /// 
     /// Supported API versions: 2
     pub include_fenced_brokers: bool,
 
@@ -42,39 +42,40 @@ pub struct DescribeClusterRequest {
 
 impl DescribeClusterRequest {
     /// Sets `include_cluster_authorized_operations` to the passed value.
-    ///
+    /// 
     /// Whether to include cluster authorized operations.
-    ///
+    /// 
     /// Supported API versions: 0-2
-    pub fn with_include_cluster_authorized_operations(mut self, value: bool) -> Self {
+    pub fn with_include_cluster_authorized_operations(mut self, value: bool) -> Self
+    {
         self.include_cluster_authorized_operations = value;
         self
-    }
-    /// Sets `endpoint_type` to the passed value.
-    ///
+    }/// Sets `endpoint_type` to the passed value.
+    /// 
     /// The endpoint type to describe. 1=brokers, 2=controllers.
-    ///
+    /// 
     /// Supported API versions: 1-2
-    pub fn with_endpoint_type(mut self, value: i8) -> Self {
+    pub fn with_endpoint_type(mut self, value: i8) -> Self
+    {
         self.endpoint_type = value;
         self
-    }
-    /// Sets `include_fenced_brokers` to the passed value.
-    ///
+    }/// Sets `include_fenced_brokers` to the passed value.
+    /// 
     /// Whether to include fenced brokers when listing brokers.
-    ///
+    /// 
     /// Supported API versions: 2
-    pub fn with_include_fenced_brokers(mut self, value: bool) -> Self {
+    pub fn with_include_fenced_brokers(mut self, value: bool) -> Self
+    {
         self.include_fenced_brokers = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -103,10 +104,7 @@ impl Encodable for DescribeClusterRequest {
         }
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -132,10 +130,7 @@ impl Encodable for DescribeClusterRequest {
         }
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -199,3 +194,4 @@ impl HeaderVersion for DescribeClusterRequest {
         2
     }
 }
+

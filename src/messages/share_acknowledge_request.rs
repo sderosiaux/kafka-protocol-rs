@@ -7,28 +7,28 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
 
-/// Valid versions: 1
+
+/// Valid versions: 1-2
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct AcknowledgePartition {
     /// The partition index.
-    ///
-    /// Supported API versions: 1
+    /// 
+    /// Supported API versions: 1-2
     pub partition_index: i32,
 
     /// Record batches to acknowledge.
-    ///
-    /// Supported API versions: 1
+    /// 
+    /// Supported API versions: 1-2
     pub acknowledgement_batches: Vec<AcknowledgementBatch>,
 
     /// Other tagged fields
@@ -37,30 +37,31 @@ pub struct AcknowledgePartition {
 
 impl AcknowledgePartition {
     /// Sets `partition_index` to the passed value.
-    ///
+    /// 
     /// The partition index.
-    ///
-    /// Supported API versions: 1
-    pub fn with_partition_index(mut self, value: i32) -> Self {
+    /// 
+    /// Supported API versions: 1-2
+    pub fn with_partition_index(mut self, value: i32) -> Self
+    {
         self.partition_index = value;
         self
-    }
-    /// Sets `acknowledgement_batches` to the passed value.
-    ///
+    }/// Sets `acknowledgement_batches` to the passed value.
+    /// 
     /// Record batches to acknowledge.
-    ///
-    /// Supported API versions: 1
-    pub fn with_acknowledgement_batches(mut self, value: Vec<AcknowledgementBatch>) -> Self {
+    /// 
+    /// Supported API versions: 1-2
+    pub fn with_acknowledgement_batches(mut self, value: Vec<AcknowledgementBatch>) -> Self
+    {
         self.acknowledgement_batches = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -69,18 +70,14 @@ impl AcknowledgePartition {
 #[cfg(feature = "client")]
 impl Encodable for AcknowledgePartition {
     fn encode<B: ByteBufMut>(&self, buf: &mut B, version: i16) -> Result<()> {
-        if version != 1 {
+        if version < 1 || version > 2 {
             bail!("specified version not supported by this message type");
         }
         types::Int32.encode(buf, &self.partition_index)?;
-        types::CompactArray(types::Struct { version })
-            .encode(buf, &self.acknowledgement_batches)?;
+        types::CompactArray(types::Struct { version }).encode(buf, &self.acknowledgement_batches)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -90,14 +87,10 @@ impl Encodable for AcknowledgePartition {
     fn compute_size(&self, version: i16) -> Result<usize> {
         let mut total_size = 0;
         total_size += types::Int32.compute_size(&self.partition_index)?;
-        total_size += types::CompactArray(types::Struct { version })
-            .compute_size(&self.acknowledgement_batches)?;
+        total_size += types::CompactArray(types::Struct { version }).compute_size(&self.acknowledgement_batches)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -109,7 +102,7 @@ impl Encodable for AcknowledgePartition {
 #[cfg(feature = "broker")]
 impl Decodable for AcknowledgePartition {
     fn decode<B: ByteBuf>(buf: &mut B, version: i16) -> Result<Self> {
-        if version != 1 {
+        if version < 1 || version > 2 {
             bail!("specified version not supported by this message type");
         }
         let partition_index = types::Int32.decode(buf)?;
@@ -141,22 +134,22 @@ impl Default for AcknowledgePartition {
 }
 
 impl Message for AcknowledgePartition {
-    const VERSIONS: VersionRange = VersionRange { min: 1, max: 1 };
+    const VERSIONS: VersionRange = VersionRange { min: 1, max: 2 };
     const DEPRECATED_VERSIONS: Option<VersionRange> = None;
 }
 
-/// Valid versions: 1
+/// Valid versions: 1-2
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct AcknowledgeTopic {
     /// The unique topic ID.
-    ///
-    /// Supported API versions: 1
+    /// 
+    /// Supported API versions: 1-2
     pub topic_id: Uuid,
 
     /// The partitions containing records to acknowledge.
-    ///
-    /// Supported API versions: 1
+    /// 
+    /// Supported API versions: 1-2
     pub partitions: Vec<AcknowledgePartition>,
 
     /// Other tagged fields
@@ -165,30 +158,31 @@ pub struct AcknowledgeTopic {
 
 impl AcknowledgeTopic {
     /// Sets `topic_id` to the passed value.
-    ///
+    /// 
     /// The unique topic ID.
-    ///
-    /// Supported API versions: 1
-    pub fn with_topic_id(mut self, value: Uuid) -> Self {
+    /// 
+    /// Supported API versions: 1-2
+    pub fn with_topic_id(mut self, value: Uuid) -> Self
+    {
         self.topic_id = value;
         self
-    }
-    /// Sets `partitions` to the passed value.
-    ///
+    }/// Sets `partitions` to the passed value.
+    /// 
     /// The partitions containing records to acknowledge.
-    ///
-    /// Supported API versions: 1
-    pub fn with_partitions(mut self, value: Vec<AcknowledgePartition>) -> Self {
+    /// 
+    /// Supported API versions: 1-2
+    pub fn with_partitions(mut self, value: Vec<AcknowledgePartition>) -> Self
+    {
         self.partitions = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -197,17 +191,14 @@ impl AcknowledgeTopic {
 #[cfg(feature = "client")]
 impl Encodable for AcknowledgeTopic {
     fn encode<B: ByteBufMut>(&self, buf: &mut B, version: i16) -> Result<()> {
-        if version != 1 {
+        if version < 1 || version > 2 {
             bail!("specified version not supported by this message type");
         }
         types::Uuid.encode(buf, &self.topic_id)?;
         types::CompactArray(types::Struct { version }).encode(buf, &self.partitions)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -217,14 +208,10 @@ impl Encodable for AcknowledgeTopic {
     fn compute_size(&self, version: i16) -> Result<usize> {
         let mut total_size = 0;
         total_size += types::Uuid.compute_size(&self.topic_id)?;
-        total_size +=
-            types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
+        total_size += types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -236,7 +223,7 @@ impl Encodable for AcknowledgeTopic {
 #[cfg(feature = "broker")]
 impl Decodable for AcknowledgeTopic {
     fn decode<B: ByteBuf>(buf: &mut B, version: i16) -> Result<Self> {
-        if version != 1 {
+        if version < 1 || version > 2 {
             bail!("specified version not supported by this message type");
         }
         let topic_id = types::Uuid.decode(buf)?;
@@ -268,27 +255,27 @@ impl Default for AcknowledgeTopic {
 }
 
 impl Message for AcknowledgeTopic {
-    const VERSIONS: VersionRange = VersionRange { min: 1, max: 1 };
+    const VERSIONS: VersionRange = VersionRange { min: 1, max: 2 };
     const DEPRECATED_VERSIONS: Option<VersionRange> = None;
 }
 
-/// Valid versions: 1
+/// Valid versions: 1-2
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct AcknowledgementBatch {
     /// First offset of batch of records to acknowledge.
-    ///
-    /// Supported API versions: 1
+    /// 
+    /// Supported API versions: 1-2
     pub first_offset: i64,
 
     /// Last offset (inclusive) of batch of records to acknowledge.
-    ///
-    /// Supported API versions: 1
+    /// 
+    /// Supported API versions: 1-2
     pub last_offset: i64,
 
-    /// Array of acknowledge types - 0:Gap,1:Accept,2:Release,3:Reject.
-    ///
-    /// Supported API versions: 1
+    /// Array of acknowledge types - 0:Gap,1:Accept,2:Release,3:Reject,4:Renew.
+    /// 
+    /// Supported API versions: 1-2
     pub acknowledge_types: Vec<i8>,
 
     /// Other tagged fields
@@ -297,39 +284,40 @@ pub struct AcknowledgementBatch {
 
 impl AcknowledgementBatch {
     /// Sets `first_offset` to the passed value.
-    ///
+    /// 
     /// First offset of batch of records to acknowledge.
-    ///
-    /// Supported API versions: 1
-    pub fn with_first_offset(mut self, value: i64) -> Self {
+    /// 
+    /// Supported API versions: 1-2
+    pub fn with_first_offset(mut self, value: i64) -> Self
+    {
         self.first_offset = value;
         self
-    }
-    /// Sets `last_offset` to the passed value.
-    ///
+    }/// Sets `last_offset` to the passed value.
+    /// 
     /// Last offset (inclusive) of batch of records to acknowledge.
-    ///
-    /// Supported API versions: 1
-    pub fn with_last_offset(mut self, value: i64) -> Self {
+    /// 
+    /// Supported API versions: 1-2
+    pub fn with_last_offset(mut self, value: i64) -> Self
+    {
         self.last_offset = value;
         self
-    }
-    /// Sets `acknowledge_types` to the passed value.
-    ///
-    /// Array of acknowledge types - 0:Gap,1:Accept,2:Release,3:Reject.
-    ///
-    /// Supported API versions: 1
-    pub fn with_acknowledge_types(mut self, value: Vec<i8>) -> Self {
+    }/// Sets `acknowledge_types` to the passed value.
+    /// 
+    /// Array of acknowledge types - 0:Gap,1:Accept,2:Release,3:Reject,4:Renew.
+    /// 
+    /// Supported API versions: 1-2
+    pub fn with_acknowledge_types(mut self, value: Vec<i8>) -> Self
+    {
         self.acknowledge_types = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -338,7 +326,7 @@ impl AcknowledgementBatch {
 #[cfg(feature = "client")]
 impl Encodable for AcknowledgementBatch {
     fn encode<B: ByteBufMut>(&self, buf: &mut B, version: i16) -> Result<()> {
-        if version != 1 {
+        if version < 1 || version > 2 {
             bail!("specified version not supported by this message type");
         }
         types::Int64.encode(buf, &self.first_offset)?;
@@ -346,10 +334,7 @@ impl Encodable for AcknowledgementBatch {
         types::CompactArray(types::Int8).encode(buf, &self.acknowledge_types)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -363,10 +348,7 @@ impl Encodable for AcknowledgementBatch {
         total_size += types::CompactArray(types::Int8).compute_size(&self.acknowledge_types)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -378,7 +360,7 @@ impl Encodable for AcknowledgementBatch {
 #[cfg(feature = "broker")]
 impl Decodable for AcknowledgementBatch {
     fn decode<B: ByteBuf>(buf: &mut B, version: i16) -> Result<Self> {
-        if version != 1 {
+        if version < 1 || version > 2 {
             bail!("specified version not supported by this message type");
         }
         let first_offset = types::Int64.decode(buf)?;
@@ -413,32 +395,37 @@ impl Default for AcknowledgementBatch {
 }
 
 impl Message for AcknowledgementBatch {
-    const VERSIONS: VersionRange = VersionRange { min: 1, max: 1 };
+    const VERSIONS: VersionRange = VersionRange { min: 1, max: 2 };
     const DEPRECATED_VERSIONS: Option<VersionRange> = None;
 }
 
-/// Valid versions: 1
+/// Valid versions: 1-2
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShareAcknowledgeRequest {
     /// The group identifier.
-    ///
-    /// Supported API versions: 1
+    /// 
+    /// Supported API versions: 1-2
     pub group_id: Option<super::GroupId>,
 
     /// The member ID.
-    ///
-    /// Supported API versions: 1
+    /// 
+    /// Supported API versions: 1-2
     pub member_id: Option<StrBytes>,
 
     /// The current share session epoch: 0 to open a share session; -1 to close it; otherwise increments for consecutive requests.
-    ///
-    /// Supported API versions: 1
+    /// 
+    /// Supported API versions: 1-2
     pub share_session_epoch: i32,
 
+    /// Whether Renew type acknowledgements present in AcknowledgementBatches.
+    /// 
+    /// Supported API versions: 2
+    pub is_renew_ack: bool,
+
     /// The topics containing records to acknowledge.
-    ///
-    /// Supported API versions: 1
+    /// 
+    /// Supported API versions: 1-2
     pub topics: Vec<AcknowledgeTopic>,
 
     /// Other tagged fields
@@ -447,48 +434,58 @@ pub struct ShareAcknowledgeRequest {
 
 impl ShareAcknowledgeRequest {
     /// Sets `group_id` to the passed value.
-    ///
+    /// 
     /// The group identifier.
-    ///
-    /// Supported API versions: 1
-    pub fn with_group_id(mut self, value: Option<super::GroupId>) -> Self {
+    /// 
+    /// Supported API versions: 1-2
+    pub fn with_group_id(mut self, value: Option<super::GroupId>) -> Self
+    {
         self.group_id = value;
         self
-    }
-    /// Sets `member_id` to the passed value.
-    ///
+    }/// Sets `member_id` to the passed value.
+    /// 
     /// The member ID.
-    ///
-    /// Supported API versions: 1
-    pub fn with_member_id(mut self, value: Option<StrBytes>) -> Self {
+    /// 
+    /// Supported API versions: 1-2
+    pub fn with_member_id(mut self, value: Option<StrBytes>) -> Self
+    {
         self.member_id = value;
         self
-    }
-    /// Sets `share_session_epoch` to the passed value.
-    ///
+    }/// Sets `share_session_epoch` to the passed value.
+    /// 
     /// The current share session epoch: 0 to open a share session; -1 to close it; otherwise increments for consecutive requests.
-    ///
-    /// Supported API versions: 1
-    pub fn with_share_session_epoch(mut self, value: i32) -> Self {
+    /// 
+    /// Supported API versions: 1-2
+    pub fn with_share_session_epoch(mut self, value: i32) -> Self
+    {
         self.share_session_epoch = value;
         self
-    }
-    /// Sets `topics` to the passed value.
-    ///
+    }/// Sets `is_renew_ack` to the passed value.
+    /// 
+    /// Whether Renew type acknowledgements present in AcknowledgementBatches.
+    /// 
+    /// Supported API versions: 2
+    pub fn with_is_renew_ack(mut self, value: bool) -> Self
+    {
+        self.is_renew_ack = value;
+        self
+    }/// Sets `topics` to the passed value.
+    /// 
     /// The topics containing records to acknowledge.
-    ///
-    /// Supported API versions: 1
-    pub fn with_topics(mut self, value: Vec<AcknowledgeTopic>) -> Self {
+    /// 
+    /// Supported API versions: 1-2
+    pub fn with_topics(mut self, value: Vec<AcknowledgeTopic>) -> Self
+    {
         self.topics = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -497,19 +494,23 @@ impl ShareAcknowledgeRequest {
 #[cfg(feature = "client")]
 impl Encodable for ShareAcknowledgeRequest {
     fn encode<B: ByteBufMut>(&self, buf: &mut B, version: i16) -> Result<()> {
-        if version != 1 {
+        if version < 1 || version > 2 {
             bail!("specified version not supported by this message type");
         }
         types::CompactString.encode(buf, &self.group_id)?;
         types::CompactString.encode(buf, &self.member_id)?;
         types::Int32.encode(buf, &self.share_session_epoch)?;
+        if version >= 2 {
+            types::Boolean.encode(buf, &self.is_renew_ack)?;
+        } else {
+            if self.is_renew_ack {
+                bail!("A field is set that is not available on the selected protocol version");
+            }
+        }
         types::CompactArray(types::Struct { version }).encode(buf, &self.topics)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -521,13 +522,17 @@ impl Encodable for ShareAcknowledgeRequest {
         total_size += types::CompactString.compute_size(&self.group_id)?;
         total_size += types::CompactString.compute_size(&self.member_id)?;
         total_size += types::Int32.compute_size(&self.share_session_epoch)?;
+        if version >= 2 {
+            total_size += types::Boolean.compute_size(&self.is_renew_ack)?;
+        } else {
+            if self.is_renew_ack {
+                bail!("A field is set that is not available on the selected protocol version");
+            }
+        }
         total_size += types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -539,12 +544,17 @@ impl Encodable for ShareAcknowledgeRequest {
 #[cfg(feature = "broker")]
 impl Decodable for ShareAcknowledgeRequest {
     fn decode<B: ByteBuf>(buf: &mut B, version: i16) -> Result<Self> {
-        if version != 1 {
+        if version < 1 || version > 2 {
             bail!("specified version not supported by this message type");
         }
         let group_id = types::CompactString.decode(buf)?;
         let member_id = types::CompactString.decode(buf)?;
         let share_session_epoch = types::Int32.decode(buf)?;
+        let is_renew_ack = if version >= 2 {
+            types::Boolean.decode(buf)?
+        } else {
+            false
+        };
         let topics = types::CompactArray(types::Struct { version }).decode(buf)?;
         let mut unknown_tagged_fields = BTreeMap::new();
         let num_tagged_fields = types::UnsignedVarInt.decode(buf)?;
@@ -558,6 +568,7 @@ impl Decodable for ShareAcknowledgeRequest {
             group_id,
             member_id,
             share_session_epoch,
+            is_renew_ack,
             topics,
             unknown_tagged_fields,
         })
@@ -570,6 +581,7 @@ impl Default for ShareAcknowledgeRequest {
             group_id: None,
             member_id: Some(Default::default()),
             share_session_epoch: 0,
+            is_renew_ack: false,
             topics: Default::default(),
             unknown_tagged_fields: BTreeMap::new(),
         }
@@ -577,7 +589,7 @@ impl Default for ShareAcknowledgeRequest {
 }
 
 impl Message for ShareAcknowledgeRequest {
-    const VERSIONS: VersionRange = VersionRange { min: 1, max: 1 };
+    const VERSIONS: VersionRange = VersionRange { min: 1, max: 2 };
     const DEPRECATED_VERSIONS: Option<VersionRange> = None;
 }
 
@@ -586,3 +598,4 @@ impl HeaderVersion for ShareAcknowledgeRequest {
         2
     }
 }
+

@@ -1425,12 +1425,11 @@ pub fn generate(output_path: &str, spec: Spec) -> Result<Option<GenerationOutput
     let deprecated_versions = spec.deprecated_versions;
     let mut entity_types: BTreeSet<EntityType> = BTreeSet::new();
 
-    let valid_versions = if spec.latest_version_unstable {
-        // skip unstable versions
-        spec.valid_versions.without_last()
-    } else {
-        spec.valid_versions
-    };
+    // Kapture fork: include the latest version even when upstream marks
+    // it unstable. We're an inspector — we want to decode whatever's
+    // on the wire, including KIP candidates clients may already use.
+    let _suppress_unstable = spec.latest_version_unstable;
+    let valid_versions = spec.valid_versions;
 
     // most likely, the spec has only one unstable version
     if valid_versions.is_none() {

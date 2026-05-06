@@ -7,10 +7,16 @@ use std::process::Command;
 pub mod generate_messages;
 
 fn main() -> Result<(), Error> {
-    let mut dir = std::fs::canonicalize(std::file!().rsplit_once('/').unwrap().0)?;
-    dir.push("../../src/messages");
-    let output_path = std::fs::canonicalize(dir)?;
+    // CARGO_MANIFEST_DIR is always set by cargo at compile time and
+    // points at protocol_codegen/. Pre std::file!() canonicalization
+    // was broken across release builds (file! returns the literal
+    // pre-canonicalized path).
+    let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let output_path = std::fs::canonicalize(manifest.join("../src/messages"))?;
     let messages_module_dir = output_path.to_str().unwrap();
+    // Anchor the cloned kafka_repo next to protocol_codegen/Cargo.toml
+    // so cwd-changes don't break this script.
+    std::env::set_current_dir(manifest)?;
 
     // Download messages from head of Kafka repo
     let kafka_repo = Path::new("kafka_repo");
@@ -33,7 +39,11 @@ fn main() -> Result<(), Error> {
     // Checkout the release commit
     // https://github.com/apache/kafka/releases/tag/4.1.0
     // checking out a tag with git2 is annoying -- we pin to the tag's commit sha instead
-    let release_commit = "13f70256db3c994c590e5d262a7cc50b9e973204";
+    // Kapture fork: bumped from 4.1.0 to apache/kafka trunk
+    // 5e6150caf7 (2026-05-06) so schemas include TopicId on
+    // OffsetCommit/Fetch v10, Enable2Pc on InitProducerId v6, Share
+    // Groups, KRaft v2 additions, ApiVersions v5, etc.
+    let release_commit = "5e6150caf7bde2e111c41f949b85c44c291a866c";
     println!("Checking out release {}", release_commit);
     let oid = Oid::from_str(release_commit).unwrap();
     let commit = repo

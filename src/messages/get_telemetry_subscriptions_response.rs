@@ -7,62 +7,62 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 0
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct GetTelemetrySubscriptionsResponse {
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    ///
+    /// 
     /// Supported API versions: 0
     pub throttle_time_ms: i32,
 
     /// The error code, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 0
     pub error_code: i16,
 
     /// Assigned client instance id if ClientInstanceId was 0 in the request, else 0.
-    ///
+    /// 
     /// Supported API versions: 0
     pub client_instance_id: Uuid,
 
     /// Unique identifier for the current subscription set for this client instance.
-    ///
+    /// 
     /// Supported API versions: 0
     pub subscription_id: i32,
 
     /// Compression types that broker accepts for the PushTelemetryRequest.
-    ///
+    /// 
     /// Supported API versions: 0
     pub accepted_compression_types: Vec<i8>,
 
     /// Configured push interval, which is the lowest configured interval in the current subscription set.
-    ///
+    /// 
     /// Supported API versions: 0
     pub push_interval_ms: i32,
 
     /// The maximum bytes of binary data the broker accepts in PushTelemetryRequest.
-    ///
+    /// 
     /// Supported API versions: 0
     pub telemetry_max_bytes: i32,
 
     /// Flag to indicate monotonic/counter metrics are to be emitted as deltas or cumulative values.
-    ///
+    /// 
     /// Supported API versions: 0
     pub delta_temporality: bool,
 
     /// Requested metrics prefix string match. Empty array: No metrics subscribed, Array[0] empty string: All metrics subscribed.
-    ///
+    /// 
     /// Supported API versions: 0
     pub requested_metrics: Vec<StrBytes>,
 
@@ -72,93 +72,94 @@ pub struct GetTelemetrySubscriptionsResponse {
 
 impl GetTelemetrySubscriptionsResponse {
     /// Sets `throttle_time_ms` to the passed value.
-    ///
+    /// 
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_throttle_time_ms(mut self, value: i32) -> Self {
+    pub fn with_throttle_time_ms(mut self, value: i32) -> Self
+    {
         self.throttle_time_ms = value;
         self
-    }
-    /// Sets `error_code` to the passed value.
-    ///
+    }/// Sets `error_code` to the passed value.
+    /// 
     /// The error code, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_error_code(mut self, value: i16) -> Self {
+    pub fn with_error_code(mut self, value: i16) -> Self
+    {
         self.error_code = value;
         self
-    }
-    /// Sets `client_instance_id` to the passed value.
-    ///
+    }/// Sets `client_instance_id` to the passed value.
+    /// 
     /// Assigned client instance id if ClientInstanceId was 0 in the request, else 0.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_client_instance_id(mut self, value: Uuid) -> Self {
+    pub fn with_client_instance_id(mut self, value: Uuid) -> Self
+    {
         self.client_instance_id = value;
         self
-    }
-    /// Sets `subscription_id` to the passed value.
-    ///
+    }/// Sets `subscription_id` to the passed value.
+    /// 
     /// Unique identifier for the current subscription set for this client instance.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_subscription_id(mut self, value: i32) -> Self {
+    pub fn with_subscription_id(mut self, value: i32) -> Self
+    {
         self.subscription_id = value;
         self
-    }
-    /// Sets `accepted_compression_types` to the passed value.
-    ///
+    }/// Sets `accepted_compression_types` to the passed value.
+    /// 
     /// Compression types that broker accepts for the PushTelemetryRequest.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_accepted_compression_types(mut self, value: Vec<i8>) -> Self {
+    pub fn with_accepted_compression_types(mut self, value: Vec<i8>) -> Self
+    {
         self.accepted_compression_types = value;
         self
-    }
-    /// Sets `push_interval_ms` to the passed value.
-    ///
+    }/// Sets `push_interval_ms` to the passed value.
+    /// 
     /// Configured push interval, which is the lowest configured interval in the current subscription set.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_push_interval_ms(mut self, value: i32) -> Self {
+    pub fn with_push_interval_ms(mut self, value: i32) -> Self
+    {
         self.push_interval_ms = value;
         self
-    }
-    /// Sets `telemetry_max_bytes` to the passed value.
-    ///
+    }/// Sets `telemetry_max_bytes` to the passed value.
+    /// 
     /// The maximum bytes of binary data the broker accepts in PushTelemetryRequest.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_telemetry_max_bytes(mut self, value: i32) -> Self {
+    pub fn with_telemetry_max_bytes(mut self, value: i32) -> Self
+    {
         self.telemetry_max_bytes = value;
         self
-    }
-    /// Sets `delta_temporality` to the passed value.
-    ///
+    }/// Sets `delta_temporality` to the passed value.
+    /// 
     /// Flag to indicate monotonic/counter metrics are to be emitted as deltas or cumulative values.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_delta_temporality(mut self, value: bool) -> Self {
+    pub fn with_delta_temporality(mut self, value: bool) -> Self
+    {
         self.delta_temporality = value;
         self
-    }
-    /// Sets `requested_metrics` to the passed value.
-    ///
+    }/// Sets `requested_metrics` to the passed value.
+    /// 
     /// Requested metrics prefix string match. Empty array: No metrics subscribed, Array[0] empty string: All metrics subscribed.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_requested_metrics(mut self, value: Vec<StrBytes>) -> Self {
+    pub fn with_requested_metrics(mut self, value: Vec<StrBytes>) -> Self
+    {
         self.requested_metrics = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -181,10 +182,7 @@ impl Encodable for GetTelemetrySubscriptionsResponse {
         types::CompactArray(types::CompactString).encode(buf, &self.requested_metrics)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -197,19 +195,14 @@ impl Encodable for GetTelemetrySubscriptionsResponse {
         total_size += types::Int16.compute_size(&self.error_code)?;
         total_size += types::Uuid.compute_size(&self.client_instance_id)?;
         total_size += types::Int32.compute_size(&self.subscription_id)?;
-        total_size +=
-            types::CompactArray(types::Int8).compute_size(&self.accepted_compression_types)?;
+        total_size += types::CompactArray(types::Int8).compute_size(&self.accepted_compression_types)?;
         total_size += types::Int32.compute_size(&self.push_interval_ms)?;
         total_size += types::Int32.compute_size(&self.telemetry_max_bytes)?;
         total_size += types::Boolean.compute_size(&self.delta_temporality)?;
-        total_size +=
-            types::CompactArray(types::CompactString).compute_size(&self.requested_metrics)?;
+        total_size += types::CompactArray(types::CompactString).compute_size(&self.requested_metrics)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -283,3 +276,4 @@ impl HeaderVersion for GetTelemetrySubscriptionsResponse {
         1
     }
 }
+

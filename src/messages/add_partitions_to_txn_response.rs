@@ -7,27 +7,27 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 0-5
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct AddPartitionsToTxnPartitionResult {
     /// The partition indexes.
-    ///
+    /// 
     /// Supported API versions: 0-5
     pub partition_index: i32,
 
     /// The response error code.
-    ///
+    /// 
     /// Supported API versions: 0-5
     pub partition_error_code: i16,
 
@@ -37,30 +37,31 @@ pub struct AddPartitionsToTxnPartitionResult {
 
 impl AddPartitionsToTxnPartitionResult {
     /// Sets `partition_index` to the passed value.
-    ///
+    /// 
     /// The partition indexes.
-    ///
+    /// 
     /// Supported API versions: 0-5
-    pub fn with_partition_index(mut self, value: i32) -> Self {
+    pub fn with_partition_index(mut self, value: i32) -> Self
+    {
         self.partition_index = value;
         self
-    }
-    /// Sets `partition_error_code` to the passed value.
-    ///
+    }/// Sets `partition_error_code` to the passed value.
+    /// 
     /// The response error code.
-    ///
+    /// 
     /// Supported API versions: 0-5
-    pub fn with_partition_error_code(mut self, value: i16) -> Self {
+    pub fn with_partition_error_code(mut self, value: i16) -> Self
+    {
         self.partition_error_code = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -77,10 +78,7 @@ impl Encodable for AddPartitionsToTxnPartitionResult {
         if version >= 3 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -95,10 +93,7 @@ impl Encodable for AddPartitionsToTxnPartitionResult {
         if version >= 3 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -154,22 +149,22 @@ impl Message for AddPartitionsToTxnPartitionResult {
 #[derive(Debug, Clone, PartialEq)]
 pub struct AddPartitionsToTxnResponse {
     /// Duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    ///
+    /// 
     /// Supported API versions: 0-5
     pub throttle_time_ms: i32,
 
     /// The response top level error code.
-    ///
+    /// 
     /// Supported API versions: 4-5
     pub error_code: i16,
 
     /// Results categorized by transactional ID.
-    ///
+    /// 
     /// Supported API versions: 4-5
     pub results_by_transaction: Vec<AddPartitionsToTxnResult>,
 
     /// The results for each topic.
-    ///
+    /// 
     /// Supported API versions: 0-3
     pub results_by_topic_v3_and_below: Vec<AddPartitionsToTxnTopicResult>,
 
@@ -179,51 +174,49 @@ pub struct AddPartitionsToTxnResponse {
 
 impl AddPartitionsToTxnResponse {
     /// Sets `throttle_time_ms` to the passed value.
-    ///
+    /// 
     /// Duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    ///
+    /// 
     /// Supported API versions: 0-5
-    pub fn with_throttle_time_ms(mut self, value: i32) -> Self {
+    pub fn with_throttle_time_ms(mut self, value: i32) -> Self
+    {
         self.throttle_time_ms = value;
         self
-    }
-    /// Sets `error_code` to the passed value.
-    ///
+    }/// Sets `error_code` to the passed value.
+    /// 
     /// The response top level error code.
-    ///
+    /// 
     /// Supported API versions: 4-5
-    pub fn with_error_code(mut self, value: i16) -> Self {
+    pub fn with_error_code(mut self, value: i16) -> Self
+    {
         self.error_code = value;
         self
-    }
-    /// Sets `results_by_transaction` to the passed value.
-    ///
+    }/// Sets `results_by_transaction` to the passed value.
+    /// 
     /// Results categorized by transactional ID.
-    ///
+    /// 
     /// Supported API versions: 4-5
-    pub fn with_results_by_transaction(mut self, value: Vec<AddPartitionsToTxnResult>) -> Self {
+    pub fn with_results_by_transaction(mut self, value: Vec<AddPartitionsToTxnResult>) -> Self
+    {
         self.results_by_transaction = value;
         self
-    }
-    /// Sets `results_by_topic_v3_and_below` to the passed value.
-    ///
+    }/// Sets `results_by_topic_v3_and_below` to the passed value.
+    /// 
     /// The results for each topic.
-    ///
+    /// 
     /// Supported API versions: 0-3
-    pub fn with_results_by_topic_v3_and_below(
-        mut self,
-        value: Vec<AddPartitionsToTxnTopicResult>,
-    ) -> Self {
+    pub fn with_results_by_topic_v3_and_below(mut self, value: Vec<AddPartitionsToTxnTopicResult>) -> Self
+    {
         self.results_by_topic_v3_and_below = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -240,8 +233,7 @@ impl Encodable for AddPartitionsToTxnResponse {
             types::Int16.encode(buf, &self.error_code)?;
         }
         if version >= 4 {
-            types::CompactArray(types::Struct { version })
-                .encode(buf, &self.results_by_transaction)?;
+            types::CompactArray(types::Struct { version }).encode(buf, &self.results_by_transaction)?;
         } else {
             if !self.results_by_transaction.is_empty() {
                 bail!("A field is set that is not available on the selected protocol version");
@@ -249,11 +241,9 @@ impl Encodable for AddPartitionsToTxnResponse {
         }
         if version <= 3 {
             if version >= 3 {
-                types::CompactArray(types::Struct { version })
-                    .encode(buf, &self.results_by_topic_v3_and_below)?;
+                types::CompactArray(types::Struct { version }).encode(buf, &self.results_by_topic_v3_and_below)?;
             } else {
-                types::Array(types::Struct { version })
-                    .encode(buf, &self.results_by_topic_v3_and_below)?;
+                types::Array(types::Struct { version }).encode(buf, &self.results_by_topic_v3_and_below)?;
             }
         } else {
             if !self.results_by_topic_v3_and_below.is_empty() {
@@ -263,10 +253,7 @@ impl Encodable for AddPartitionsToTxnResponse {
         if version >= 3 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -281,8 +268,7 @@ impl Encodable for AddPartitionsToTxnResponse {
             total_size += types::Int16.compute_size(&self.error_code)?;
         }
         if version >= 4 {
-            total_size += types::CompactArray(types::Struct { version })
-                .compute_size(&self.results_by_transaction)?;
+            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.results_by_transaction)?;
         } else {
             if !self.results_by_transaction.is_empty() {
                 bail!("A field is set that is not available on the selected protocol version");
@@ -290,11 +276,9 @@ impl Encodable for AddPartitionsToTxnResponse {
         }
         if version <= 3 {
             if version >= 3 {
-                total_size += types::CompactArray(types::Struct { version })
-                    .compute_size(&self.results_by_topic_v3_and_below)?;
+                total_size += types::CompactArray(types::Struct { version }).compute_size(&self.results_by_topic_v3_and_below)?;
             } else {
-                total_size += types::Array(types::Struct { version })
-                    .compute_size(&self.results_by_topic_v3_and_below)?;
+                total_size += types::Array(types::Struct { version }).compute_size(&self.results_by_topic_v3_and_below)?;
             }
         } else {
             if !self.results_by_topic_v3_and_below.is_empty() {
@@ -304,10 +288,7 @@ impl Encodable for AddPartitionsToTxnResponse {
         if version >= 3 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -385,12 +366,12 @@ impl Message for AddPartitionsToTxnResponse {
 #[derive(Debug, Clone, PartialEq)]
 pub struct AddPartitionsToTxnResult {
     /// The transactional id corresponding to the transaction.
-    ///
+    /// 
     /// Supported API versions: 4-5
     pub transactional_id: super::TransactionalId,
 
     /// The results for each topic.
-    ///
+    /// 
     /// Supported API versions: 4-5
     pub topic_results: Vec<AddPartitionsToTxnTopicResult>,
 
@@ -400,30 +381,31 @@ pub struct AddPartitionsToTxnResult {
 
 impl AddPartitionsToTxnResult {
     /// Sets `transactional_id` to the passed value.
-    ///
+    /// 
     /// The transactional id corresponding to the transaction.
-    ///
+    /// 
     /// Supported API versions: 4-5
-    pub fn with_transactional_id(mut self, value: super::TransactionalId) -> Self {
+    pub fn with_transactional_id(mut self, value: super::TransactionalId) -> Self
+    {
         self.transactional_id = value;
         self
-    }
-    /// Sets `topic_results` to the passed value.
-    ///
+    }/// Sets `topic_results` to the passed value.
+    /// 
     /// The results for each topic.
-    ///
+    /// 
     /// Supported API versions: 4-5
-    pub fn with_topic_results(mut self, value: Vec<AddPartitionsToTxnTopicResult>) -> Self {
+    pub fn with_topic_results(mut self, value: Vec<AddPartitionsToTxnTopicResult>) -> Self
+    {
         self.topic_results = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -452,10 +434,7 @@ impl Encodable for AddPartitionsToTxnResult {
         if version >= 3 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -473,8 +452,7 @@ impl Encodable for AddPartitionsToTxnResult {
             }
         }
         if version >= 4 {
-            total_size +=
-                types::CompactArray(types::Struct { version }).compute_size(&self.topic_results)?;
+            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.topic_results)?;
         } else {
             if !self.topic_results.is_empty() {
                 bail!("A field is set that is not available on the selected protocol version");
@@ -483,10 +461,7 @@ impl Encodable for AddPartitionsToTxnResult {
         if version >= 3 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -550,12 +525,12 @@ impl Message for AddPartitionsToTxnResult {
 #[derive(Debug, Clone, PartialEq)]
 pub struct AddPartitionsToTxnTopicResult {
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 0-5
     pub name: super::TopicName,
 
     /// The results for each partition.
-    ///
+    /// 
     /// Supported API versions: 0-5
     pub results_by_partition: Vec<AddPartitionsToTxnPartitionResult>,
 
@@ -565,33 +540,31 @@ pub struct AddPartitionsToTxnTopicResult {
 
 impl AddPartitionsToTxnTopicResult {
     /// Sets `name` to the passed value.
-    ///
+    /// 
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 0-5
-    pub fn with_name(mut self, value: super::TopicName) -> Self {
+    pub fn with_name(mut self, value: super::TopicName) -> Self
+    {
         self.name = value;
         self
-    }
-    /// Sets `results_by_partition` to the passed value.
-    ///
+    }/// Sets `results_by_partition` to the passed value.
+    /// 
     /// The results for each partition.
-    ///
+    /// 
     /// Supported API versions: 0-5
-    pub fn with_results_by_partition(
-        mut self,
-        value: Vec<AddPartitionsToTxnPartitionResult>,
-    ) -> Self {
+    pub fn with_results_by_partition(mut self, value: Vec<AddPartitionsToTxnPartitionResult>) -> Self
+    {
         self.results_by_partition = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -609,18 +582,14 @@ impl Encodable for AddPartitionsToTxnTopicResult {
             types::String.encode(buf, &self.name)?;
         }
         if version >= 3 {
-            types::CompactArray(types::Struct { version })
-                .encode(buf, &self.results_by_partition)?;
+            types::CompactArray(types::Struct { version }).encode(buf, &self.results_by_partition)?;
         } else {
             types::Array(types::Struct { version }).encode(buf, &self.results_by_partition)?;
         }
         if version >= 3 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -636,19 +605,14 @@ impl Encodable for AddPartitionsToTxnTopicResult {
             total_size += types::String.compute_size(&self.name)?;
         }
         if version >= 3 {
-            total_size += types::CompactArray(types::Struct { version })
-                .compute_size(&self.results_by_partition)?;
+            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.results_by_partition)?;
         } else {
-            total_size +=
-                types::Array(types::Struct { version }).compute_size(&self.results_by_partition)?;
+            total_size += types::Array(types::Struct { version }).compute_size(&self.results_by_partition)?;
         }
         if version >= 3 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -716,3 +680,4 @@ impl HeaderVersion for AddPartitionsToTxnResponse {
         }
     }
 }
+

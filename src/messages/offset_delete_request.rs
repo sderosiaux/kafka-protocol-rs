@@ -7,47 +7,49 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 0
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct OffsetDeleteRequest {
     /// The unique group identifier.
-    ///
+    /// 
     /// Supported API versions: 0
     pub group_id: super::GroupId,
 
     /// The topics to delete offsets for.
-    ///
+    /// 
     /// Supported API versions: 0
     pub topics: Vec<OffsetDeleteRequestTopic>,
+
 }
 
 impl OffsetDeleteRequest {
     /// Sets `group_id` to the passed value.
-    ///
+    /// 
     /// The unique group identifier.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_group_id(mut self, value: super::GroupId) -> Self {
+    pub fn with_group_id(mut self, value: super::GroupId) -> Self
+    {
         self.group_id = value;
         self
-    }
-    /// Sets `topics` to the passed value.
-    ///
+    }/// Sets `topics` to the passed value.
+    /// 
     /// The topics to delete offsets for.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_topics(mut self, value: Vec<OffsetDeleteRequestTopic>) -> Self {
+    pub fn with_topics(mut self, value: Vec<OffsetDeleteRequestTopic>) -> Self
+    {
         self.topics = value;
         self
     }
@@ -81,7 +83,10 @@ impl Decodable for OffsetDeleteRequest {
         }
         let group_id = types::String.decode(buf)?;
         let topics = types::Array(types::Struct { version }).decode(buf)?;
-        Ok(Self { group_id, topics })
+        Ok(Self {
+            group_id,
+            topics,
+        })
     }
 }
 
@@ -104,18 +109,20 @@ impl Message for OffsetDeleteRequest {
 #[derive(Debug, Clone, PartialEq)]
 pub struct OffsetDeleteRequestPartition {
     /// The partition index.
-    ///
+    /// 
     /// Supported API versions: 0
     pub partition_index: i32,
+
 }
 
 impl OffsetDeleteRequestPartition {
     /// Sets `partition_index` to the passed value.
-    ///
+    /// 
     /// The partition index.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_partition_index(mut self, value: i32) -> Self {
+    pub fn with_partition_index(mut self, value: i32) -> Self
+    {
         self.partition_index = value;
         self
     }
@@ -146,13 +153,17 @@ impl Decodable for OffsetDeleteRequestPartition {
             bail!("specified version not supported by this message type");
         }
         let partition_index = types::Int32.decode(buf)?;
-        Ok(Self { partition_index })
+        Ok(Self {
+            partition_index,
+        })
     }
 }
 
 impl Default for OffsetDeleteRequestPartition {
     fn default() -> Self {
-        Self { partition_index: 0 }
+        Self {
+            partition_index: 0,
+        }
     }
 }
 
@@ -166,32 +177,34 @@ impl Message for OffsetDeleteRequestPartition {
 #[derive(Debug, Clone, PartialEq)]
 pub struct OffsetDeleteRequestTopic {
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 0
     pub name: super::TopicName,
 
     /// Each partition to delete offsets for.
-    ///
+    /// 
     /// Supported API versions: 0
     pub partitions: Vec<OffsetDeleteRequestPartition>,
+
 }
 
 impl OffsetDeleteRequestTopic {
     /// Sets `name` to the passed value.
-    ///
+    /// 
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_name(mut self, value: super::TopicName) -> Self {
+    pub fn with_name(mut self, value: super::TopicName) -> Self
+    {
         self.name = value;
         self
-    }
-    /// Sets `partitions` to the passed value.
-    ///
+    }/// Sets `partitions` to the passed value.
+    /// 
     /// Each partition to delete offsets for.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_partitions(mut self, value: Vec<OffsetDeleteRequestPartition>) -> Self {
+    pub fn with_partitions(mut self, value: Vec<OffsetDeleteRequestPartition>) -> Self
+    {
         self.partitions = value;
         self
     }
@@ -225,7 +238,10 @@ impl Decodable for OffsetDeleteRequestTopic {
         }
         let name = types::String.decode(buf)?;
         let partitions = types::Array(types::Struct { version }).decode(buf)?;
-        Ok(Self { name, partitions })
+        Ok(Self {
+            name,
+            partitions,
+        })
     }
 }
 
@@ -248,3 +264,4 @@ impl HeaderVersion for OffsetDeleteRequest {
         1
     }
 }
+

@@ -7,27 +7,27 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 0
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct AlterUserScramCredentialsRequest {
     /// The SCRAM credentials to remove.
-    ///
+    /// 
     /// Supported API versions: 0
     pub deletions: Vec<ScramCredentialDeletion>,
 
     /// The SCRAM credentials to update/insert.
-    ///
+    /// 
     /// Supported API versions: 0
     pub upsertions: Vec<ScramCredentialUpsertion>,
 
@@ -37,30 +37,31 @@ pub struct AlterUserScramCredentialsRequest {
 
 impl AlterUserScramCredentialsRequest {
     /// Sets `deletions` to the passed value.
-    ///
+    /// 
     /// The SCRAM credentials to remove.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_deletions(mut self, value: Vec<ScramCredentialDeletion>) -> Self {
+    pub fn with_deletions(mut self, value: Vec<ScramCredentialDeletion>) -> Self
+    {
         self.deletions = value;
         self
-    }
-    /// Sets `upsertions` to the passed value.
-    ///
+    }/// Sets `upsertions` to the passed value.
+    /// 
     /// The SCRAM credentials to update/insert.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_upsertions(mut self, value: Vec<ScramCredentialUpsertion>) -> Self {
+    pub fn with_upsertions(mut self, value: Vec<ScramCredentialUpsertion>) -> Self
+    {
         self.upsertions = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -76,10 +77,7 @@ impl Encodable for AlterUserScramCredentialsRequest {
         types::CompactArray(types::Struct { version }).encode(buf, &self.upsertions)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -88,16 +86,11 @@ impl Encodable for AlterUserScramCredentialsRequest {
     }
     fn compute_size(&self, version: i16) -> Result<usize> {
         let mut total_size = 0;
-        total_size +=
-            types::CompactArray(types::Struct { version }).compute_size(&self.deletions)?;
-        total_size +=
-            types::CompactArray(types::Struct { version }).compute_size(&self.upsertions)?;
+        total_size += types::CompactArray(types::Struct { version }).compute_size(&self.deletions)?;
+        total_size += types::CompactArray(types::Struct { version }).compute_size(&self.upsertions)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -150,12 +143,12 @@ impl Message for AlterUserScramCredentialsRequest {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ScramCredentialDeletion {
     /// The user name.
-    ///
+    /// 
     /// Supported API versions: 0
     pub name: StrBytes,
 
     /// The SCRAM mechanism.
-    ///
+    /// 
     /// Supported API versions: 0
     pub mechanism: i8,
 
@@ -165,30 +158,31 @@ pub struct ScramCredentialDeletion {
 
 impl ScramCredentialDeletion {
     /// Sets `name` to the passed value.
-    ///
+    /// 
     /// The user name.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_name(mut self, value: StrBytes) -> Self {
+    pub fn with_name(mut self, value: StrBytes) -> Self
+    {
         self.name = value;
         self
-    }
-    /// Sets `mechanism` to the passed value.
-    ///
+    }/// Sets `mechanism` to the passed value.
+    /// 
     /// The SCRAM mechanism.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_mechanism(mut self, value: i8) -> Self {
+    pub fn with_mechanism(mut self, value: i8) -> Self
+    {
         self.mechanism = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -204,10 +198,7 @@ impl Encodable for ScramCredentialDeletion {
         types::Int8.encode(buf, &self.mechanism)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -220,10 +211,7 @@ impl Encodable for ScramCredentialDeletion {
         total_size += types::Int8.compute_size(&self.mechanism)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -276,27 +264,27 @@ impl Message for ScramCredentialDeletion {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ScramCredentialUpsertion {
     /// The user name.
-    ///
+    /// 
     /// Supported API versions: 0
     pub name: StrBytes,
 
     /// The SCRAM mechanism.
-    ///
+    /// 
     /// Supported API versions: 0
     pub mechanism: i8,
 
     /// The number of iterations.
-    ///
+    /// 
     /// Supported API versions: 0
     pub iterations: i32,
 
     /// A random salt generated by the client.
-    ///
+    /// 
     /// Supported API versions: 0
     pub salt: Bytes,
 
     /// The salted password.
-    ///
+    /// 
     /// Supported API versions: 0
     pub salted_password: Bytes,
 
@@ -306,57 +294,58 @@ pub struct ScramCredentialUpsertion {
 
 impl ScramCredentialUpsertion {
     /// Sets `name` to the passed value.
-    ///
+    /// 
     /// The user name.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_name(mut self, value: StrBytes) -> Self {
+    pub fn with_name(mut self, value: StrBytes) -> Self
+    {
         self.name = value;
         self
-    }
-    /// Sets `mechanism` to the passed value.
-    ///
+    }/// Sets `mechanism` to the passed value.
+    /// 
     /// The SCRAM mechanism.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_mechanism(mut self, value: i8) -> Self {
+    pub fn with_mechanism(mut self, value: i8) -> Self
+    {
         self.mechanism = value;
         self
-    }
-    /// Sets `iterations` to the passed value.
-    ///
+    }/// Sets `iterations` to the passed value.
+    /// 
     /// The number of iterations.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_iterations(mut self, value: i32) -> Self {
+    pub fn with_iterations(mut self, value: i32) -> Self
+    {
         self.iterations = value;
         self
-    }
-    /// Sets `salt` to the passed value.
-    ///
+    }/// Sets `salt` to the passed value.
+    /// 
     /// A random salt generated by the client.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_salt(mut self, value: Bytes) -> Self {
+    pub fn with_salt(mut self, value: Bytes) -> Self
+    {
         self.salt = value;
         self
-    }
-    /// Sets `salted_password` to the passed value.
-    ///
+    }/// Sets `salted_password` to the passed value.
+    /// 
     /// The salted password.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_salted_password(mut self, value: Bytes) -> Self {
+    pub fn with_salted_password(mut self, value: Bytes) -> Self
+    {
         self.salted_password = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -375,10 +364,7 @@ impl Encodable for ScramCredentialUpsertion {
         types::CompactBytes.encode(buf, &self.salted_password)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -394,10 +380,7 @@ impl Encodable for ScramCredentialUpsertion {
         total_size += types::CompactBytes.compute_size(&self.salted_password)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -459,3 +442,4 @@ impl HeaderVersion for AlterUserScramCredentialsRequest {
         2
     }
 }
+

@@ -7,27 +7,27 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 0
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct SnapshotHeaderRecord {
     /// The version of the snapshot header record.
-    ///
+    /// 
     /// Supported API versions: 0
     pub version: i16,
 
     /// The append time of the last record from the log contained in this snapshot.
-    ///
+    /// 
     /// Supported API versions: 0
     pub last_contained_log_timestamp: i64,
 
@@ -37,30 +37,31 @@ pub struct SnapshotHeaderRecord {
 
 impl SnapshotHeaderRecord {
     /// Sets `version` to the passed value.
-    ///
+    /// 
     /// The version of the snapshot header record.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_version(mut self, value: i16) -> Self {
+    pub fn with_version(mut self, value: i16) -> Self
+    {
         self.version = value;
         self
-    }
-    /// Sets `last_contained_log_timestamp` to the passed value.
-    ///
+    }/// Sets `last_contained_log_timestamp` to the passed value.
+    /// 
     /// The append time of the last record from the log contained in this snapshot.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_last_contained_log_timestamp(mut self, value: i64) -> Self {
+    pub fn with_last_contained_log_timestamp(mut self, value: i64) -> Self
+    {
         self.last_contained_log_timestamp = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -75,10 +76,7 @@ impl Encodable for SnapshotHeaderRecord {
         types::Int64.encode(buf, &self.last_contained_log_timestamp)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -91,10 +89,7 @@ impl Encodable for SnapshotHeaderRecord {
         total_size += types::Int64.compute_size(&self.last_contained_log_timestamp)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -140,3 +135,4 @@ impl Message for SnapshotHeaderRecord {
     const VERSIONS: VersionRange = VersionRange { min: 0, max: 0 };
     const DEPRECATED_VERSIONS: Option<VersionRange> = None;
 }
+

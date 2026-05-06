@@ -7,27 +7,27 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 3-13
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct PartitionProduceData {
     /// The partition index.
-    ///
+    /// 
     /// Supported API versions: 3-13
     pub index: i32,
 
     /// The record data to be produced.
-    ///
+    /// 
     /// Supported API versions: 3-13
     pub records: Option<Bytes>,
 
@@ -37,30 +37,31 @@ pub struct PartitionProduceData {
 
 impl PartitionProduceData {
     /// Sets `index` to the passed value.
-    ///
+    /// 
     /// The partition index.
-    ///
+    /// 
     /// Supported API versions: 3-13
-    pub fn with_index(mut self, value: i32) -> Self {
+    pub fn with_index(mut self, value: i32) -> Self
+    {
         self.index = value;
         self
-    }
-    /// Sets `records` to the passed value.
-    ///
+    }/// Sets `records` to the passed value.
+    /// 
     /// The record data to be produced.
-    ///
+    /// 
     /// Supported API versions: 3-13
-    pub fn with_records(mut self, value: Option<Bytes>) -> Self {
+    pub fn with_records(mut self, value: Option<Bytes>) -> Self
+    {
         self.records = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -81,10 +82,7 @@ impl Encodable for PartitionProduceData {
         if version >= 9 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -103,10 +101,7 @@ impl Encodable for PartitionProduceData {
         if version >= 9 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -166,22 +161,22 @@ impl Message for PartitionProduceData {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProduceRequest {
     /// The transactional ID, or null if the producer is not transactional.
-    ///
+    /// 
     /// Supported API versions: 3-13
     pub transactional_id: Option<super::TransactionalId>,
 
     /// The number of acknowledgments the producer requires the leader to have received before considering a request complete. Allowed values: 0 for no acknowledgments, 1 for only the leader and -1 for the full ISR.
-    ///
+    /// 
     /// Supported API versions: 3-13
     pub acks: i16,
 
     /// The timeout to await a response in milliseconds.
-    ///
+    /// 
     /// Supported API versions: 3-13
     pub timeout_ms: i32,
 
     /// Each topic to produce to.
-    ///
+    /// 
     /// Supported API versions: 3-13
     pub topic_data: Vec<TopicProduceData>,
 
@@ -191,48 +186,49 @@ pub struct ProduceRequest {
 
 impl ProduceRequest {
     /// Sets `transactional_id` to the passed value.
-    ///
+    /// 
     /// The transactional ID, or null if the producer is not transactional.
-    ///
+    /// 
     /// Supported API versions: 3-13
-    pub fn with_transactional_id(mut self, value: Option<super::TransactionalId>) -> Self {
+    pub fn with_transactional_id(mut self, value: Option<super::TransactionalId>) -> Self
+    {
         self.transactional_id = value;
         self
-    }
-    /// Sets `acks` to the passed value.
-    ///
+    }/// Sets `acks` to the passed value.
+    /// 
     /// The number of acknowledgments the producer requires the leader to have received before considering a request complete. Allowed values: 0 for no acknowledgments, 1 for only the leader and -1 for the full ISR.
-    ///
+    /// 
     /// Supported API versions: 3-13
-    pub fn with_acks(mut self, value: i16) -> Self {
+    pub fn with_acks(mut self, value: i16) -> Self
+    {
         self.acks = value;
         self
-    }
-    /// Sets `timeout_ms` to the passed value.
-    ///
+    }/// Sets `timeout_ms` to the passed value.
+    /// 
     /// The timeout to await a response in milliseconds.
-    ///
+    /// 
     /// Supported API versions: 3-13
-    pub fn with_timeout_ms(mut self, value: i32) -> Self {
+    pub fn with_timeout_ms(mut self, value: i32) -> Self
+    {
         self.timeout_ms = value;
         self
-    }
-    /// Sets `topic_data` to the passed value.
-    ///
+    }/// Sets `topic_data` to the passed value.
+    /// 
     /// Each topic to produce to.
-    ///
+    /// 
     /// Supported API versions: 3-13
-    pub fn with_topic_data(mut self, value: Vec<TopicProduceData>) -> Self {
+    pub fn with_topic_data(mut self, value: Vec<TopicProduceData>) -> Self
+    {
         self.topic_data = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -259,10 +255,7 @@ impl Encodable for ProduceRequest {
         if version >= 9 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -280,18 +273,14 @@ impl Encodable for ProduceRequest {
         total_size += types::Int16.compute_size(&self.acks)?;
         total_size += types::Int32.compute_size(&self.timeout_ms)?;
         if version >= 9 {
-            total_size +=
-                types::CompactArray(types::Struct { version }).compute_size(&self.topic_data)?;
+            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.topic_data)?;
         } else {
             total_size += types::Array(types::Struct { version }).compute_size(&self.topic_data)?;
         }
         if version >= 9 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -361,17 +350,17 @@ impl Message for ProduceRequest {
 #[derive(Debug, Clone, PartialEq)]
 pub struct TopicProduceData {
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 3-12
     pub name: super::TopicName,
 
     /// The unique topic ID
-    ///
+    /// 
     /// Supported API versions: 13
     pub topic_id: Uuid,
 
     /// Each partition to produce to.
-    ///
+    /// 
     /// Supported API versions: 3-13
     pub partition_data: Vec<PartitionProduceData>,
 
@@ -381,39 +370,40 @@ pub struct TopicProduceData {
 
 impl TopicProduceData {
     /// Sets `name` to the passed value.
-    ///
+    /// 
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 3-12
-    pub fn with_name(mut self, value: super::TopicName) -> Self {
+    pub fn with_name(mut self, value: super::TopicName) -> Self
+    {
         self.name = value;
         self
-    }
-    /// Sets `topic_id` to the passed value.
-    ///
+    }/// Sets `topic_id` to the passed value.
+    /// 
     /// The unique topic ID
-    ///
+    /// 
     /// Supported API versions: 13
-    pub fn with_topic_id(mut self, value: Uuid) -> Self {
+    pub fn with_topic_id(mut self, value: Uuid) -> Self
+    {
         self.topic_id = value;
         self
-    }
-    /// Sets `partition_data` to the passed value.
-    ///
+    }/// Sets `partition_data` to the passed value.
+    /// 
     /// Each partition to produce to.
-    ///
+    /// 
     /// Supported API versions: 3-13
-    pub fn with_partition_data(mut self, value: Vec<PartitionProduceData>) -> Self {
+    pub fn with_partition_data(mut self, value: Vec<PartitionProduceData>) -> Self
+    {
         self.partition_data = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -443,10 +433,7 @@ impl Encodable for TopicProduceData {
         if version >= 9 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -467,19 +454,14 @@ impl Encodable for TopicProduceData {
             total_size += types::Uuid.compute_size(&self.topic_id)?;
         }
         if version >= 9 {
-            total_size += types::CompactArray(types::Struct { version })
-                .compute_size(&self.partition_data)?;
+            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.partition_data)?;
         } else {
-            total_size +=
-                types::Array(types::Struct { version }).compute_size(&self.partition_data)?;
+            total_size += types::Array(types::Struct { version }).compute_size(&self.partition_data)?;
         }
         if version >= 9 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -558,3 +540,4 @@ impl HeaderVersion for ProduceRequest {
         }
     }
 }
+

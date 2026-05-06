@@ -7,47 +7,47 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 0
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct PartitionResult {
     /// The partition index.
-    ///
+    /// 
     /// Supported API versions: 0
     pub partition: i32,
 
     /// The error code, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 0
     pub error_code: i16,
 
     /// The error message, or null if there was no error.
-    ///
+    /// 
     /// Supported API versions: 0
     pub error_message: Option<StrBytes>,
 
     /// The state epoch of the share-partition.
-    ///
+    /// 
     /// Supported API versions: 0
     pub state_epoch: i32,
 
     /// The share-partition start offset, which can be -1 if it is not yet initialized.
-    ///
+    /// 
     /// Supported API versions: 0
     pub start_offset: i64,
 
     /// The state batches for this share-partition.
-    ///
+    /// 
     /// Supported API versions: 0
     pub state_batches: Vec<StateBatch>,
 
@@ -57,66 +57,67 @@ pub struct PartitionResult {
 
 impl PartitionResult {
     /// Sets `partition` to the passed value.
-    ///
+    /// 
     /// The partition index.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_partition(mut self, value: i32) -> Self {
+    pub fn with_partition(mut self, value: i32) -> Self
+    {
         self.partition = value;
         self
-    }
-    /// Sets `error_code` to the passed value.
-    ///
+    }/// Sets `error_code` to the passed value.
+    /// 
     /// The error code, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_error_code(mut self, value: i16) -> Self {
+    pub fn with_error_code(mut self, value: i16) -> Self
+    {
         self.error_code = value;
         self
-    }
-    /// Sets `error_message` to the passed value.
-    ///
+    }/// Sets `error_message` to the passed value.
+    /// 
     /// The error message, or null if there was no error.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_error_message(mut self, value: Option<StrBytes>) -> Self {
+    pub fn with_error_message(mut self, value: Option<StrBytes>) -> Self
+    {
         self.error_message = value;
         self
-    }
-    /// Sets `state_epoch` to the passed value.
-    ///
+    }/// Sets `state_epoch` to the passed value.
+    /// 
     /// The state epoch of the share-partition.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_state_epoch(mut self, value: i32) -> Self {
+    pub fn with_state_epoch(mut self, value: i32) -> Self
+    {
         self.state_epoch = value;
         self
-    }
-    /// Sets `start_offset` to the passed value.
-    ///
+    }/// Sets `start_offset` to the passed value.
+    /// 
     /// The share-partition start offset, which can be -1 if it is not yet initialized.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_start_offset(mut self, value: i64) -> Self {
+    pub fn with_start_offset(mut self, value: i64) -> Self
+    {
         self.start_offset = value;
         self
-    }
-    /// Sets `state_batches` to the passed value.
-    ///
+    }/// Sets `state_batches` to the passed value.
+    /// 
     /// The state batches for this share-partition.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_state_batches(mut self, value: Vec<StateBatch>) -> Self {
+    pub fn with_state_batches(mut self, value: Vec<StateBatch>) -> Self
+    {
         self.state_batches = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -136,10 +137,7 @@ impl Encodable for PartitionResult {
         types::CompactArray(types::Struct { version }).encode(buf, &self.state_batches)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -153,14 +151,10 @@ impl Encodable for PartitionResult {
         total_size += types::CompactString.compute_size(&self.error_message)?;
         total_size += types::Int32.compute_size(&self.state_epoch)?;
         total_size += types::Int64.compute_size(&self.start_offset)?;
-        total_size +=
-            types::CompactArray(types::Struct { version }).compute_size(&self.state_batches)?;
+        total_size += types::CompactArray(types::Struct { version }).compute_size(&self.state_batches)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -225,7 +219,7 @@ impl Message for PartitionResult {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ReadShareGroupStateResponse {
     /// The read results.
-    ///
+    /// 
     /// Supported API versions: 0
     pub results: Vec<ReadStateResult>,
 
@@ -235,21 +229,22 @@ pub struct ReadShareGroupStateResponse {
 
 impl ReadShareGroupStateResponse {
     /// Sets `results` to the passed value.
-    ///
+    /// 
     /// The read results.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_results(mut self, value: Vec<ReadStateResult>) -> Self {
+    pub fn with_results(mut self, value: Vec<ReadStateResult>) -> Self
+    {
         self.results = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -264,10 +259,7 @@ impl Encodable for ReadShareGroupStateResponse {
         types::CompactArray(types::Struct { version }).encode(buf, &self.results)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -279,10 +271,7 @@ impl Encodable for ReadShareGroupStateResponse {
         total_size += types::CompactArray(types::Struct { version }).compute_size(&self.results)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -332,12 +321,12 @@ impl Message for ReadShareGroupStateResponse {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ReadStateResult {
     /// The topic identifier.
-    ///
+    /// 
     /// Supported API versions: 0
     pub topic_id: Uuid,
 
     /// The results for the partitions.
-    ///
+    /// 
     /// Supported API versions: 0
     pub partitions: Vec<PartitionResult>,
 
@@ -347,30 +336,31 @@ pub struct ReadStateResult {
 
 impl ReadStateResult {
     /// Sets `topic_id` to the passed value.
-    ///
+    /// 
     /// The topic identifier.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_topic_id(mut self, value: Uuid) -> Self {
+    pub fn with_topic_id(mut self, value: Uuid) -> Self
+    {
         self.topic_id = value;
         self
-    }
-    /// Sets `partitions` to the passed value.
-    ///
+    }/// Sets `partitions` to the passed value.
+    /// 
     /// The results for the partitions.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_partitions(mut self, value: Vec<PartitionResult>) -> Self {
+    pub fn with_partitions(mut self, value: Vec<PartitionResult>) -> Self
+    {
         self.partitions = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -386,10 +376,7 @@ impl Encodable for ReadStateResult {
         types::CompactArray(types::Struct { version }).encode(buf, &self.partitions)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -399,14 +386,10 @@ impl Encodable for ReadStateResult {
     fn compute_size(&self, version: i16) -> Result<usize> {
         let mut total_size = 0;
         total_size += types::Uuid.compute_size(&self.topic_id)?;
-        total_size +=
-            types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
+        total_size += types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -459,22 +442,22 @@ impl Message for ReadStateResult {
 #[derive(Debug, Clone, PartialEq)]
 pub struct StateBatch {
     /// The first offset of this state batch.
-    ///
+    /// 
     /// Supported API versions: 0
     pub first_offset: i64,
 
     /// The last offset of this state batch.
-    ///
+    /// 
     /// Supported API versions: 0
     pub last_offset: i64,
 
     /// The delivery state - 0:Available,2:Acked,4:Archived.
-    ///
+    /// 
     /// Supported API versions: 0
     pub delivery_state: i8,
 
     /// The delivery count.
-    ///
+    /// 
     /// Supported API versions: 0
     pub delivery_count: i16,
 
@@ -484,48 +467,49 @@ pub struct StateBatch {
 
 impl StateBatch {
     /// Sets `first_offset` to the passed value.
-    ///
+    /// 
     /// The first offset of this state batch.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_first_offset(mut self, value: i64) -> Self {
+    pub fn with_first_offset(mut self, value: i64) -> Self
+    {
         self.first_offset = value;
         self
-    }
-    /// Sets `last_offset` to the passed value.
-    ///
+    }/// Sets `last_offset` to the passed value.
+    /// 
     /// The last offset of this state batch.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_last_offset(mut self, value: i64) -> Self {
+    pub fn with_last_offset(mut self, value: i64) -> Self
+    {
         self.last_offset = value;
         self
-    }
-    /// Sets `delivery_state` to the passed value.
-    ///
+    }/// Sets `delivery_state` to the passed value.
+    /// 
     /// The delivery state - 0:Available,2:Acked,4:Archived.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_delivery_state(mut self, value: i8) -> Self {
+    pub fn with_delivery_state(mut self, value: i8) -> Self
+    {
         self.delivery_state = value;
         self
-    }
-    /// Sets `delivery_count` to the passed value.
-    ///
+    }/// Sets `delivery_count` to the passed value.
+    /// 
     /// The delivery count.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_delivery_count(mut self, value: i16) -> Self {
+    pub fn with_delivery_count(mut self, value: i16) -> Self
+    {
         self.delivery_count = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -543,10 +527,7 @@ impl Encodable for StateBatch {
         types::Int16.encode(buf, &self.delivery_count)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -561,10 +542,7 @@ impl Encodable for StateBatch {
         total_size += types::Int16.compute_size(&self.delivery_count)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -623,3 +601,4 @@ impl HeaderVersion for ReadShareGroupStateResponse {
         1
     }
 }
+

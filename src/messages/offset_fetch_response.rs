@@ -7,37 +7,37 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 1-10
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct OffsetFetchResponse {
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    ///
+    /// 
     /// Supported API versions: 3-10
     pub throttle_time_ms: i32,
 
     /// The responses per topic.
-    ///
+    /// 
     /// Supported API versions: 1-7
     pub topics: Vec<OffsetFetchResponseTopic>,
 
     /// The top-level error code, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 2-7
     pub error_code: i16,
 
     /// The responses per group id.
-    ///
+    /// 
     /// Supported API versions: 8-10
     pub groups: Vec<OffsetFetchResponseGroup>,
 
@@ -47,48 +47,49 @@ pub struct OffsetFetchResponse {
 
 impl OffsetFetchResponse {
     /// Sets `throttle_time_ms` to the passed value.
-    ///
+    /// 
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    ///
+    /// 
     /// Supported API versions: 3-10
-    pub fn with_throttle_time_ms(mut self, value: i32) -> Self {
+    pub fn with_throttle_time_ms(mut self, value: i32) -> Self
+    {
         self.throttle_time_ms = value;
         self
-    }
-    /// Sets `topics` to the passed value.
-    ///
+    }/// Sets `topics` to the passed value.
+    /// 
     /// The responses per topic.
-    ///
+    /// 
     /// Supported API versions: 1-7
-    pub fn with_topics(mut self, value: Vec<OffsetFetchResponseTopic>) -> Self {
+    pub fn with_topics(mut self, value: Vec<OffsetFetchResponseTopic>) -> Self
+    {
         self.topics = value;
         self
-    }
-    /// Sets `error_code` to the passed value.
-    ///
+    }/// Sets `error_code` to the passed value.
+    /// 
     /// The top-level error code, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 2-7
-    pub fn with_error_code(mut self, value: i16) -> Self {
+    pub fn with_error_code(mut self, value: i16) -> Self
+    {
         self.error_code = value;
         self
-    }
-    /// Sets `groups` to the passed value.
-    ///
+    }/// Sets `groups` to the passed value.
+    /// 
     /// The responses per group id.
-    ///
+    /// 
     /// Supported API versions: 8-10
-    pub fn with_groups(mut self, value: Vec<OffsetFetchResponseGroup>) -> Self {
+    pub fn with_groups(mut self, value: Vec<OffsetFetchResponseGroup>) -> Self
+    {
         self.groups = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -127,10 +128,7 @@ impl Encodable for OffsetFetchResponse {
         if version >= 6 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -145,8 +143,7 @@ impl Encodable for OffsetFetchResponse {
         }
         if version <= 7 {
             if version >= 6 {
-                total_size +=
-                    types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
+                total_size += types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
             } else {
                 total_size += types::Array(types::Struct { version }).compute_size(&self.topics)?;
             }
@@ -159,8 +156,7 @@ impl Encodable for OffsetFetchResponse {
             total_size += types::Int16.compute_size(&self.error_code)?;
         }
         if version >= 8 {
-            total_size +=
-                types::CompactArray(types::Struct { version }).compute_size(&self.groups)?;
+            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.groups)?;
         } else {
             if !self.groups.is_empty() {
                 bail!("A field is set that is not available on the selected protocol version");
@@ -169,10 +165,7 @@ impl Encodable for OffsetFetchResponse {
         if version >= 6 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -254,17 +247,17 @@ impl Message for OffsetFetchResponse {
 #[derive(Debug, Clone, PartialEq)]
 pub struct OffsetFetchResponseGroup {
     /// The group ID.
-    ///
+    /// 
     /// Supported API versions: 8-10
     pub group_id: super::GroupId,
 
     /// The responses per topic.
-    ///
+    /// 
     /// Supported API versions: 8-10
     pub topics: Vec<OffsetFetchResponseTopics>,
 
     /// The group-level error code, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 8-10
     pub error_code: i16,
 
@@ -274,39 +267,40 @@ pub struct OffsetFetchResponseGroup {
 
 impl OffsetFetchResponseGroup {
     /// Sets `group_id` to the passed value.
-    ///
+    /// 
     /// The group ID.
-    ///
+    /// 
     /// Supported API versions: 8-10
-    pub fn with_group_id(mut self, value: super::GroupId) -> Self {
+    pub fn with_group_id(mut self, value: super::GroupId) -> Self
+    {
         self.group_id = value;
         self
-    }
-    /// Sets `topics` to the passed value.
-    ///
+    }/// Sets `topics` to the passed value.
+    /// 
     /// The responses per topic.
-    ///
+    /// 
     /// Supported API versions: 8-10
-    pub fn with_topics(mut self, value: Vec<OffsetFetchResponseTopics>) -> Self {
+    pub fn with_topics(mut self, value: Vec<OffsetFetchResponseTopics>) -> Self
+    {
         self.topics = value;
         self
-    }
-    /// Sets `error_code` to the passed value.
-    ///
+    }/// Sets `error_code` to the passed value.
+    /// 
     /// The group-level error code, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 8-10
-    pub fn with_error_code(mut self, value: i16) -> Self {
+    pub fn with_error_code(mut self, value: i16) -> Self
+    {
         self.error_code = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -342,10 +336,7 @@ impl Encodable for OffsetFetchResponseGroup {
         if version >= 6 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -363,8 +354,7 @@ impl Encodable for OffsetFetchResponseGroup {
             }
         }
         if version >= 8 {
-            total_size +=
-                types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
+            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
         } else {
             if !self.topics.is_empty() {
                 bail!("A field is set that is not available on the selected protocol version");
@@ -380,10 +370,7 @@ impl Encodable for OffsetFetchResponseGroup {
         if version >= 6 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -454,27 +441,27 @@ impl Message for OffsetFetchResponseGroup {
 #[derive(Debug, Clone, PartialEq)]
 pub struct OffsetFetchResponsePartition {
     /// The partition index.
-    ///
+    /// 
     /// Supported API versions: 1-7
     pub partition_index: i32,
 
     /// The committed message offset.
-    ///
+    /// 
     /// Supported API versions: 1-7
     pub committed_offset: i64,
 
     /// The leader epoch.
-    ///
+    /// 
     /// Supported API versions: 5-7
     pub committed_leader_epoch: i32,
 
     /// The partition metadata.
-    ///
+    /// 
     /// Supported API versions: 1-7
     pub metadata: Option<StrBytes>,
 
     /// The error code, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 1-7
     pub error_code: i16,
 
@@ -484,57 +471,58 @@ pub struct OffsetFetchResponsePartition {
 
 impl OffsetFetchResponsePartition {
     /// Sets `partition_index` to the passed value.
-    ///
+    /// 
     /// The partition index.
-    ///
+    /// 
     /// Supported API versions: 1-7
-    pub fn with_partition_index(mut self, value: i32) -> Self {
+    pub fn with_partition_index(mut self, value: i32) -> Self
+    {
         self.partition_index = value;
         self
-    }
-    /// Sets `committed_offset` to the passed value.
-    ///
+    }/// Sets `committed_offset` to the passed value.
+    /// 
     /// The committed message offset.
-    ///
+    /// 
     /// Supported API versions: 1-7
-    pub fn with_committed_offset(mut self, value: i64) -> Self {
+    pub fn with_committed_offset(mut self, value: i64) -> Self
+    {
         self.committed_offset = value;
         self
-    }
-    /// Sets `committed_leader_epoch` to the passed value.
-    ///
+    }/// Sets `committed_leader_epoch` to the passed value.
+    /// 
     /// The leader epoch.
-    ///
+    /// 
     /// Supported API versions: 5-7
-    pub fn with_committed_leader_epoch(mut self, value: i32) -> Self {
+    pub fn with_committed_leader_epoch(mut self, value: i32) -> Self
+    {
         self.committed_leader_epoch = value;
         self
-    }
-    /// Sets `metadata` to the passed value.
-    ///
+    }/// Sets `metadata` to the passed value.
+    /// 
     /// The partition metadata.
-    ///
+    /// 
     /// Supported API versions: 1-7
-    pub fn with_metadata(mut self, value: Option<StrBytes>) -> Self {
+    pub fn with_metadata(mut self, value: Option<StrBytes>) -> Self
+    {
         self.metadata = value;
         self
-    }
-    /// Sets `error_code` to the passed value.
-    ///
+    }/// Sets `error_code` to the passed value.
+    /// 
     /// The error code, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 1-7
-    pub fn with_error_code(mut self, value: i16) -> Self {
+    pub fn with_error_code(mut self, value: i16) -> Self
+    {
         self.error_code = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -570,12 +558,7 @@ impl Encodable for OffsetFetchResponsePartition {
                 types::String.encode(buf, &self.metadata)?;
             }
         } else {
-            if !self
-                .metadata
-                .as_ref()
-                .map(|x| x.is_empty())
-                .unwrap_or_default()
-            {
+            if !self.metadata.as_ref().map(|x| x.is_empty()).unwrap_or_default() {
                 bail!("A field is set that is not available on the selected protocol version");
             }
         }
@@ -589,10 +572,7 @@ impl Encodable for OffsetFetchResponsePartition {
         if version >= 6 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -626,12 +606,7 @@ impl Encodable for OffsetFetchResponsePartition {
                 total_size += types::String.compute_size(&self.metadata)?;
             }
         } else {
-            if !self
-                .metadata
-                .as_ref()
-                .map(|x| x.is_empty())
-                .unwrap_or_default()
-            {
+            if !self.metadata.as_ref().map(|x| x.is_empty()).unwrap_or_default() {
                 bail!("A field is set that is not available on the selected protocol version");
             }
         }
@@ -645,10 +620,7 @@ impl Encodable for OffsetFetchResponsePartition {
         if version >= 6 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -737,27 +709,27 @@ impl Message for OffsetFetchResponsePartition {
 #[derive(Debug, Clone, PartialEq)]
 pub struct OffsetFetchResponsePartitions {
     /// The partition index.
-    ///
+    /// 
     /// Supported API versions: 8-10
     pub partition_index: i32,
 
     /// The committed message offset.
-    ///
+    /// 
     /// Supported API versions: 8-10
     pub committed_offset: i64,
 
     /// The leader epoch.
-    ///
+    /// 
     /// Supported API versions: 8-10
     pub committed_leader_epoch: i32,
 
     /// The partition metadata.
-    ///
+    /// 
     /// Supported API versions: 8-10
     pub metadata: Option<StrBytes>,
 
     /// The partition-level error code, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 8-10
     pub error_code: i16,
 
@@ -767,57 +739,58 @@ pub struct OffsetFetchResponsePartitions {
 
 impl OffsetFetchResponsePartitions {
     /// Sets `partition_index` to the passed value.
-    ///
+    /// 
     /// The partition index.
-    ///
+    /// 
     /// Supported API versions: 8-10
-    pub fn with_partition_index(mut self, value: i32) -> Self {
+    pub fn with_partition_index(mut self, value: i32) -> Self
+    {
         self.partition_index = value;
         self
-    }
-    /// Sets `committed_offset` to the passed value.
-    ///
+    }/// Sets `committed_offset` to the passed value.
+    /// 
     /// The committed message offset.
-    ///
+    /// 
     /// Supported API versions: 8-10
-    pub fn with_committed_offset(mut self, value: i64) -> Self {
+    pub fn with_committed_offset(mut self, value: i64) -> Self
+    {
         self.committed_offset = value;
         self
-    }
-    /// Sets `committed_leader_epoch` to the passed value.
-    ///
+    }/// Sets `committed_leader_epoch` to the passed value.
+    /// 
     /// The leader epoch.
-    ///
+    /// 
     /// Supported API versions: 8-10
-    pub fn with_committed_leader_epoch(mut self, value: i32) -> Self {
+    pub fn with_committed_leader_epoch(mut self, value: i32) -> Self
+    {
         self.committed_leader_epoch = value;
         self
-    }
-    /// Sets `metadata` to the passed value.
-    ///
+    }/// Sets `metadata` to the passed value.
+    /// 
     /// The partition metadata.
-    ///
+    /// 
     /// Supported API versions: 8-10
-    pub fn with_metadata(mut self, value: Option<StrBytes>) -> Self {
+    pub fn with_metadata(mut self, value: Option<StrBytes>) -> Self
+    {
         self.metadata = value;
         self
-    }
-    /// Sets `error_code` to the passed value.
-    ///
+    }/// Sets `error_code` to the passed value.
+    /// 
     /// The partition-level error code, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 8-10
-    pub fn with_error_code(mut self, value: i16) -> Self {
+    pub fn with_error_code(mut self, value: i16) -> Self
+    {
         self.error_code = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -849,12 +822,7 @@ impl Encodable for OffsetFetchResponsePartitions {
         if version >= 8 {
             types::CompactString.encode(buf, &self.metadata)?;
         } else {
-            if !self
-                .metadata
-                .as_ref()
-                .map(|x| x.is_empty())
-                .unwrap_or_default()
-            {
+            if !self.metadata.as_ref().map(|x| x.is_empty()).unwrap_or_default() {
                 bail!("A field is set that is not available on the selected protocol version");
             }
         }
@@ -868,10 +836,7 @@ impl Encodable for OffsetFetchResponsePartitions {
         if version >= 6 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -901,12 +866,7 @@ impl Encodable for OffsetFetchResponsePartitions {
         if version >= 8 {
             total_size += types::CompactString.compute_size(&self.metadata)?;
         } else {
-            if !self
-                .metadata
-                .as_ref()
-                .map(|x| x.is_empty())
-                .unwrap_or_default()
-            {
+            if !self.metadata.as_ref().map(|x| x.is_empty()).unwrap_or_default() {
                 bail!("A field is set that is not available on the selected protocol version");
             }
         }
@@ -920,10 +880,7 @@ impl Encodable for OffsetFetchResponsePartitions {
         if version >= 6 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -1008,12 +965,12 @@ impl Message for OffsetFetchResponsePartitions {
 #[derive(Debug, Clone, PartialEq)]
 pub struct OffsetFetchResponseTopic {
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 1-7
     pub name: super::TopicName,
 
     /// The responses per partition.
-    ///
+    /// 
     /// Supported API versions: 1-7
     pub partitions: Vec<OffsetFetchResponsePartition>,
 
@@ -1023,30 +980,31 @@ pub struct OffsetFetchResponseTopic {
 
 impl OffsetFetchResponseTopic {
     /// Sets `name` to the passed value.
-    ///
+    /// 
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 1-7
-    pub fn with_name(mut self, value: super::TopicName) -> Self {
+    pub fn with_name(mut self, value: super::TopicName) -> Self
+    {
         self.name = value;
         self
-    }
-    /// Sets `partitions` to the passed value.
-    ///
+    }/// Sets `partitions` to the passed value.
+    /// 
     /// The responses per partition.
-    ///
+    /// 
     /// Supported API versions: 1-7
-    pub fn with_partitions(mut self, value: Vec<OffsetFetchResponsePartition>) -> Self {
+    pub fn with_partitions(mut self, value: Vec<OffsetFetchResponsePartition>) -> Self
+    {
         self.partitions = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -1083,10 +1041,7 @@ impl Encodable for OffsetFetchResponseTopic {
         if version >= 6 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -1109,11 +1064,9 @@ impl Encodable for OffsetFetchResponseTopic {
         }
         if version <= 7 {
             if version >= 6 {
-                total_size += types::CompactArray(types::Struct { version })
-                    .compute_size(&self.partitions)?;
+                total_size += types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
             } else {
-                total_size +=
-                    types::Array(types::Struct { version }).compute_size(&self.partitions)?;
+                total_size += types::Array(types::Struct { version }).compute_size(&self.partitions)?;
             }
         } else {
             if !self.partitions.is_empty() {
@@ -1123,10 +1076,7 @@ impl Encodable for OffsetFetchResponseTopic {
         if version >= 6 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -1198,17 +1148,17 @@ impl Message for OffsetFetchResponseTopic {
 #[derive(Debug, Clone, PartialEq)]
 pub struct OffsetFetchResponseTopics {
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 8-9
     pub name: super::TopicName,
 
     /// The topic ID.
-    ///
+    /// 
     /// Supported API versions: 10
     pub topic_id: Uuid,
 
     /// The responses per partition.
-    ///
+    /// 
     /// Supported API versions: 8-10
     pub partitions: Vec<OffsetFetchResponsePartitions>,
 
@@ -1218,39 +1168,40 @@ pub struct OffsetFetchResponseTopics {
 
 impl OffsetFetchResponseTopics {
     /// Sets `name` to the passed value.
-    ///
+    /// 
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 8-9
-    pub fn with_name(mut self, value: super::TopicName) -> Self {
+    pub fn with_name(mut self, value: super::TopicName) -> Self
+    {
         self.name = value;
         self
-    }
-    /// Sets `topic_id` to the passed value.
-    ///
+    }/// Sets `topic_id` to the passed value.
+    /// 
     /// The topic ID.
-    ///
+    /// 
     /// Supported API versions: 10
-    pub fn with_topic_id(mut self, value: Uuid) -> Self {
+    pub fn with_topic_id(mut self, value: Uuid) -> Self
+    {
         self.topic_id = value;
         self
-    }
-    /// Sets `partitions` to the passed value.
-    ///
+    }/// Sets `partitions` to the passed value.
+    /// 
     /// The responses per partition.
-    ///
+    /// 
     /// Supported API versions: 8-10
-    pub fn with_partitions(mut self, value: Vec<OffsetFetchResponsePartitions>) -> Self {
+    pub fn with_partitions(mut self, value: Vec<OffsetFetchResponsePartitions>) -> Self
+    {
         self.partitions = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -1278,10 +1229,7 @@ impl Encodable for OffsetFetchResponseTopics {
         if version >= 6 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -1298,8 +1246,7 @@ impl Encodable for OffsetFetchResponseTopics {
             total_size += types::Uuid.compute_size(&self.topic_id)?;
         }
         if version >= 8 {
-            total_size +=
-                types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
+            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
         } else {
             if !self.partitions.is_empty() {
                 bail!("A field is set that is not available on the selected protocol version");
@@ -1308,10 +1255,7 @@ impl Encodable for OffsetFetchResponseTopics {
         if version >= 6 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -1386,3 +1330,4 @@ impl HeaderVersion for OffsetFetchResponse {
         }
     }
 }
+

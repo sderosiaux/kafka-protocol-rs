@@ -7,42 +7,42 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 2-7
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct CreatableTopicConfigs {
     /// The configuration name.
-    ///
+    /// 
     /// Supported API versions: 5-7
     pub name: StrBytes,
 
     /// The configuration value.
-    ///
+    /// 
     /// Supported API versions: 5-7
     pub value: Option<StrBytes>,
 
     /// True if the configuration is read-only.
-    ///
+    /// 
     /// Supported API versions: 5-7
     pub read_only: bool,
 
     /// The configuration source.
-    ///
+    /// 
     /// Supported API versions: 5-7
     pub config_source: i8,
 
     /// True if this configuration is sensitive.
-    ///
+    /// 
     /// Supported API versions: 5-7
     pub is_sensitive: bool,
 
@@ -52,57 +52,58 @@ pub struct CreatableTopicConfigs {
 
 impl CreatableTopicConfigs {
     /// Sets `name` to the passed value.
-    ///
+    /// 
     /// The configuration name.
-    ///
+    /// 
     /// Supported API versions: 5-7
-    pub fn with_name(mut self, value: StrBytes) -> Self {
+    pub fn with_name(mut self, value: StrBytes) -> Self
+    {
         self.name = value;
         self
-    }
-    /// Sets `value` to the passed value.
-    ///
+    }/// Sets `value` to the passed value.
+    /// 
     /// The configuration value.
-    ///
+    /// 
     /// Supported API versions: 5-7
-    pub fn with_value(mut self, value: Option<StrBytes>) -> Self {
+    pub fn with_value(mut self, value: Option<StrBytes>) -> Self
+    {
         self.value = value;
         self
-    }
-    /// Sets `read_only` to the passed value.
-    ///
+    }/// Sets `read_only` to the passed value.
+    /// 
     /// True if the configuration is read-only.
-    ///
+    /// 
     /// Supported API versions: 5-7
-    pub fn with_read_only(mut self, value: bool) -> Self {
+    pub fn with_read_only(mut self, value: bool) -> Self
+    {
         self.read_only = value;
         self
-    }
-    /// Sets `config_source` to the passed value.
-    ///
+    }/// Sets `config_source` to the passed value.
+    /// 
     /// The configuration source.
-    ///
+    /// 
     /// Supported API versions: 5-7
-    pub fn with_config_source(mut self, value: i8) -> Self {
+    pub fn with_config_source(mut self, value: i8) -> Self
+    {
         self.config_source = value;
         self
-    }
-    /// Sets `is_sensitive` to the passed value.
-    ///
+    }/// Sets `is_sensitive` to the passed value.
+    /// 
     /// True if this configuration is sensitive.
-    ///
+    /// 
     /// Supported API versions: 5-7
-    pub fn with_is_sensitive(mut self, value: bool) -> Self {
+    pub fn with_is_sensitive(mut self, value: bool) -> Self
+    {
         self.is_sensitive = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -124,12 +125,7 @@ impl Encodable for CreatableTopicConfigs {
         if version >= 5 {
             types::CompactString.encode(buf, &self.value)?;
         } else {
-            if !self
-                .value
-                .as_ref()
-                .map(|x| x.is_empty())
-                .unwrap_or_default()
-            {
+            if !self.value.as_ref().map(|x| x.is_empty()).unwrap_or_default() {
                 bail!("A field is set that is not available on the selected protocol version");
             }
         }
@@ -153,10 +149,7 @@ impl Encodable for CreatableTopicConfigs {
         if version >= 5 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -176,12 +169,7 @@ impl Encodable for CreatableTopicConfigs {
         if version >= 5 {
             total_size += types::CompactString.compute_size(&self.value)?;
         } else {
-            if !self
-                .value
-                .as_ref()
-                .map(|x| x.is_empty())
-                .unwrap_or_default()
-            {
+            if !self.value.as_ref().map(|x| x.is_empty()).unwrap_or_default() {
                 bail!("A field is set that is not available on the selected protocol version");
             }
         }
@@ -205,10 +193,7 @@ impl Encodable for CreatableTopicConfigs {
         if version >= 5 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -293,42 +278,42 @@ impl Message for CreatableTopicConfigs {
 #[derive(Debug, Clone, PartialEq)]
 pub struct CreatableTopicResult {
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 2-7
     pub name: super::TopicName,
 
     /// The unique topic ID.
-    ///
+    /// 
     /// Supported API versions: 7
     pub topic_id: Uuid,
 
     /// The error code, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 2-7
     pub error_code: i16,
 
     /// The error message, or null if there was no error.
-    ///
+    /// 
     /// Supported API versions: 2-7
     pub error_message: Option<StrBytes>,
 
     /// Optional topic config error returned if configs are not returned in the response.
-    ///
+    /// 
     /// Supported API versions: 5-7
     pub topic_config_error_code: i16,
 
     /// Number of partitions of the topic.
-    ///
+    /// 
     /// Supported API versions: 5-7
     pub num_partitions: i32,
 
     /// Replication factor of the topic.
-    ///
+    /// 
     /// Supported API versions: 5-7
     pub replication_factor: i16,
 
     /// Configuration of the topic.
-    ///
+    /// 
     /// Supported API versions: 5-7
     pub configs: Option<Vec<CreatableTopicConfigs>>,
 
@@ -338,84 +323,85 @@ pub struct CreatableTopicResult {
 
 impl CreatableTopicResult {
     /// Sets `name` to the passed value.
-    ///
+    /// 
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 2-7
-    pub fn with_name(mut self, value: super::TopicName) -> Self {
+    pub fn with_name(mut self, value: super::TopicName) -> Self
+    {
         self.name = value;
         self
-    }
-    /// Sets `topic_id` to the passed value.
-    ///
+    }/// Sets `topic_id` to the passed value.
+    /// 
     /// The unique topic ID.
-    ///
+    /// 
     /// Supported API versions: 7
-    pub fn with_topic_id(mut self, value: Uuid) -> Self {
+    pub fn with_topic_id(mut self, value: Uuid) -> Self
+    {
         self.topic_id = value;
         self
-    }
-    /// Sets `error_code` to the passed value.
-    ///
+    }/// Sets `error_code` to the passed value.
+    /// 
     /// The error code, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 2-7
-    pub fn with_error_code(mut self, value: i16) -> Self {
+    pub fn with_error_code(mut self, value: i16) -> Self
+    {
         self.error_code = value;
         self
-    }
-    /// Sets `error_message` to the passed value.
-    ///
+    }/// Sets `error_message` to the passed value.
+    /// 
     /// The error message, or null if there was no error.
-    ///
+    /// 
     /// Supported API versions: 2-7
-    pub fn with_error_message(mut self, value: Option<StrBytes>) -> Self {
+    pub fn with_error_message(mut self, value: Option<StrBytes>) -> Self
+    {
         self.error_message = value;
         self
-    }
-    /// Sets `topic_config_error_code` to the passed value.
-    ///
+    }/// Sets `topic_config_error_code` to the passed value.
+    /// 
     /// Optional topic config error returned if configs are not returned in the response.
-    ///
+    /// 
     /// Supported API versions: 5-7
-    pub fn with_topic_config_error_code(mut self, value: i16) -> Self {
+    pub fn with_topic_config_error_code(mut self, value: i16) -> Self
+    {
         self.topic_config_error_code = value;
         self
-    }
-    /// Sets `num_partitions` to the passed value.
-    ///
+    }/// Sets `num_partitions` to the passed value.
+    /// 
     /// Number of partitions of the topic.
-    ///
+    /// 
     /// Supported API versions: 5-7
-    pub fn with_num_partitions(mut self, value: i32) -> Self {
+    pub fn with_num_partitions(mut self, value: i32) -> Self
+    {
         self.num_partitions = value;
         self
-    }
-    /// Sets `replication_factor` to the passed value.
-    ///
+    }/// Sets `replication_factor` to the passed value.
+    /// 
     /// Replication factor of the topic.
-    ///
+    /// 
     /// Supported API versions: 5-7
-    pub fn with_replication_factor(mut self, value: i16) -> Self {
+    pub fn with_replication_factor(mut self, value: i16) -> Self
+    {
         self.replication_factor = value;
         self
-    }
-    /// Sets `configs` to the passed value.
-    ///
+    }/// Sets `configs` to the passed value.
+    /// 
     /// Configuration of the topic.
-    ///
+    /// 
     /// Supported API versions: 5-7
-    pub fn with_configs(mut self, value: Option<Vec<CreatableTopicConfigs>>) -> Self {
+    pub fn with_configs(mut self, value: Option<Vec<CreatableTopicConfigs>>) -> Self
+    {
         self.configs = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -456,19 +442,13 @@ impl Encodable for CreatableTopicResult {
                 num_tagged_fields += 1;
             }
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
             if self.topic_config_error_code != 0 {
                 let computed_size = types::Int16.compute_size(&self.topic_config_error_code)?;
                 if computed_size > std::u32::MAX as usize {
-                    bail!(
-                        "Tagged field is too large to encode ({} bytes)",
-                        computed_size
-                    );
+                    bail!("Tagged field is too large to encode ({} bytes)", computed_size);
                 }
                 types::UnsignedVarInt.encode(buf, 0)?;
                 types::UnsignedVarInt.encode(buf, computed_size as u32)?;
@@ -502,8 +482,7 @@ impl Encodable for CreatableTopicResult {
             total_size += types::Int16.compute_size(&self.replication_factor)?;
         }
         if version >= 5 {
-            total_size +=
-                types::CompactArray(types::Struct { version }).compute_size(&self.configs)?;
+            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.configs)?;
         }
         if version >= 5 {
             let mut num_tagged_fields = self.unknown_tagged_fields.len();
@@ -511,19 +490,13 @@ impl Encodable for CreatableTopicResult {
                 num_tagged_fields += 1;
             }
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
             if self.topic_config_error_code != 0 {
                 let computed_size = types::Int16.compute_size(&self.topic_config_error_code)?;
                 if computed_size > std::u32::MAX as usize {
-                    bail!(
-                        "Tagged field is too large to encode ({} bytes)",
-                        computed_size
-                    );
+                    bail!("Tagged field is too large to encode ({} bytes)", computed_size);
                 }
                 total_size += types::UnsignedVarInt.compute_size(0)?;
                 total_size += types::UnsignedVarInt.compute_size(computed_size as u32)?;
@@ -583,7 +556,7 @@ impl Decodable for CreatableTopicResult {
                 match tag {
                     0 => {
                         topic_config_error_code = types::Int16.decode(buf)?;
-                    }
+                    },
                     _ => {
                         let unknown_value = buf.try_get_bytes(size as usize)?;
                         unknown_tagged_fields.insert(tag as i32, unknown_value);
@@ -631,12 +604,12 @@ impl Message for CreatableTopicResult {
 #[derive(Debug, Clone, PartialEq)]
 pub struct CreateTopicsResponse {
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    ///
+    /// 
     /// Supported API versions: 2-7
     pub throttle_time_ms: i32,
 
     /// Results for each topic we tried to create.
-    ///
+    /// 
     /// Supported API versions: 2-7
     pub topics: Vec<CreatableTopicResult>,
 
@@ -646,30 +619,31 @@ pub struct CreateTopicsResponse {
 
 impl CreateTopicsResponse {
     /// Sets `throttle_time_ms` to the passed value.
-    ///
+    /// 
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    ///
+    /// 
     /// Supported API versions: 2-7
-    pub fn with_throttle_time_ms(mut self, value: i32) -> Self {
+    pub fn with_throttle_time_ms(mut self, value: i32) -> Self
+    {
         self.throttle_time_ms = value;
         self
-    }
-    /// Sets `topics` to the passed value.
-    ///
+    }/// Sets `topics` to the passed value.
+    /// 
     /// Results for each topic we tried to create.
-    ///
+    /// 
     /// Supported API versions: 2-7
-    pub fn with_topics(mut self, value: Vec<CreatableTopicResult>) -> Self {
+    pub fn with_topics(mut self, value: Vec<CreatableTopicResult>) -> Self
+    {
         self.topics = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -690,10 +664,7 @@ impl Encodable for CreateTopicsResponse {
         if version >= 5 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -705,18 +676,14 @@ impl Encodable for CreateTopicsResponse {
         let mut total_size = 0;
         total_size += types::Int32.compute_size(&self.throttle_time_ms)?;
         if version >= 5 {
-            total_size +=
-                types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
+            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
         } else {
             total_size += types::Array(types::Struct { version }).compute_size(&self.topics)?;
         }
         if version >= 5 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -780,3 +747,4 @@ impl HeaderVersion for CreateTopicsResponse {
         }
     }
 }
+

@@ -7,29 +7,39 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
 
-/// Valid versions: 0-4
+
+/// Valid versions: 0-5
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct ApiVersionsRequest {
     /// The name of the client.
-    ///
-    /// Supported API versions: 3-4
+    /// 
+    /// Supported API versions: 3-5
     pub client_software_name: StrBytes,
 
     /// The version of the client.
-    ///
-    /// Supported API versions: 3-4
+    /// 
+    /// Supported API versions: 3-5
     pub client_software_version: StrBytes,
+
+    /// The cluster ID the client intends to connect to, if known.
+    /// 
+    /// Supported API versions: 5
+    pub cluster_id: Option<StrBytes>,
+
+    /// The node ID the client intends to connect to, if known.
+    /// 
+    /// Supported API versions: 5
+    pub node_id: i32,
 
     /// Other tagged fields
     pub unknown_tagged_fields: BTreeMap<i32, Bytes>,
@@ -37,30 +47,49 @@ pub struct ApiVersionsRequest {
 
 impl ApiVersionsRequest {
     /// Sets `client_software_name` to the passed value.
-    ///
+    /// 
     /// The name of the client.
-    ///
-    /// Supported API versions: 3-4
-    pub fn with_client_software_name(mut self, value: StrBytes) -> Self {
+    /// 
+    /// Supported API versions: 3-5
+    pub fn with_client_software_name(mut self, value: StrBytes) -> Self
+    {
         self.client_software_name = value;
         self
-    }
-    /// Sets `client_software_version` to the passed value.
-    ///
+    }/// Sets `client_software_version` to the passed value.
+    /// 
     /// The version of the client.
-    ///
-    /// Supported API versions: 3-4
-    pub fn with_client_software_version(mut self, value: StrBytes) -> Self {
+    /// 
+    /// Supported API versions: 3-5
+    pub fn with_client_software_version(mut self, value: StrBytes) -> Self
+    {
         self.client_software_version = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets `cluster_id` to the passed value.
+    /// 
+    /// The cluster ID the client intends to connect to, if known.
+    /// 
+    /// Supported API versions: 5
+    pub fn with_cluster_id(mut self, value: Option<StrBytes>) -> Self
+    {
+        self.cluster_id = value;
+        self
+    }/// Sets `node_id` to the passed value.
+    /// 
+    /// The node ID the client intends to connect to, if known.
+    /// 
+    /// Supported API versions: 5
+    pub fn with_node_id(mut self, value: i32) -> Self
+    {
+        self.node_id = value;
+        self
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -78,13 +107,16 @@ impl Encodable for ApiVersionsRequest {
         if version >= 3 {
             types::CompactString.encode(buf, &self.client_software_version)?;
         }
+        if version >= 5 {
+            types::CompactString.encode(buf, &self.cluster_id)?;
+        }
+        if version >= 5 {
+            types::Int32.encode(buf, &self.node_id)?;
+        }
         if version >= 3 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -100,13 +132,16 @@ impl Encodable for ApiVersionsRequest {
         if version >= 3 {
             total_size += types::CompactString.compute_size(&self.client_software_version)?;
         }
+        if version >= 5 {
+            total_size += types::CompactString.compute_size(&self.cluster_id)?;
+        }
+        if version >= 5 {
+            total_size += types::Int32.compute_size(&self.node_id)?;
+        }
         if version >= 3 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -132,6 +167,16 @@ impl Decodable for ApiVersionsRequest {
         } else {
             Default::default()
         };
+        let cluster_id = if version >= 5 {
+            types::CompactString.decode(buf)?
+        } else {
+            None
+        };
+        let node_id = if version >= 5 {
+            types::Int32.decode(buf)?
+        } else {
+            -1
+        };
         let mut unknown_tagged_fields = BTreeMap::new();
         if version >= 3 {
             let num_tagged_fields = types::UnsignedVarInt.decode(buf)?;
@@ -145,6 +190,8 @@ impl Decodable for ApiVersionsRequest {
         Ok(Self {
             client_software_name,
             client_software_version,
+            cluster_id,
+            node_id,
             unknown_tagged_fields,
         })
     }
@@ -155,6 +202,8 @@ impl Default for ApiVersionsRequest {
         Self {
             client_software_name: Default::default(),
             client_software_version: Default::default(),
+            cluster_id: None,
+            node_id: -1,
             unknown_tagged_fields: BTreeMap::new(),
         }
     }
@@ -174,3 +223,4 @@ impl HeaderVersion for ApiVersionsRequest {
         }
     }
 }
+

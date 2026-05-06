@@ -7,33 +7,35 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 0-1
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct SaslHandshakeRequest {
     /// The SASL mechanism chosen by the client.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub mechanism: StrBytes,
+
 }
 
 impl SaslHandshakeRequest {
     /// Sets `mechanism` to the passed value.
-    ///
+    /// 
     /// The SASL mechanism chosen by the client.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_mechanism(mut self, value: StrBytes) -> Self {
+    pub fn with_mechanism(mut self, value: StrBytes) -> Self
+    {
         self.mechanism = value;
         self
     }
@@ -64,7 +66,9 @@ impl Decodable for SaslHandshakeRequest {
             bail!("specified version not supported by this message type");
         }
         let mechanism = types::String.decode(buf)?;
-        Ok(Self { mechanism })
+        Ok(Self {
+            mechanism,
+        })
     }
 }
 
@@ -86,3 +90,4 @@ impl HeaderVersion for SaslHandshakeRequest {
         1
     }
 }
+

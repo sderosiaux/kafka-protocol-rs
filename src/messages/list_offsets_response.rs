@@ -7,43 +7,43 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
 
-/// Valid versions: 1-10
+
+/// Valid versions: 1-11
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct ListOffsetsPartitionResponse {
     /// The partition index.
-    ///
-    /// Supported API versions: 1-10
+    /// 
+    /// Supported API versions: 1-11
     pub partition_index: i32,
 
     /// The partition error code, or 0 if there was no error.
-    ///
-    /// Supported API versions: 1-10
+    /// 
+    /// Supported API versions: 1-11
     pub error_code: i16,
 
     /// The timestamp associated with the returned offset.
-    ///
-    /// Supported API versions: 1-10
+    /// 
+    /// Supported API versions: 1-11
     pub timestamp: i64,
 
     /// The returned offset.
-    ///
-    /// Supported API versions: 1-10
+    /// 
+    /// Supported API versions: 1-11
     pub offset: i64,
 
     /// The leader epoch associated with the returned offset.
-    ///
-    /// Supported API versions: 4-10
+    /// 
+    /// Supported API versions: 4-11
     pub leader_epoch: i32,
 
     /// Other tagged fields
@@ -52,57 +52,58 @@ pub struct ListOffsetsPartitionResponse {
 
 impl ListOffsetsPartitionResponse {
     /// Sets `partition_index` to the passed value.
-    ///
+    /// 
     /// The partition index.
-    ///
-    /// Supported API versions: 1-10
-    pub fn with_partition_index(mut self, value: i32) -> Self {
+    /// 
+    /// Supported API versions: 1-11
+    pub fn with_partition_index(mut self, value: i32) -> Self
+    {
         self.partition_index = value;
         self
-    }
-    /// Sets `error_code` to the passed value.
-    ///
+    }/// Sets `error_code` to the passed value.
+    /// 
     /// The partition error code, or 0 if there was no error.
-    ///
-    /// Supported API versions: 1-10
-    pub fn with_error_code(mut self, value: i16) -> Self {
+    /// 
+    /// Supported API versions: 1-11
+    pub fn with_error_code(mut self, value: i16) -> Self
+    {
         self.error_code = value;
         self
-    }
-    /// Sets `timestamp` to the passed value.
-    ///
+    }/// Sets `timestamp` to the passed value.
+    /// 
     /// The timestamp associated with the returned offset.
-    ///
-    /// Supported API versions: 1-10
-    pub fn with_timestamp(mut self, value: i64) -> Self {
+    /// 
+    /// Supported API versions: 1-11
+    pub fn with_timestamp(mut self, value: i64) -> Self
+    {
         self.timestamp = value;
         self
-    }
-    /// Sets `offset` to the passed value.
-    ///
+    }/// Sets `offset` to the passed value.
+    /// 
     /// The returned offset.
-    ///
-    /// Supported API versions: 1-10
-    pub fn with_offset(mut self, value: i64) -> Self {
+    /// 
+    /// Supported API versions: 1-11
+    pub fn with_offset(mut self, value: i64) -> Self
+    {
         self.offset = value;
         self
-    }
-    /// Sets `leader_epoch` to the passed value.
-    ///
+    }/// Sets `leader_epoch` to the passed value.
+    /// 
     /// The leader epoch associated with the returned offset.
-    ///
-    /// Supported API versions: 4-10
-    pub fn with_leader_epoch(mut self, value: i32) -> Self {
+    /// 
+    /// Supported API versions: 4-11
+    pub fn with_leader_epoch(mut self, value: i32) -> Self
+    {
         self.leader_epoch = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -111,7 +112,7 @@ impl ListOffsetsPartitionResponse {
 #[cfg(feature = "broker")]
 impl Encodable for ListOffsetsPartitionResponse {
     fn encode<B: ByteBufMut>(&self, buf: &mut B, version: i16) -> Result<()> {
-        if version < 1 || version > 10 {
+        if version < 1 || version > 11 {
             bail!("specified version not supported by this message type");
         }
         types::Int32.encode(buf, &self.partition_index)?;
@@ -128,10 +129,7 @@ impl Encodable for ListOffsetsPartitionResponse {
         if version >= 6 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -155,10 +153,7 @@ impl Encodable for ListOffsetsPartitionResponse {
         if version >= 6 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -171,7 +166,7 @@ impl Encodable for ListOffsetsPartitionResponse {
 #[cfg(feature = "client")]
 impl Decodable for ListOffsetsPartitionResponse {
     fn decode<B: ByteBuf>(buf: &mut B, version: i16) -> Result<Self> {
-        if version < 1 || version > 10 {
+        if version < 1 || version > 11 {
             bail!("specified version not supported by this message type");
         }
         let partition_index = types::Int32.decode(buf)?;
@@ -218,22 +213,22 @@ impl Default for ListOffsetsPartitionResponse {
 }
 
 impl Message for ListOffsetsPartitionResponse {
-    const VERSIONS: VersionRange = VersionRange { min: 1, max: 10 };
+    const VERSIONS: VersionRange = VersionRange { min: 1, max: 11 };
     const DEPRECATED_VERSIONS: Option<VersionRange> = None;
 }
 
-/// Valid versions: 1-10
+/// Valid versions: 1-11
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct ListOffsetsResponse {
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    ///
-    /// Supported API versions: 2-10
+    /// 
+    /// Supported API versions: 2-11
     pub throttle_time_ms: i32,
 
     /// Each topic in the response.
-    ///
-    /// Supported API versions: 1-10
+    /// 
+    /// Supported API versions: 1-11
     pub topics: Vec<ListOffsetsTopicResponse>,
 
     /// Other tagged fields
@@ -242,30 +237,31 @@ pub struct ListOffsetsResponse {
 
 impl ListOffsetsResponse {
     /// Sets `throttle_time_ms` to the passed value.
-    ///
+    /// 
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    ///
-    /// Supported API versions: 2-10
-    pub fn with_throttle_time_ms(mut self, value: i32) -> Self {
+    /// 
+    /// Supported API versions: 2-11
+    pub fn with_throttle_time_ms(mut self, value: i32) -> Self
+    {
         self.throttle_time_ms = value;
         self
-    }
-    /// Sets `topics` to the passed value.
-    ///
+    }/// Sets `topics` to the passed value.
+    /// 
     /// Each topic in the response.
-    ///
-    /// Supported API versions: 1-10
-    pub fn with_topics(mut self, value: Vec<ListOffsetsTopicResponse>) -> Self {
+    /// 
+    /// Supported API versions: 1-11
+    pub fn with_topics(mut self, value: Vec<ListOffsetsTopicResponse>) -> Self
+    {
         self.topics = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -274,7 +270,7 @@ impl ListOffsetsResponse {
 #[cfg(feature = "broker")]
 impl Encodable for ListOffsetsResponse {
     fn encode<B: ByteBufMut>(&self, buf: &mut B, version: i16) -> Result<()> {
-        if version < 1 || version > 10 {
+        if version < 1 || version > 11 {
             bail!("specified version not supported by this message type");
         }
         if version >= 2 {
@@ -288,10 +284,7 @@ impl Encodable for ListOffsetsResponse {
         if version >= 6 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -305,18 +298,14 @@ impl Encodable for ListOffsetsResponse {
             total_size += types::Int32.compute_size(&self.throttle_time_ms)?;
         }
         if version >= 6 {
-            total_size +=
-                types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
+            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
         } else {
             total_size += types::Array(types::Struct { version }).compute_size(&self.topics)?;
         }
         if version >= 6 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -329,7 +318,7 @@ impl Encodable for ListOffsetsResponse {
 #[cfg(feature = "client")]
 impl Decodable for ListOffsetsResponse {
     fn decode<B: ByteBuf>(buf: &mut B, version: i16) -> Result<Self> {
-        if version < 1 || version > 10 {
+        if version < 1 || version > 11 {
             bail!("specified version not supported by this message type");
         }
         let throttle_time_ms = if version >= 2 {
@@ -371,22 +360,22 @@ impl Default for ListOffsetsResponse {
 }
 
 impl Message for ListOffsetsResponse {
-    const VERSIONS: VersionRange = VersionRange { min: 1, max: 10 };
+    const VERSIONS: VersionRange = VersionRange { min: 1, max: 11 };
     const DEPRECATED_VERSIONS: Option<VersionRange> = None;
 }
 
-/// Valid versions: 1-10
+/// Valid versions: 1-11
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct ListOffsetsTopicResponse {
     /// The topic name.
-    ///
-    /// Supported API versions: 1-10
+    /// 
+    /// Supported API versions: 1-11
     pub name: super::TopicName,
 
     /// Each partition in the response.
-    ///
-    /// Supported API versions: 1-10
+    /// 
+    /// Supported API versions: 1-11
     pub partitions: Vec<ListOffsetsPartitionResponse>,
 
     /// Other tagged fields
@@ -395,30 +384,31 @@ pub struct ListOffsetsTopicResponse {
 
 impl ListOffsetsTopicResponse {
     /// Sets `name` to the passed value.
-    ///
+    /// 
     /// The topic name.
-    ///
-    /// Supported API versions: 1-10
-    pub fn with_name(mut self, value: super::TopicName) -> Self {
+    /// 
+    /// Supported API versions: 1-11
+    pub fn with_name(mut self, value: super::TopicName) -> Self
+    {
         self.name = value;
         self
-    }
-    /// Sets `partitions` to the passed value.
-    ///
+    }/// Sets `partitions` to the passed value.
+    /// 
     /// Each partition in the response.
-    ///
-    /// Supported API versions: 1-10
-    pub fn with_partitions(mut self, value: Vec<ListOffsetsPartitionResponse>) -> Self {
+    /// 
+    /// Supported API versions: 1-11
+    pub fn with_partitions(mut self, value: Vec<ListOffsetsPartitionResponse>) -> Self
+    {
         self.partitions = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -427,7 +417,7 @@ impl ListOffsetsTopicResponse {
 #[cfg(feature = "broker")]
 impl Encodable for ListOffsetsTopicResponse {
     fn encode<B: ByteBufMut>(&self, buf: &mut B, version: i16) -> Result<()> {
-        if version < 1 || version > 10 {
+        if version < 1 || version > 11 {
             bail!("specified version not supported by this message type");
         }
         if version >= 6 {
@@ -443,10 +433,7 @@ impl Encodable for ListOffsetsTopicResponse {
         if version >= 6 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -462,18 +449,14 @@ impl Encodable for ListOffsetsTopicResponse {
             total_size += types::String.compute_size(&self.name)?;
         }
         if version >= 6 {
-            total_size +=
-                types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
+            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
         } else {
             total_size += types::Array(types::Struct { version }).compute_size(&self.partitions)?;
         }
         if version >= 6 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -486,7 +469,7 @@ impl Encodable for ListOffsetsTopicResponse {
 #[cfg(feature = "client")]
 impl Decodable for ListOffsetsTopicResponse {
     fn decode<B: ByteBuf>(buf: &mut B, version: i16) -> Result<Self> {
-        if version < 1 || version > 10 {
+        if version < 1 || version > 11 {
             bail!("specified version not supported by this message type");
         }
         let name = if version >= 6 {
@@ -528,7 +511,7 @@ impl Default for ListOffsetsTopicResponse {
 }
 
 impl Message for ListOffsetsTopicResponse {
-    const VERSIONS: VersionRange = VersionRange { min: 1, max: 10 };
+    const VERSIONS: VersionRange = VersionRange { min: 1, max: 11 };
     const DEPRECATED_VERSIONS: Option<VersionRange> = None;
 }
 
@@ -541,3 +524,4 @@ impl HeaderVersion for ListOffsetsResponse {
         }
     }
 }
+

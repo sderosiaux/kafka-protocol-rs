@@ -7,22 +7,22 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 0-3
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct CreatePartitionsAssignment {
     /// The assigned broker IDs.
-    ///
+    /// 
     /// Supported API versions: 0-3
     pub broker_ids: Vec<super::BrokerId>,
 
@@ -32,21 +32,22 @@ pub struct CreatePartitionsAssignment {
 
 impl CreatePartitionsAssignment {
     /// Sets `broker_ids` to the passed value.
-    ///
+    /// 
     /// The assigned broker IDs.
-    ///
+    /// 
     /// Supported API versions: 0-3
-    pub fn with_broker_ids(mut self, value: Vec<super::BrokerId>) -> Self {
+    pub fn with_broker_ids(mut self, value: Vec<super::BrokerId>) -> Self
+    {
         self.broker_ids = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -66,10 +67,7 @@ impl Encodable for CreatePartitionsAssignment {
         if version >= 2 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -87,10 +85,7 @@ impl Encodable for CreatePartitionsAssignment {
         if version >= 2 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -147,17 +142,17 @@ impl Message for CreatePartitionsAssignment {
 #[derive(Debug, Clone, PartialEq)]
 pub struct CreatePartitionsRequest {
     /// Each topic that we want to create new partitions inside.
-    ///
+    /// 
     /// Supported API versions: 0-3
     pub topics: Vec<CreatePartitionsTopic>,
 
     /// The time in ms to wait for the partitions to be created.
-    ///
+    /// 
     /// Supported API versions: 0-3
     pub timeout_ms: i32,
 
     /// If true, then validate the request, but don't actually increase the number of partitions.
-    ///
+    /// 
     /// Supported API versions: 0-3
     pub validate_only: bool,
 
@@ -167,39 +162,40 @@ pub struct CreatePartitionsRequest {
 
 impl CreatePartitionsRequest {
     /// Sets `topics` to the passed value.
-    ///
+    /// 
     /// Each topic that we want to create new partitions inside.
-    ///
+    /// 
     /// Supported API versions: 0-3
-    pub fn with_topics(mut self, value: Vec<CreatePartitionsTopic>) -> Self {
+    pub fn with_topics(mut self, value: Vec<CreatePartitionsTopic>) -> Self
+    {
         self.topics = value;
         self
-    }
-    /// Sets `timeout_ms` to the passed value.
-    ///
+    }/// Sets `timeout_ms` to the passed value.
+    /// 
     /// The time in ms to wait for the partitions to be created.
-    ///
+    /// 
     /// Supported API versions: 0-3
-    pub fn with_timeout_ms(mut self, value: i32) -> Self {
+    pub fn with_timeout_ms(mut self, value: i32) -> Self
+    {
         self.timeout_ms = value;
         self
-    }
-    /// Sets `validate_only` to the passed value.
-    ///
+    }/// Sets `validate_only` to the passed value.
+    /// 
     /// If true, then validate the request, but don't actually increase the number of partitions.
-    ///
+    /// 
     /// Supported API versions: 0-3
-    pub fn with_validate_only(mut self, value: bool) -> Self {
+    pub fn with_validate_only(mut self, value: bool) -> Self
+    {
         self.validate_only = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -221,10 +217,7 @@ impl Encodable for CreatePartitionsRequest {
         if version >= 2 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -235,8 +228,7 @@ impl Encodable for CreatePartitionsRequest {
     fn compute_size(&self, version: i16) -> Result<usize> {
         let mut total_size = 0;
         if version >= 2 {
-            total_size +=
-                types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
+            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
         } else {
             total_size += types::Array(types::Struct { version }).compute_size(&self.topics)?;
         }
@@ -245,10 +237,7 @@ impl Encodable for CreatePartitionsRequest {
         if version >= 2 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -311,17 +300,17 @@ impl Message for CreatePartitionsRequest {
 #[derive(Debug, Clone, PartialEq)]
 pub struct CreatePartitionsTopic {
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 0-3
     pub name: super::TopicName,
 
     /// The new partition count.
-    ///
+    /// 
     /// Supported API versions: 0-3
     pub count: i32,
 
     /// The new partition assignments.
-    ///
+    /// 
     /// Supported API versions: 0-3
     pub assignments: Option<Vec<CreatePartitionsAssignment>>,
 
@@ -331,39 +320,40 @@ pub struct CreatePartitionsTopic {
 
 impl CreatePartitionsTopic {
     /// Sets `name` to the passed value.
-    ///
+    /// 
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 0-3
-    pub fn with_name(mut self, value: super::TopicName) -> Self {
+    pub fn with_name(mut self, value: super::TopicName) -> Self
+    {
         self.name = value;
         self
-    }
-    /// Sets `count` to the passed value.
-    ///
+    }/// Sets `count` to the passed value.
+    /// 
     /// The new partition count.
-    ///
+    /// 
     /// Supported API versions: 0-3
-    pub fn with_count(mut self, value: i32) -> Self {
+    pub fn with_count(mut self, value: i32) -> Self
+    {
         self.count = value;
         self
-    }
-    /// Sets `assignments` to the passed value.
-    ///
+    }/// Sets `assignments` to the passed value.
+    /// 
     /// The new partition assignments.
-    ///
+    /// 
     /// Supported API versions: 0-3
-    pub fn with_assignments(mut self, value: Option<Vec<CreatePartitionsAssignment>>) -> Self {
+    pub fn with_assignments(mut self, value: Option<Vec<CreatePartitionsAssignment>>) -> Self
+    {
         self.assignments = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -389,10 +379,7 @@ impl Encodable for CreatePartitionsTopic {
         if version >= 2 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -409,19 +396,14 @@ impl Encodable for CreatePartitionsTopic {
         }
         total_size += types::Int32.compute_size(&self.count)?;
         if version >= 2 {
-            total_size +=
-                types::CompactArray(types::Struct { version }).compute_size(&self.assignments)?;
+            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.assignments)?;
         } else {
-            total_size +=
-                types::Array(types::Struct { version }).compute_size(&self.assignments)?;
+            total_size += types::Array(types::Struct { version }).compute_size(&self.assignments)?;
         }
         if version >= 2 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -492,3 +474,4 @@ impl HeaderVersion for CreatePartitionsRequest {
         }
     }
 }
+

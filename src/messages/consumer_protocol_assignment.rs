@@ -7,47 +7,49 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 0-3
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct ConsumerProtocolAssignment {
     /// The list of topics and partitions assigned to this consumer.
-    ///
+    /// 
     /// Supported API versions: 0-3
     pub assigned_partitions: Vec<TopicPartition>,
 
     /// User data.
-    ///
+    /// 
     /// Supported API versions: 0-3
     pub user_data: Option<Bytes>,
+
 }
 
 impl ConsumerProtocolAssignment {
     /// Sets `assigned_partitions` to the passed value.
-    ///
+    /// 
     /// The list of topics and partitions assigned to this consumer.
-    ///
+    /// 
     /// Supported API versions: 0-3
-    pub fn with_assigned_partitions(mut self, value: Vec<TopicPartition>) -> Self {
+    pub fn with_assigned_partitions(mut self, value: Vec<TopicPartition>) -> Self
+    {
         self.assigned_partitions = value;
         self
-    }
-    /// Sets `user_data` to the passed value.
-    ///
+    }/// Sets `user_data` to the passed value.
+    /// 
     /// User data.
-    ///
+    /// 
     /// Supported API versions: 0-3
-    pub fn with_user_data(mut self, value: Option<Bytes>) -> Self {
+    pub fn with_user_data(mut self, value: Option<Bytes>) -> Self
+    {
         self.user_data = value;
         self
     }
@@ -65,8 +67,7 @@ impl Encodable for ConsumerProtocolAssignment {
     }
     fn compute_size(&self, version: i16) -> Result<usize> {
         let mut total_size = 0;
-        total_size +=
-            types::Array(types::Struct { version }).compute_size(&self.assigned_partitions)?;
+        total_size += types::Array(types::Struct { version }).compute_size(&self.assigned_partitions)?;
         total_size += types::Bytes.compute_size(&self.user_data)?;
 
         Ok(total_size)
@@ -106,32 +107,34 @@ impl Message for ConsumerProtocolAssignment {
 #[derive(Debug, Clone, PartialEq)]
 pub struct TopicPartition {
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 0-3
     pub topic: super::TopicName,
 
     /// The list of partitions assigned to this consumer.
-    ///
+    /// 
     /// Supported API versions: 0-3
     pub partitions: Vec<i32>,
+
 }
 
 impl TopicPartition {
     /// Sets `topic` to the passed value.
-    ///
+    /// 
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 0-3
-    pub fn with_topic(mut self, value: super::TopicName) -> Self {
+    pub fn with_topic(mut self, value: super::TopicName) -> Self
+    {
         self.topic = value;
         self
-    }
-    /// Sets `partitions` to the passed value.
-    ///
+    }/// Sets `partitions` to the passed value.
+    /// 
     /// The list of partitions assigned to this consumer.
-    ///
+    /// 
     /// Supported API versions: 0-3
-    pub fn with_partitions(mut self, value: Vec<i32>) -> Self {
+    pub fn with_partitions(mut self, value: Vec<i32>) -> Self
+    {
         self.partitions = value;
         self
     }
@@ -163,7 +166,10 @@ impl Decodable for TopicPartition {
         }
         let topic = types::String.decode(buf)?;
         let partitions = types::Array(types::Int32).decode(buf)?;
-        Ok(Self { topic, partitions })
+        Ok(Self {
+            topic,
+            partitions,
+        })
     }
 }
 
@@ -180,3 +186,4 @@ impl Message for TopicPartition {
     const VERSIONS: VersionRange = VersionRange { min: 0, max: 3 };
     const DEPRECATED_VERSIONS: Option<VersionRange> = None;
 }
+

@@ -7,49 +7,54 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
 
-/// Valid versions: 0
+
+/// Valid versions: 0-1
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct PartitionResult {
     /// The partition index.
-    ///
-    /// Supported API versions: 0
+    /// 
+    /// Supported API versions: 0-1
     pub partition: i32,
 
     /// The error code, or 0 if there was no error.
-    ///
-    /// Supported API versions: 0
+    /// 
+    /// Supported API versions: 0-1
     pub error_code: i16,
 
     /// The error message, or null if there was no error.
-    ///
-    /// Supported API versions: 0
+    /// 
+    /// Supported API versions: 0-1
     pub error_message: Option<StrBytes>,
 
     /// The state epoch of the share-partition.
-    ///
-    /// Supported API versions: 0
+    /// 
+    /// Supported API versions: 0-1
     pub state_epoch: i32,
 
     /// The leader epoch of the share-partition.
-    ///
-    /// Supported API versions: 0
+    /// 
+    /// Supported API versions: 0-1
     pub leader_epoch: i32,
 
     /// The share-partition start offset.
-    ///
-    /// Supported API versions: 0
+    /// 
+    /// Supported API versions: 0-1
     pub start_offset: i64,
+
+    /// The number of offsets greater than or equal to share-partition start offset for which delivery has been completed.
+    /// 
+    /// Supported API versions: 1
+    pub delivery_complete_count: i32,
 
     /// Other tagged fields
     pub unknown_tagged_fields: BTreeMap<i32, Bytes>,
@@ -57,66 +62,76 @@ pub struct PartitionResult {
 
 impl PartitionResult {
     /// Sets `partition` to the passed value.
-    ///
+    /// 
     /// The partition index.
-    ///
-    /// Supported API versions: 0
-    pub fn with_partition(mut self, value: i32) -> Self {
+    /// 
+    /// Supported API versions: 0-1
+    pub fn with_partition(mut self, value: i32) -> Self
+    {
         self.partition = value;
         self
-    }
-    /// Sets `error_code` to the passed value.
-    ///
+    }/// Sets `error_code` to the passed value.
+    /// 
     /// The error code, or 0 if there was no error.
-    ///
-    /// Supported API versions: 0
-    pub fn with_error_code(mut self, value: i16) -> Self {
+    /// 
+    /// Supported API versions: 0-1
+    pub fn with_error_code(mut self, value: i16) -> Self
+    {
         self.error_code = value;
         self
-    }
-    /// Sets `error_message` to the passed value.
-    ///
+    }/// Sets `error_message` to the passed value.
+    /// 
     /// The error message, or null if there was no error.
-    ///
-    /// Supported API versions: 0
-    pub fn with_error_message(mut self, value: Option<StrBytes>) -> Self {
+    /// 
+    /// Supported API versions: 0-1
+    pub fn with_error_message(mut self, value: Option<StrBytes>) -> Self
+    {
         self.error_message = value;
         self
-    }
-    /// Sets `state_epoch` to the passed value.
-    ///
+    }/// Sets `state_epoch` to the passed value.
+    /// 
     /// The state epoch of the share-partition.
-    ///
-    /// Supported API versions: 0
-    pub fn with_state_epoch(mut self, value: i32) -> Self {
+    /// 
+    /// Supported API versions: 0-1
+    pub fn with_state_epoch(mut self, value: i32) -> Self
+    {
         self.state_epoch = value;
         self
-    }
-    /// Sets `leader_epoch` to the passed value.
-    ///
+    }/// Sets `leader_epoch` to the passed value.
+    /// 
     /// The leader epoch of the share-partition.
-    ///
-    /// Supported API versions: 0
-    pub fn with_leader_epoch(mut self, value: i32) -> Self {
+    /// 
+    /// Supported API versions: 0-1
+    pub fn with_leader_epoch(mut self, value: i32) -> Self
+    {
         self.leader_epoch = value;
         self
-    }
-    /// Sets `start_offset` to the passed value.
-    ///
+    }/// Sets `start_offset` to the passed value.
+    /// 
     /// The share-partition start offset.
-    ///
-    /// Supported API versions: 0
-    pub fn with_start_offset(mut self, value: i64) -> Self {
+    /// 
+    /// Supported API versions: 0-1
+    pub fn with_start_offset(mut self, value: i64) -> Self
+    {
         self.start_offset = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets `delivery_complete_count` to the passed value.
+    /// 
+    /// The number of offsets greater than or equal to share-partition start offset for which delivery has been completed.
+    /// 
+    /// Supported API versions: 1
+    pub fn with_delivery_complete_count(mut self, value: i32) -> Self
+    {
+        self.delivery_complete_count = value;
+        self
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -125,7 +140,7 @@ impl PartitionResult {
 #[cfg(feature = "broker")]
 impl Encodable for PartitionResult {
     fn encode<B: ByteBufMut>(&self, buf: &mut B, version: i16) -> Result<()> {
-        if version != 0 {
+        if version < 0 || version > 1 {
             bail!("specified version not supported by this message type");
         }
         types::Int32.encode(buf, &self.partition)?;
@@ -134,12 +149,12 @@ impl Encodable for PartitionResult {
         types::Int32.encode(buf, &self.state_epoch)?;
         types::Int32.encode(buf, &self.leader_epoch)?;
         types::Int64.encode(buf, &self.start_offset)?;
+        if version >= 1 {
+            types::Int32.encode(buf, &self.delivery_complete_count)?;
+        }
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -154,12 +169,12 @@ impl Encodable for PartitionResult {
         total_size += types::Int32.compute_size(&self.state_epoch)?;
         total_size += types::Int32.compute_size(&self.leader_epoch)?;
         total_size += types::Int64.compute_size(&self.start_offset)?;
+        if version >= 1 {
+            total_size += types::Int32.compute_size(&self.delivery_complete_count)?;
+        }
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -171,7 +186,7 @@ impl Encodable for PartitionResult {
 #[cfg(feature = "client")]
 impl Decodable for PartitionResult {
     fn decode<B: ByteBuf>(buf: &mut B, version: i16) -> Result<Self> {
-        if version != 0 {
+        if version < 0 || version > 1 {
             bail!("specified version not supported by this message type");
         }
         let partition = types::Int32.decode(buf)?;
@@ -180,6 +195,11 @@ impl Decodable for PartitionResult {
         let state_epoch = types::Int32.decode(buf)?;
         let leader_epoch = types::Int32.decode(buf)?;
         let start_offset = types::Int64.decode(buf)?;
+        let delivery_complete_count = if version >= 1 {
+            types::Int32.decode(buf)?
+        } else {
+            -1
+        };
         let mut unknown_tagged_fields = BTreeMap::new();
         let num_tagged_fields = types::UnsignedVarInt.decode(buf)?;
         for _ in 0..num_tagged_fields {
@@ -195,6 +215,7 @@ impl Decodable for PartitionResult {
             state_epoch,
             leader_epoch,
             start_offset,
+            delivery_complete_count,
             unknown_tagged_fields,
         })
     }
@@ -209,23 +230,24 @@ impl Default for PartitionResult {
             state_epoch: 0,
             leader_epoch: 0,
             start_offset: 0,
+            delivery_complete_count: -1,
             unknown_tagged_fields: BTreeMap::new(),
         }
     }
 }
 
 impl Message for PartitionResult {
-    const VERSIONS: VersionRange = VersionRange { min: 0, max: 0 };
+    const VERSIONS: VersionRange = VersionRange { min: 0, max: 1 };
     const DEPRECATED_VERSIONS: Option<VersionRange> = None;
 }
 
-/// Valid versions: 0
+/// Valid versions: 0-1
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct ReadShareGroupStateSummaryResponse {
     /// The read results.
-    ///
-    /// Supported API versions: 0
+    /// 
+    /// Supported API versions: 0-1
     pub results: Vec<ReadStateSummaryResult>,
 
     /// Other tagged fields
@@ -234,21 +256,22 @@ pub struct ReadShareGroupStateSummaryResponse {
 
 impl ReadShareGroupStateSummaryResponse {
     /// Sets `results` to the passed value.
-    ///
+    /// 
     /// The read results.
-    ///
-    /// Supported API versions: 0
-    pub fn with_results(mut self, value: Vec<ReadStateSummaryResult>) -> Self {
+    /// 
+    /// Supported API versions: 0-1
+    pub fn with_results(mut self, value: Vec<ReadStateSummaryResult>) -> Self
+    {
         self.results = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -257,16 +280,13 @@ impl ReadShareGroupStateSummaryResponse {
 #[cfg(feature = "broker")]
 impl Encodable for ReadShareGroupStateSummaryResponse {
     fn encode<B: ByteBufMut>(&self, buf: &mut B, version: i16) -> Result<()> {
-        if version != 0 {
+        if version < 0 || version > 1 {
             bail!("specified version not supported by this message type");
         }
         types::CompactArray(types::Struct { version }).encode(buf, &self.results)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -278,10 +298,7 @@ impl Encodable for ReadShareGroupStateSummaryResponse {
         total_size += types::CompactArray(types::Struct { version }).compute_size(&self.results)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -293,7 +310,7 @@ impl Encodable for ReadShareGroupStateSummaryResponse {
 #[cfg(feature = "client")]
 impl Decodable for ReadShareGroupStateSummaryResponse {
     fn decode<B: ByteBuf>(buf: &mut B, version: i16) -> Result<Self> {
-        if version != 0 {
+        if version < 0 || version > 1 {
             bail!("specified version not supported by this message type");
         }
         let results = types::CompactArray(types::Struct { version }).decode(buf)?;
@@ -322,22 +339,22 @@ impl Default for ReadShareGroupStateSummaryResponse {
 }
 
 impl Message for ReadShareGroupStateSummaryResponse {
-    const VERSIONS: VersionRange = VersionRange { min: 0, max: 0 };
+    const VERSIONS: VersionRange = VersionRange { min: 0, max: 1 };
     const DEPRECATED_VERSIONS: Option<VersionRange> = None;
 }
 
-/// Valid versions: 0
+/// Valid versions: 0-1
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct ReadStateSummaryResult {
     /// The topic identifier.
-    ///
-    /// Supported API versions: 0
+    /// 
+    /// Supported API versions: 0-1
     pub topic_id: Uuid,
 
     /// The results for the partitions.
-    ///
-    /// Supported API versions: 0
+    /// 
+    /// Supported API versions: 0-1
     pub partitions: Vec<PartitionResult>,
 
     /// Other tagged fields
@@ -346,30 +363,31 @@ pub struct ReadStateSummaryResult {
 
 impl ReadStateSummaryResult {
     /// Sets `topic_id` to the passed value.
-    ///
+    /// 
     /// The topic identifier.
-    ///
-    /// Supported API versions: 0
-    pub fn with_topic_id(mut self, value: Uuid) -> Self {
+    /// 
+    /// Supported API versions: 0-1
+    pub fn with_topic_id(mut self, value: Uuid) -> Self
+    {
         self.topic_id = value;
         self
-    }
-    /// Sets `partitions` to the passed value.
-    ///
+    }/// Sets `partitions` to the passed value.
+    /// 
     /// The results for the partitions.
-    ///
-    /// Supported API versions: 0
-    pub fn with_partitions(mut self, value: Vec<PartitionResult>) -> Self {
+    /// 
+    /// Supported API versions: 0-1
+    pub fn with_partitions(mut self, value: Vec<PartitionResult>) -> Self
+    {
         self.partitions = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -378,17 +396,14 @@ impl ReadStateSummaryResult {
 #[cfg(feature = "broker")]
 impl Encodable for ReadStateSummaryResult {
     fn encode<B: ByteBufMut>(&self, buf: &mut B, version: i16) -> Result<()> {
-        if version != 0 {
+        if version < 0 || version > 1 {
             bail!("specified version not supported by this message type");
         }
         types::Uuid.encode(buf, &self.topic_id)?;
         types::CompactArray(types::Struct { version }).encode(buf, &self.partitions)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -398,14 +413,10 @@ impl Encodable for ReadStateSummaryResult {
     fn compute_size(&self, version: i16) -> Result<usize> {
         let mut total_size = 0;
         total_size += types::Uuid.compute_size(&self.topic_id)?;
-        total_size +=
-            types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
+        total_size += types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -417,7 +428,7 @@ impl Encodable for ReadStateSummaryResult {
 #[cfg(feature = "client")]
 impl Decodable for ReadStateSummaryResult {
     fn decode<B: ByteBuf>(buf: &mut B, version: i16) -> Result<Self> {
-        if version != 0 {
+        if version < 0 || version > 1 {
             bail!("specified version not supported by this message type");
         }
         let topic_id = types::Uuid.decode(buf)?;
@@ -449,7 +460,7 @@ impl Default for ReadStateSummaryResult {
 }
 
 impl Message for ReadStateSummaryResult {
-    const VERSIONS: VersionRange = VersionRange { min: 0, max: 0 };
+    const VERSIONS: VersionRange = VersionRange { min: 0, max: 1 };
     const DEPRECATED_VERSIONS: Option<VersionRange> = None;
 }
 
@@ -458,3 +469,4 @@ impl HeaderVersion for ReadShareGroupStateSummaryResponse {
         1
     }
 }
+

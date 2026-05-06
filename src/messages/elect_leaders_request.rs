@@ -7,32 +7,32 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 0-2
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct ElectLeadersRequest {
     /// Type of elections to conduct for the partition. A value of '0' elects the preferred replica. A value of '1' elects the first live replica if there are no in-sync replica.
-    ///
+    /// 
     /// Supported API versions: 1-2
     pub election_type: i8,
 
     /// The topic partitions to elect leaders.
-    ///
+    /// 
     /// Supported API versions: 0-2
     pub topic_partitions: Option<Vec<TopicPartitions>>,
 
     /// The time in ms to wait for the election to complete.
-    ///
+    /// 
     /// Supported API versions: 0-2
     pub timeout_ms: i32,
 
@@ -42,39 +42,40 @@ pub struct ElectLeadersRequest {
 
 impl ElectLeadersRequest {
     /// Sets `election_type` to the passed value.
-    ///
+    /// 
     /// Type of elections to conduct for the partition. A value of '0' elects the preferred replica. A value of '1' elects the first live replica if there are no in-sync replica.
-    ///
+    /// 
     /// Supported API versions: 1-2
-    pub fn with_election_type(mut self, value: i8) -> Self {
+    pub fn with_election_type(mut self, value: i8) -> Self
+    {
         self.election_type = value;
         self
-    }
-    /// Sets `topic_partitions` to the passed value.
-    ///
+    }/// Sets `topic_partitions` to the passed value.
+    /// 
     /// The topic partitions to elect leaders.
-    ///
+    /// 
     /// Supported API versions: 0-2
-    pub fn with_topic_partitions(mut self, value: Option<Vec<TopicPartitions>>) -> Self {
+    pub fn with_topic_partitions(mut self, value: Option<Vec<TopicPartitions>>) -> Self
+    {
         self.topic_partitions = value;
         self
-    }
-    /// Sets `timeout_ms` to the passed value.
-    ///
+    }/// Sets `timeout_ms` to the passed value.
+    /// 
     /// The time in ms to wait for the election to complete.
-    ///
+    /// 
     /// Supported API versions: 0-2
-    pub fn with_timeout_ms(mut self, value: i32) -> Self {
+    pub fn with_timeout_ms(mut self, value: i32) -> Self
+    {
         self.timeout_ms = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -102,10 +103,7 @@ impl Encodable for ElectLeadersRequest {
         if version >= 2 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -123,20 +121,15 @@ impl Encodable for ElectLeadersRequest {
             }
         }
         if version >= 2 {
-            total_size += types::CompactArray(types::Struct { version })
-                .compute_size(&self.topic_partitions)?;
+            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.topic_partitions)?;
         } else {
-            total_size +=
-                types::Array(types::Struct { version }).compute_size(&self.topic_partitions)?;
+            total_size += types::Array(types::Struct { version }).compute_size(&self.topic_partitions)?;
         }
         total_size += types::Int32.compute_size(&self.timeout_ms)?;
         if version >= 2 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -203,12 +196,12 @@ impl Message for ElectLeadersRequest {
 #[derive(Debug, Clone, PartialEq)]
 pub struct TopicPartitions {
     /// The name of a topic.
-    ///
+    /// 
     /// Supported API versions: 0-2
     pub topic: super::TopicName,
 
     /// The partitions of this topic whose leader should be elected.
-    ///
+    /// 
     /// Supported API versions: 0-2
     pub partitions: Vec<i32>,
 
@@ -218,30 +211,31 @@ pub struct TopicPartitions {
 
 impl TopicPartitions {
     /// Sets `topic` to the passed value.
-    ///
+    /// 
     /// The name of a topic.
-    ///
+    /// 
     /// Supported API versions: 0-2
-    pub fn with_topic(mut self, value: super::TopicName) -> Self {
+    pub fn with_topic(mut self, value: super::TopicName) -> Self
+    {
         self.topic = value;
         self
-    }
-    /// Sets `partitions` to the passed value.
-    ///
+    }/// Sets `partitions` to the passed value.
+    /// 
     /// The partitions of this topic whose leader should be elected.
-    ///
+    /// 
     /// Supported API versions: 0-2
-    pub fn with_partitions(mut self, value: Vec<i32>) -> Self {
+    pub fn with_partitions(mut self, value: Vec<i32>) -> Self
+    {
         self.partitions = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -266,10 +260,7 @@ impl Encodable for TopicPartitions {
         if version >= 2 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -292,10 +283,7 @@ impl Encodable for TopicPartitions {
         if version >= 2 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -363,3 +351,4 @@ impl HeaderVersion for ElectLeadersRequest {
         }
     }
 }
+

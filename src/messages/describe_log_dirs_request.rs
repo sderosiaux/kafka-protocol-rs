@@ -7,28 +7,28 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
 
-/// Valid versions: 1-4
+
+/// Valid versions: 1-5
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct DescribableLogDirTopic {
     /// The topic name.
-    ///
-    /// Supported API versions: 1-4
+    /// 
+    /// Supported API versions: 1-5
     pub topic: super::TopicName,
 
     /// The partition indexes.
-    ///
-    /// Supported API versions: 1-4
+    /// 
+    /// Supported API versions: 1-5
     pub partitions: Vec<i32>,
 
     /// Other tagged fields
@@ -37,30 +37,31 @@ pub struct DescribableLogDirTopic {
 
 impl DescribableLogDirTopic {
     /// Sets `topic` to the passed value.
-    ///
+    /// 
     /// The topic name.
-    ///
-    /// Supported API versions: 1-4
-    pub fn with_topic(mut self, value: super::TopicName) -> Self {
+    /// 
+    /// Supported API versions: 1-5
+    pub fn with_topic(mut self, value: super::TopicName) -> Self
+    {
         self.topic = value;
         self
-    }
-    /// Sets `partitions` to the passed value.
-    ///
+    }/// Sets `partitions` to the passed value.
+    /// 
     /// The partition indexes.
-    ///
-    /// Supported API versions: 1-4
-    pub fn with_partitions(mut self, value: Vec<i32>) -> Self {
+    /// 
+    /// Supported API versions: 1-5
+    pub fn with_partitions(mut self, value: Vec<i32>) -> Self
+    {
         self.partitions = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -69,7 +70,7 @@ impl DescribableLogDirTopic {
 #[cfg(feature = "client")]
 impl Encodable for DescribableLogDirTopic {
     fn encode<B: ByteBufMut>(&self, buf: &mut B, version: i16) -> Result<()> {
-        if version < 1 || version > 4 {
+        if version < 1 || version > 5 {
             bail!("specified version not supported by this message type");
         }
         if version >= 2 {
@@ -85,10 +86,7 @@ impl Encodable for DescribableLogDirTopic {
         if version >= 2 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -111,10 +109,7 @@ impl Encodable for DescribableLogDirTopic {
         if version >= 2 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -127,7 +122,7 @@ impl Encodable for DescribableLogDirTopic {
 #[cfg(feature = "broker")]
 impl Decodable for DescribableLogDirTopic {
     fn decode<B: ByteBuf>(buf: &mut B, version: i16) -> Result<Self> {
-        if version < 1 || version > 4 {
+        if version < 1 || version > 5 {
             bail!("specified version not supported by this message type");
         }
         let topic = if version >= 2 {
@@ -169,17 +164,17 @@ impl Default for DescribableLogDirTopic {
 }
 
 impl Message for DescribableLogDirTopic {
-    const VERSIONS: VersionRange = VersionRange { min: 1, max: 4 };
+    const VERSIONS: VersionRange = VersionRange { min: 1, max: 5 };
     const DEPRECATED_VERSIONS: Option<VersionRange> = None;
 }
 
-/// Valid versions: 1-4
+/// Valid versions: 1-5
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct DescribeLogDirsRequest {
     /// Each topic that we want to describe log directories for, or null for all topics.
-    ///
-    /// Supported API versions: 1-4
+    /// 
+    /// Supported API versions: 1-5
     pub topics: Option<Vec<DescribableLogDirTopic>>,
 
     /// Other tagged fields
@@ -188,21 +183,22 @@ pub struct DescribeLogDirsRequest {
 
 impl DescribeLogDirsRequest {
     /// Sets `topics` to the passed value.
-    ///
+    /// 
     /// Each topic that we want to describe log directories for, or null for all topics.
-    ///
-    /// Supported API versions: 1-4
-    pub fn with_topics(mut self, value: Option<Vec<DescribableLogDirTopic>>) -> Self {
+    /// 
+    /// Supported API versions: 1-5
+    pub fn with_topics(mut self, value: Option<Vec<DescribableLogDirTopic>>) -> Self
+    {
         self.topics = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -211,7 +207,7 @@ impl DescribeLogDirsRequest {
 #[cfg(feature = "client")]
 impl Encodable for DescribeLogDirsRequest {
     fn encode<B: ByteBufMut>(&self, buf: &mut B, version: i16) -> Result<()> {
-        if version < 1 || version > 4 {
+        if version < 1 || version > 5 {
             bail!("specified version not supported by this message type");
         }
         if version >= 2 {
@@ -222,10 +218,7 @@ impl Encodable for DescribeLogDirsRequest {
         if version >= 2 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -236,18 +229,14 @@ impl Encodable for DescribeLogDirsRequest {
     fn compute_size(&self, version: i16) -> Result<usize> {
         let mut total_size = 0;
         if version >= 2 {
-            total_size +=
-                types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
+            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
         } else {
             total_size += types::Array(types::Struct { version }).compute_size(&self.topics)?;
         }
         if version >= 2 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -260,7 +249,7 @@ impl Encodable for DescribeLogDirsRequest {
 #[cfg(feature = "broker")]
 impl Decodable for DescribeLogDirsRequest {
     fn decode<B: ByteBuf>(buf: &mut B, version: i16) -> Result<Self> {
-        if version < 1 || version > 4 {
+        if version < 1 || version > 5 {
             bail!("specified version not supported by this message type");
         }
         let topics = if version >= 2 {
@@ -295,7 +284,7 @@ impl Default for DescribeLogDirsRequest {
 }
 
 impl Message for DescribeLogDirsRequest {
-    const VERSIONS: VersionRange = VersionRange { min: 1, max: 4 };
+    const VERSIONS: VersionRange = VersionRange { min: 1, max: 5 };
     const DEPRECATED_VERSIONS: Option<VersionRange> = None;
 }
 
@@ -308,3 +297,4 @@ impl HeaderVersion for DescribeLogDirsRequest {
         }
     }
 }
+
