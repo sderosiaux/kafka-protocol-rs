@@ -69,7 +69,7 @@ impl ApiVersionsRequest {
 #[cfg(feature = "client")]
 impl Encodable for ApiVersionsRequest {
     fn encode<B: ByteBufMut>(&self, buf: &mut B, version: i16) -> Result<()> {
-        if version < 0 || version > 4 {
+        if version < 0 || version > 5 {
             bail!("specified version not supported by this message type");
         }
         if version >= 3 {
@@ -119,7 +119,7 @@ impl Encodable for ApiVersionsRequest {
 #[cfg(feature = "broker")]
 impl Decodable for ApiVersionsRequest {
     fn decode<B: ByteBuf>(buf: &mut B, version: i16) -> Result<Self> {
-        if version < 0 || version > 4 {
+        if version < 0 || version > 5 {
             bail!("specified version not supported by this message type");
         }
         let client_software_name = if version >= 3 {
@@ -161,7 +161,7 @@ impl Default for ApiVersionsRequest {
 }
 
 impl Message for ApiVersionsRequest {
-    const VERSIONS: VersionRange = VersionRange { min: 0, max: 4 };
+    const VERSIONS: VersionRange = VersionRange { min: 0, max: 5 };
     const DEPRECATED_VERSIONS: Option<VersionRange> = None;
 }
 
