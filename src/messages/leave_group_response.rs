@@ -7,32 +7,32 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
+use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
-use anyhow::{bail, Result};
 
 use crate::protocol::{
-    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
-    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
+    buf::{ByteBuf, ByteBufMut},
+    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
+    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
 };
-
 
 /// Valid versions: 0-5
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct LeaveGroupResponse {
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    /// 
+    ///
     /// Supported API versions: 1-5
     pub throttle_time_ms: i32,
 
     /// The error code, or 0 if there was no error.
-    /// 
+    ///
     /// Supported API versions: 0-5
     pub error_code: i16,
 
     /// List of leaving member responses.
-    /// 
+    ///
     /// Supported API versions: 3-5
     pub members: Vec<MemberResponse>,
 
@@ -42,40 +42,39 @@ pub struct LeaveGroupResponse {
 
 impl LeaveGroupResponse {
     /// Sets `throttle_time_ms` to the passed value.
-    /// 
+    ///
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    /// 
+    ///
     /// Supported API versions: 1-5
-    pub fn with_throttle_time_ms(mut self, value: i32) -> Self
-    {
+    pub fn with_throttle_time_ms(mut self, value: i32) -> Self {
         self.throttle_time_ms = value;
         self
-    }/// Sets `error_code` to the passed value.
-    /// 
+    }
+    /// Sets `error_code` to the passed value.
+    ///
     /// The error code, or 0 if there was no error.
-    /// 
+    ///
     /// Supported API versions: 0-5
-    pub fn with_error_code(mut self, value: i16) -> Self
-    {
+    pub fn with_error_code(mut self, value: i16) -> Self {
         self.error_code = value;
         self
-    }/// Sets `members` to the passed value.
-    /// 
+    }
+    /// Sets `members` to the passed value.
+    ///
     /// List of leaving member responses.
-    /// 
+    ///
     /// Supported API versions: 3-5
-    pub fn with_members(mut self, value: Vec<MemberResponse>) -> Self
-    {
+    pub fn with_members(mut self, value: Vec<MemberResponse>) -> Self {
         self.members = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -105,7 +104,10 @@ impl Encodable for LeaveGroupResponse {
         if version >= 4 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -121,9 +123,11 @@ impl Encodable for LeaveGroupResponse {
         total_size += types::Int16.compute_size(&self.error_code)?;
         if version >= 3 {
             if version >= 4 {
-                total_size += types::CompactArray(types::Struct { version }).compute_size(&self.members)?;
+                total_size +=
+                    types::CompactArray(types::Struct { version }).compute_size(&self.members)?;
             } else {
-                total_size += types::Array(types::Struct { version }).compute_size(&self.members)?;
+                total_size +=
+                    types::Array(types::Struct { version }).compute_size(&self.members)?;
             }
         } else {
             if !self.members.is_empty() {
@@ -133,7 +137,10 @@ impl Encodable for LeaveGroupResponse {
         if version >= 4 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -204,17 +211,17 @@ impl Message for LeaveGroupResponse {
 #[derive(Debug, Clone, PartialEq)]
 pub struct MemberResponse {
     /// The member ID to remove from the group.
-    /// 
+    ///
     /// Supported API versions: 3-5
     pub member_id: StrBytes,
 
     /// The group instance ID to remove from the group.
-    /// 
+    ///
     /// Supported API versions: 3-5
     pub group_instance_id: Option<StrBytes>,
 
     /// The error code, or 0 if there was no error.
-    /// 
+    ///
     /// Supported API versions: 3-5
     pub error_code: i16,
 
@@ -224,40 +231,39 @@ pub struct MemberResponse {
 
 impl MemberResponse {
     /// Sets `member_id` to the passed value.
-    /// 
+    ///
     /// The member ID to remove from the group.
-    /// 
+    ///
     /// Supported API versions: 3-5
-    pub fn with_member_id(mut self, value: StrBytes) -> Self
-    {
+    pub fn with_member_id(mut self, value: StrBytes) -> Self {
         self.member_id = value;
         self
-    }/// Sets `group_instance_id` to the passed value.
-    /// 
+    }
+    /// Sets `group_instance_id` to the passed value.
+    ///
     /// The group instance ID to remove from the group.
-    /// 
+    ///
     /// Supported API versions: 3-5
-    pub fn with_group_instance_id(mut self, value: Option<StrBytes>) -> Self
-    {
+    pub fn with_group_instance_id(mut self, value: Option<StrBytes>) -> Self {
         self.group_instance_id = value;
         self
-    }/// Sets `error_code` to the passed value.
-    /// 
+    }
+    /// Sets `error_code` to the passed value.
+    ///
     /// The error code, or 0 if there was no error.
-    /// 
+    ///
     /// Supported API versions: 3-5
-    pub fn with_error_code(mut self, value: i16) -> Self
-    {
+    pub fn with_error_code(mut self, value: i16) -> Self {
         self.error_code = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -287,7 +293,12 @@ impl Encodable for MemberResponse {
                 types::String.encode(buf, &self.group_instance_id)?;
             }
         } else {
-            if !self.group_instance_id.as_ref().map(|x| x.is_empty()).unwrap_or_default() {
+            if !self
+                .group_instance_id
+                .as_ref()
+                .map(|x| x.is_empty())
+                .unwrap_or_default()
+            {
                 bail!("A field is set that is not available on the selected protocol version");
             }
         }
@@ -301,7 +312,10 @@ impl Encodable for MemberResponse {
         if version >= 4 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -329,7 +343,12 @@ impl Encodable for MemberResponse {
                 total_size += types::String.compute_size(&self.group_instance_id)?;
             }
         } else {
-            if !self.group_instance_id.as_ref().map(|x| x.is_empty()).unwrap_or_default() {
+            if !self
+                .group_instance_id
+                .as_ref()
+                .map(|x| x.is_empty())
+                .unwrap_or_default()
+            {
                 bail!("A field is set that is not available on the selected protocol version");
             }
         }
@@ -343,7 +362,10 @@ impl Encodable for MemberResponse {
         if version >= 4 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -426,4 +448,3 @@ impl HeaderVersion for LeaveGroupResponse {
         }
     }
 }
-

@@ -7,37 +7,37 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
+use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
-use anyhow::{bail, Result};
 
 use crate::protocol::{
-    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
-    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
+    buf::{ByteBuf, ByteBufMut},
+    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
+    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
 };
-
 
 /// Valid versions: 2-4
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct EpochEndOffset {
     /// The error code 0, or if there was no error.
-    /// 
+    ///
     /// Supported API versions: 2-4
     pub error_code: i16,
 
     /// The partition index.
-    /// 
+    ///
     /// Supported API versions: 2-4
     pub partition: i32,
 
     /// The leader epoch of the partition.
-    /// 
+    ///
     /// Supported API versions: 2-4
     pub leader_epoch: i32,
 
     /// The end offset of the epoch.
-    /// 
+    ///
     /// Supported API versions: 2-4
     pub end_offset: i64,
 
@@ -47,49 +47,48 @@ pub struct EpochEndOffset {
 
 impl EpochEndOffset {
     /// Sets `error_code` to the passed value.
-    /// 
+    ///
     /// The error code 0, or if there was no error.
-    /// 
+    ///
     /// Supported API versions: 2-4
-    pub fn with_error_code(mut self, value: i16) -> Self
-    {
+    pub fn with_error_code(mut self, value: i16) -> Self {
         self.error_code = value;
         self
-    }/// Sets `partition` to the passed value.
-    /// 
+    }
+    /// Sets `partition` to the passed value.
+    ///
     /// The partition index.
-    /// 
+    ///
     /// Supported API versions: 2-4
-    pub fn with_partition(mut self, value: i32) -> Self
-    {
+    pub fn with_partition(mut self, value: i32) -> Self {
         self.partition = value;
         self
-    }/// Sets `leader_epoch` to the passed value.
-    /// 
+    }
+    /// Sets `leader_epoch` to the passed value.
+    ///
     /// The leader epoch of the partition.
-    /// 
+    ///
     /// Supported API versions: 2-4
-    pub fn with_leader_epoch(mut self, value: i32) -> Self
-    {
+    pub fn with_leader_epoch(mut self, value: i32) -> Self {
         self.leader_epoch = value;
         self
-    }/// Sets `end_offset` to the passed value.
-    /// 
+    }
+    /// Sets `end_offset` to the passed value.
+    ///
     /// The end offset of the epoch.
-    /// 
+    ///
     /// Supported API versions: 2-4
-    pub fn with_end_offset(mut self, value: i64) -> Self
-    {
+    pub fn with_end_offset(mut self, value: i64) -> Self {
         self.end_offset = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -108,7 +107,10 @@ impl Encodable for EpochEndOffset {
         if version >= 4 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -125,7 +127,10 @@ impl Encodable for EpochEndOffset {
         if version >= 4 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -187,12 +192,12 @@ impl Message for EpochEndOffset {
 #[derive(Debug, Clone, PartialEq)]
 pub struct OffsetForLeaderEpochResponse {
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    /// 
+    ///
     /// Supported API versions: 2-4
     pub throttle_time_ms: i32,
 
     /// Each topic we fetched offsets for.
-    /// 
+    ///
     /// Supported API versions: 2-4
     pub topics: Vec<OffsetForLeaderTopicResult>,
 
@@ -202,31 +207,30 @@ pub struct OffsetForLeaderEpochResponse {
 
 impl OffsetForLeaderEpochResponse {
     /// Sets `throttle_time_ms` to the passed value.
-    /// 
+    ///
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    /// 
+    ///
     /// Supported API versions: 2-4
-    pub fn with_throttle_time_ms(mut self, value: i32) -> Self
-    {
+    pub fn with_throttle_time_ms(mut self, value: i32) -> Self {
         self.throttle_time_ms = value;
         self
-    }/// Sets `topics` to the passed value.
-    /// 
+    }
+    /// Sets `topics` to the passed value.
+    ///
     /// Each topic we fetched offsets for.
-    /// 
+    ///
     /// Supported API versions: 2-4
-    pub fn with_topics(mut self, value: Vec<OffsetForLeaderTopicResult>) -> Self
-    {
+    pub fn with_topics(mut self, value: Vec<OffsetForLeaderTopicResult>) -> Self {
         self.topics = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -247,7 +251,10 @@ impl Encodable for OffsetForLeaderEpochResponse {
         if version >= 4 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -259,14 +266,18 @@ impl Encodable for OffsetForLeaderEpochResponse {
         let mut total_size = 0;
         total_size += types::Int32.compute_size(&self.throttle_time_ms)?;
         if version >= 4 {
-            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
+            total_size +=
+                types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
         } else {
             total_size += types::Array(types::Struct { version }).compute_size(&self.topics)?;
         }
         if version >= 4 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -326,12 +337,12 @@ impl Message for OffsetForLeaderEpochResponse {
 #[derive(Debug, Clone, PartialEq)]
 pub struct OffsetForLeaderTopicResult {
     /// The topic name.
-    /// 
+    ///
     /// Supported API versions: 2-4
     pub topic: super::TopicName,
 
     /// Each partition in the topic we fetched offsets for.
-    /// 
+    ///
     /// Supported API versions: 2-4
     pub partitions: Vec<EpochEndOffset>,
 
@@ -341,31 +352,30 @@ pub struct OffsetForLeaderTopicResult {
 
 impl OffsetForLeaderTopicResult {
     /// Sets `topic` to the passed value.
-    /// 
+    ///
     /// The topic name.
-    /// 
+    ///
     /// Supported API versions: 2-4
-    pub fn with_topic(mut self, value: super::TopicName) -> Self
-    {
+    pub fn with_topic(mut self, value: super::TopicName) -> Self {
         self.topic = value;
         self
-    }/// Sets `partitions` to the passed value.
-    /// 
+    }
+    /// Sets `partitions` to the passed value.
+    ///
     /// Each partition in the topic we fetched offsets for.
-    /// 
+    ///
     /// Supported API versions: 2-4
-    pub fn with_partitions(mut self, value: Vec<EpochEndOffset>) -> Self
-    {
+    pub fn with_partitions(mut self, value: Vec<EpochEndOffset>) -> Self {
         self.partitions = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -390,7 +400,10 @@ impl Encodable for OffsetForLeaderTopicResult {
         if version >= 4 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -406,14 +419,18 @@ impl Encodable for OffsetForLeaderTopicResult {
             total_size += types::String.compute_size(&self.topic)?;
         }
         if version >= 4 {
-            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
+            total_size +=
+                types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
         } else {
             total_size += types::Array(types::Struct { version }).compute_size(&self.partitions)?;
         }
         if version >= 4 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -481,4 +498,3 @@ impl HeaderVersion for OffsetForLeaderEpochResponse {
         }
     }
 }
-

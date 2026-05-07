@@ -7,27 +7,27 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
+use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
-use anyhow::{bail, Result};
 
 use crate::protocol::{
-    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
-    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
+    buf::{ByteBuf, ByteBufMut},
+    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
+    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
 };
-
 
 /// Valid versions: 0
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct ListPartitionReassignmentsRequest {
     /// The time in ms to wait for the request to complete.
-    /// 
+    ///
     /// Supported API versions: 0
     pub timeout_ms: i32,
 
     /// The topics to list partition reassignments for, or null to list everything.
-    /// 
+    ///
     /// Supported API versions: 0
     pub topics: Option<Vec<ListPartitionReassignmentsTopics>>,
 
@@ -37,31 +37,30 @@ pub struct ListPartitionReassignmentsRequest {
 
 impl ListPartitionReassignmentsRequest {
     /// Sets `timeout_ms` to the passed value.
-    /// 
+    ///
     /// The time in ms to wait for the request to complete.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_timeout_ms(mut self, value: i32) -> Self
-    {
+    pub fn with_timeout_ms(mut self, value: i32) -> Self {
         self.timeout_ms = value;
         self
-    }/// Sets `topics` to the passed value.
-    /// 
+    }
+    /// Sets `topics` to the passed value.
+    ///
     /// The topics to list partition reassignments for, or null to list everything.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_topics(mut self, value: Option<Vec<ListPartitionReassignmentsTopics>>) -> Self
-    {
+    pub fn with_topics(mut self, value: Option<Vec<ListPartitionReassignmentsTopics>>) -> Self {
         self.topics = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -77,7 +76,10 @@ impl Encodable for ListPartitionReassignmentsRequest {
         types::CompactArray(types::Struct { version }).encode(buf, &self.topics)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -90,7 +92,10 @@ impl Encodable for ListPartitionReassignmentsRequest {
         total_size += types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -143,12 +148,12 @@ impl Message for ListPartitionReassignmentsRequest {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ListPartitionReassignmentsTopics {
     /// The topic name.
-    /// 
+    ///
     /// Supported API versions: 0
     pub name: super::TopicName,
 
     /// The partitions to list partition reassignments for.
-    /// 
+    ///
     /// Supported API versions: 0
     pub partition_indexes: Vec<i32>,
 
@@ -158,31 +163,30 @@ pub struct ListPartitionReassignmentsTopics {
 
 impl ListPartitionReassignmentsTopics {
     /// Sets `name` to the passed value.
-    /// 
+    ///
     /// The topic name.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_name(mut self, value: super::TopicName) -> Self
-    {
+    pub fn with_name(mut self, value: super::TopicName) -> Self {
         self.name = value;
         self
-    }/// Sets `partition_indexes` to the passed value.
-    /// 
+    }
+    /// Sets `partition_indexes` to the passed value.
+    ///
     /// The partitions to list partition reassignments for.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_partition_indexes(mut self, value: Vec<i32>) -> Self
-    {
+    pub fn with_partition_indexes(mut self, value: Vec<i32>) -> Self {
         self.partition_indexes = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -198,7 +202,10 @@ impl Encodable for ListPartitionReassignmentsTopics {
         types::CompactArray(types::Int32).encode(buf, &self.partition_indexes)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -211,7 +218,10 @@ impl Encodable for ListPartitionReassignmentsTopics {
         total_size += types::CompactArray(types::Int32).compute_size(&self.partition_indexes)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -264,4 +274,3 @@ impl HeaderVersion for ListPartitionReassignmentsRequest {
         2
     }
 }
-

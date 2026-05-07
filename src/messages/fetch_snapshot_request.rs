@@ -7,37 +7,37 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
+use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
-use anyhow::{bail, Result};
 
 use crate::protocol::{
-    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
-    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
+    buf::{ByteBuf, ByteBufMut},
+    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
+    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
 };
-
 
 /// Valid versions: 0-1
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct FetchSnapshotRequest {
     /// The clusterId if known, this is used to validate metadata fetches prior to broker registration.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub cluster_id: Option<StrBytes>,
 
     /// The broker ID of the follower.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub replica_id: super::BrokerId,
 
     /// The maximum bytes to fetch from all of the snapshots.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub max_bytes: i32,
 
     /// The topics to fetch.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub topics: Vec<TopicSnapshot>,
 
@@ -47,49 +47,48 @@ pub struct FetchSnapshotRequest {
 
 impl FetchSnapshotRequest {
     /// Sets `cluster_id` to the passed value.
-    /// 
+    ///
     /// The clusterId if known, this is used to validate metadata fetches prior to broker registration.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_cluster_id(mut self, value: Option<StrBytes>) -> Self
-    {
+    pub fn with_cluster_id(mut self, value: Option<StrBytes>) -> Self {
         self.cluster_id = value;
         self
-    }/// Sets `replica_id` to the passed value.
-    /// 
+    }
+    /// Sets `replica_id` to the passed value.
+    ///
     /// The broker ID of the follower.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_replica_id(mut self, value: super::BrokerId) -> Self
-    {
+    pub fn with_replica_id(mut self, value: super::BrokerId) -> Self {
         self.replica_id = value;
         self
-    }/// Sets `max_bytes` to the passed value.
-    /// 
+    }
+    /// Sets `max_bytes` to the passed value.
+    ///
     /// The maximum bytes to fetch from all of the snapshots.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_max_bytes(mut self, value: i32) -> Self
-    {
+    pub fn with_max_bytes(mut self, value: i32) -> Self {
         self.max_bytes = value;
         self
-    }/// Sets `topics` to the passed value.
-    /// 
+    }
+    /// Sets `topics` to the passed value.
+    ///
     /// The topics to fetch.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_topics(mut self, value: Vec<TopicSnapshot>) -> Self
-    {
+    pub fn with_topics(mut self, value: Vec<TopicSnapshot>) -> Self {
         self.topics = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -109,13 +108,19 @@ impl Encodable for FetchSnapshotRequest {
             num_tagged_fields += 1;
         }
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
         if !self.cluster_id.is_none() {
             let computed_size = types::CompactString.compute_size(&self.cluster_id)?;
             if computed_size > std::u32::MAX as usize {
-                bail!("Tagged field is too large to encode ({} bytes)", computed_size);
+                bail!(
+                    "Tagged field is too large to encode ({} bytes)",
+                    computed_size
+                );
             }
             types::UnsignedVarInt.encode(buf, 0)?;
             types::UnsignedVarInt.encode(buf, computed_size as u32)?;
@@ -135,13 +140,19 @@ impl Encodable for FetchSnapshotRequest {
             num_tagged_fields += 1;
         }
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
         if !self.cluster_id.is_none() {
             let computed_size = types::CompactString.compute_size(&self.cluster_id)?;
             if computed_size > std::u32::MAX as usize {
-                bail!("Tagged field is too large to encode ({} bytes)", computed_size);
+                bail!(
+                    "Tagged field is too large to encode ({} bytes)",
+                    computed_size
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(0)?;
             total_size += types::UnsignedVarInt.compute_size(computed_size as u32)?;
@@ -171,7 +182,7 @@ impl Decodable for FetchSnapshotRequest {
             match tag {
                 0 => {
                     cluster_id = types::CompactString.decode(buf)?;
-                },
+                }
                 _ => {
                     let unknown_value = buf.try_get_bytes(size as usize)?;
                     unknown_tagged_fields.insert(tag as i32, unknown_value);
@@ -210,27 +221,27 @@ impl Message for FetchSnapshotRequest {
 #[derive(Debug, Clone, PartialEq)]
 pub struct PartitionSnapshot {
     /// The partition index.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub partition: i32,
 
     /// The current leader epoch of the partition, -1 for unknown leader epoch.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub current_leader_epoch: i32,
 
     /// The snapshot endOffset and epoch to fetch.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub snapshot_id: SnapshotId,
 
     /// The byte position within the snapshot to start fetching from.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub position: i64,
 
     /// The directory id of the follower fetching.
-    /// 
+    ///
     /// Supported API versions: 1
     pub replica_directory_id: Uuid,
 
@@ -240,58 +251,57 @@ pub struct PartitionSnapshot {
 
 impl PartitionSnapshot {
     /// Sets `partition` to the passed value.
-    /// 
+    ///
     /// The partition index.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_partition(mut self, value: i32) -> Self
-    {
+    pub fn with_partition(mut self, value: i32) -> Self {
         self.partition = value;
         self
-    }/// Sets `current_leader_epoch` to the passed value.
-    /// 
+    }
+    /// Sets `current_leader_epoch` to the passed value.
+    ///
     /// The current leader epoch of the partition, -1 for unknown leader epoch.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_current_leader_epoch(mut self, value: i32) -> Self
-    {
+    pub fn with_current_leader_epoch(mut self, value: i32) -> Self {
         self.current_leader_epoch = value;
         self
-    }/// Sets `snapshot_id` to the passed value.
-    /// 
+    }
+    /// Sets `snapshot_id` to the passed value.
+    ///
     /// The snapshot endOffset and epoch to fetch.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_snapshot_id(mut self, value: SnapshotId) -> Self
-    {
+    pub fn with_snapshot_id(mut self, value: SnapshotId) -> Self {
         self.snapshot_id = value;
         self
-    }/// Sets `position` to the passed value.
-    /// 
+    }
+    /// Sets `position` to the passed value.
+    ///
     /// The byte position within the snapshot to start fetching from.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_position(mut self, value: i64) -> Self
-    {
+    pub fn with_position(mut self, value: i64) -> Self {
         self.position = value;
         self
-    }/// Sets `replica_directory_id` to the passed value.
-    /// 
+    }
+    /// Sets `replica_directory_id` to the passed value.
+    ///
     /// The directory id of the follower fetching.
-    /// 
+    ///
     /// Supported API versions: 1
-    pub fn with_replica_directory_id(mut self, value: Uuid) -> Self
-    {
+    pub fn with_replica_directory_id(mut self, value: Uuid) -> Self {
         self.replica_directory_id = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -312,15 +322,22 @@ impl Encodable for PartitionSnapshot {
             if &self.replica_directory_id != &Uuid::nil() {
                 num_tagged_fields += 1;
             }
-        }if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+        }
+        if num_tagged_fields > std::u32::MAX as usize {
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
         if version >= 1 {
             if &self.replica_directory_id != &Uuid::nil() {
                 let computed_size = types::Uuid.compute_size(&self.replica_directory_id)?;
                 if computed_size > std::u32::MAX as usize {
-                    bail!("Tagged field is too large to encode ({} bytes)", computed_size);
+                    bail!(
+                        "Tagged field is too large to encode ({} bytes)",
+                        computed_size
+                    );
                 }
                 types::UnsignedVarInt.encode(buf, 0)?;
                 types::UnsignedVarInt.encode(buf, computed_size as u32)?;
@@ -341,15 +358,22 @@ impl Encodable for PartitionSnapshot {
             if &self.replica_directory_id != &Uuid::nil() {
                 num_tagged_fields += 1;
             }
-        }if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+        }
+        if num_tagged_fields > std::u32::MAX as usize {
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
         if version >= 1 {
             if &self.replica_directory_id != &Uuid::nil() {
                 let computed_size = types::Uuid.compute_size(&self.replica_directory_id)?;
                 if computed_size > std::u32::MAX as usize {
-                    bail!("Tagged field is too large to encode ({} bytes)", computed_size);
+                    bail!(
+                        "Tagged field is too large to encode ({} bytes)",
+                        computed_size
+                    );
                 }
                 total_size += types::UnsignedVarInt.compute_size(0)?;
                 total_size += types::UnsignedVarInt.compute_size(computed_size as u32)?;
@@ -384,7 +408,7 @@ impl Decodable for PartitionSnapshot {
                     } else {
                         bail!("Tag {} is not valid for version {}", tag, version);
                     }
-                },
+                }
                 _ => {
                     let unknown_value = buf.try_get_bytes(size as usize)?;
                     unknown_tagged_fields.insert(tag as i32, unknown_value);
@@ -425,12 +449,12 @@ impl Message for PartitionSnapshot {
 #[derive(Debug, Clone, PartialEq)]
 pub struct SnapshotId {
     /// The end offset of the snapshot.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub end_offset: i64,
 
     /// The epoch of the snapshot.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub epoch: i32,
 
@@ -440,31 +464,30 @@ pub struct SnapshotId {
 
 impl SnapshotId {
     /// Sets `end_offset` to the passed value.
-    /// 
+    ///
     /// The end offset of the snapshot.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_end_offset(mut self, value: i64) -> Self
-    {
+    pub fn with_end_offset(mut self, value: i64) -> Self {
         self.end_offset = value;
         self
-    }/// Sets `epoch` to the passed value.
-    /// 
+    }
+    /// Sets `epoch` to the passed value.
+    ///
     /// The epoch of the snapshot.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_epoch(mut self, value: i32) -> Self
-    {
+    pub fn with_epoch(mut self, value: i32) -> Self {
         self.epoch = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -480,7 +503,10 @@ impl Encodable for SnapshotId {
         types::Int32.encode(buf, &self.epoch)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -493,7 +519,10 @@ impl Encodable for SnapshotId {
         total_size += types::Int32.compute_size(&self.epoch)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -546,12 +575,12 @@ impl Message for SnapshotId {
 #[derive(Debug, Clone, PartialEq)]
 pub struct TopicSnapshot {
     /// The name of the topic to fetch.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub name: super::TopicName,
 
     /// The partitions to fetch.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub partitions: Vec<PartitionSnapshot>,
 
@@ -561,31 +590,30 @@ pub struct TopicSnapshot {
 
 impl TopicSnapshot {
     /// Sets `name` to the passed value.
-    /// 
+    ///
     /// The name of the topic to fetch.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_name(mut self, value: super::TopicName) -> Self
-    {
+    pub fn with_name(mut self, value: super::TopicName) -> Self {
         self.name = value;
         self
-    }/// Sets `partitions` to the passed value.
-    /// 
+    }
+    /// Sets `partitions` to the passed value.
+    ///
     /// The partitions to fetch.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_partitions(mut self, value: Vec<PartitionSnapshot>) -> Self
-    {
+    pub fn with_partitions(mut self, value: Vec<PartitionSnapshot>) -> Self {
         self.partitions = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -601,7 +629,10 @@ impl Encodable for TopicSnapshot {
         types::CompactArray(types::Struct { version }).encode(buf, &self.partitions)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -611,10 +642,14 @@ impl Encodable for TopicSnapshot {
     fn compute_size(&self, version: i16) -> Result<usize> {
         let mut total_size = 0;
         total_size += types::CompactString.compute_size(&self.name)?;
-        total_size += types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
+        total_size +=
+            types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -667,4 +702,3 @@ impl HeaderVersion for FetchSnapshotRequest {
         2
     }
 }
-

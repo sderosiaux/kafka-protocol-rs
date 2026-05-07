@@ -19,11 +19,17 @@ use anyhow::Context;
 use anyhow::Result;
 use std::convert::TryFrom;
 
+pub mod aborted_txn;
+pub use aborted_txn::AbortedTxn;
+
 pub mod consumer_protocol_assignment;
 pub use consumer_protocol_assignment::ConsumerProtocolAssignment;
 
 pub mod consumer_protocol_subscription;
 pub use consumer_protocol_subscription::ConsumerProtocolSubscription;
+
+pub mod control_record_type_schema;
+pub use control_record_type_schema::ControlRecordTypeSchema;
 
 pub mod default_principal_data;
 pub use default_principal_data::DefaultPrincipalData;
@@ -304,6 +310,12 @@ pub use delete_share_group_state_request::DeleteShareGroupStateRequest;
 pub mod read_share_group_state_summary_request;
 pub use read_share_group_state_summary_request::ReadShareGroupStateSummaryRequest;
 
+pub mod streams_group_heartbeat_request;
+pub use streams_group_heartbeat_request::StreamsGroupHeartbeatRequest;
+
+pub mod streams_group_describe_request;
+pub use streams_group_describe_request::StreamsGroupDescribeRequest;
+
 pub mod describe_share_group_offsets_request;
 pub use describe_share_group_offsets_request::DescribeShareGroupOffsetsRequest;
 
@@ -564,6 +576,12 @@ pub use delete_share_group_state_response::DeleteShareGroupStateResponse;
 
 pub mod read_share_group_state_summary_response;
 pub use read_share_group_state_summary_response::ReadShareGroupStateSummaryResponse;
+
+pub mod streams_group_heartbeat_response;
+pub use streams_group_heartbeat_response::StreamsGroupHeartbeatResponse;
+
+pub mod streams_group_describe_response;
+pub use streams_group_describe_response::StreamsGroupDescribeResponse;
 
 pub mod describe_share_group_offsets_response;
 pub use describe_share_group_offsets_response::DescribeShareGroupOffsetsResponse;
@@ -1079,6 +1097,18 @@ impl Request for ReadShareGroupStateSummaryRequest {
 }
 
 #[cfg(all(feature = "client", feature = "broker"))]
+impl Request for StreamsGroupHeartbeatRequest {
+    const KEY: i16 = 88;
+    type Response = StreamsGroupHeartbeatResponse;
+}
+
+#[cfg(all(feature = "client", feature = "broker"))]
+impl Request for StreamsGroupDescribeRequest {
+    const KEY: i16 = 89;
+    type Response = StreamsGroupDescribeResponse;
+}
+
+#[cfg(all(feature = "client", feature = "broker"))]
 impl Request for DescribeShareGroupOffsetsRequest {
     const KEY: i16 = 90;
     type Response = DescribeShareGroupOffsetsResponse;
@@ -1267,6 +1297,10 @@ pub enum ApiKey {
     DeleteShareGroupState = 86,
     /// API key for request ReadShareGroupStateSummaryRequest
     ReadShareGroupStateSummary = 87,
+    /// API key for request StreamsGroupHeartbeatRequest
+    StreamsGroupHeartbeat = 88,
+    /// API key for request StreamsGroupDescribeRequest
+    StreamsGroupDescribe = 89,
     /// API key for request DescribeShareGroupOffsetsRequest
     DescribeShareGroupOffsets = 90,
     /// API key for request AlterShareGroupOffsetsRequest
@@ -1387,6 +1421,8 @@ impl ApiKey {
             ApiKey::ReadShareGroupStateSummary => {
                 ReadShareGroupStateSummaryRequest::header_version(version)
             }
+            ApiKey::StreamsGroupHeartbeat => StreamsGroupHeartbeatRequest::header_version(version),
+            ApiKey::StreamsGroupDescribe => StreamsGroupDescribeRequest::header_version(version),
             ApiKey::DescribeShareGroupOffsets => {
                 DescribeShareGroupOffsetsRequest::header_version(version)
             }
@@ -1509,6 +1545,8 @@ impl ApiKey {
             ApiKey::ReadShareGroupStateSummary => {
                 ReadShareGroupStateSummaryResponse::header_version(version)
             }
+            ApiKey::StreamsGroupHeartbeat => StreamsGroupHeartbeatResponse::header_version(version),
+            ApiKey::StreamsGroupDescribe => StreamsGroupDescribeResponse::header_version(version),
             ApiKey::DescribeShareGroupOffsets => {
                 DescribeShareGroupOffsetsResponse::header_version(version)
             }
@@ -1525,7 +1563,7 @@ impl ApiKey {
         match self {
             ApiKey::Produce => VersionRange { min: 3, max: 13 },
             ApiKey::Fetch => VersionRange { min: 4, max: 18 },
-            ApiKey::ListOffsets => VersionRange { min: 1, max: 10 },
+            ApiKey::ListOffsets => VersionRange { min: 1, max: 11 },
             ApiKey::Metadata => VersionRange { min: 0, max: 13 },
             ApiKey::OffsetCommit => VersionRange { min: 2, max: 10 },
             ApiKey::OffsetFetch => VersionRange { min: 1, max: 10 },
@@ -1537,7 +1575,7 @@ impl ApiKey {
             ApiKey::DescribeGroups => VersionRange { min: 0, max: 6 },
             ApiKey::ListGroups => VersionRange { min: 0, max: 5 },
             ApiKey::SaslHandshake => VersionRange { min: 0, max: 1 },
-            ApiKey::ApiVersions => VersionRange { min: 0, max: 4 },
+            ApiKey::ApiVersions => VersionRange { min: 0, max: 5 },
             ApiKey::CreateTopics => VersionRange { min: 2, max: 7 },
             ApiKey::DeleteTopics => VersionRange { min: 1, max: 6 },
             ApiKey::DeleteRecords => VersionRange { min: 0, max: 2 },
@@ -1546,15 +1584,15 @@ impl ApiKey {
             ApiKey::AddPartitionsToTxn => VersionRange { min: 0, max: 5 },
             ApiKey::AddOffsetsToTxn => VersionRange { min: 0, max: 4 },
             ApiKey::EndTxn => VersionRange { min: 0, max: 5 },
-            ApiKey::WriteTxnMarkers => VersionRange { min: 1, max: 1 },
-            ApiKey::TxnOffsetCommit => VersionRange { min: 0, max: 5 },
+            ApiKey::WriteTxnMarkers => VersionRange { min: 1, max: 2 },
+            ApiKey::TxnOffsetCommit => VersionRange { min: 0, max: 6 },
             ApiKey::DescribeAcls => VersionRange { min: 1, max: 3 },
             ApiKey::CreateAcls => VersionRange { min: 1, max: 3 },
             ApiKey::DeleteAcls => VersionRange { min: 1, max: 3 },
             ApiKey::DescribeConfigs => VersionRange { min: 1, max: 4 },
             ApiKey::AlterConfigs => VersionRange { min: 0, max: 2 },
             ApiKey::AlterReplicaLogDirs => VersionRange { min: 1, max: 2 },
-            ApiKey::DescribeLogDirs => VersionRange { min: 1, max: 4 },
+            ApiKey::DescribeLogDirs => VersionRange { min: 1, max: 5 },
             ApiKey::SaslAuthenticate => VersionRange { min: 0, max: 2 },
             ApiKey::CreatePartitions => VersionRange { min: 0, max: 3 },
             ApiKey::CreateDelegationToken => VersionRange { min: 1, max: 3 },
@@ -1582,7 +1620,7 @@ impl ApiKey {
             ApiKey::DescribeCluster => VersionRange { min: 0, max: 2 },
             ApiKey::DescribeProducers => VersionRange { min: 0, max: 0 },
             ApiKey::BrokerRegistration => VersionRange { min: 0, max: 4 },
-            ApiKey::BrokerHeartbeat => VersionRange { min: 0, max: 1 },
+            ApiKey::BrokerHeartbeat => VersionRange { min: 0, max: 2 },
             ApiKey::UnregisterBroker => VersionRange { min: 0, max: 0 },
             ApiKey::DescribeTransactions => VersionRange { min: 0, max: 0 },
             ApiKey::ListTransactions => VersionRange { min: 0, max: 2 },
@@ -1597,17 +1635,19 @@ impl ApiKey {
             ApiKey::DescribeTopicPartitions => VersionRange { min: 0, max: 0 },
             ApiKey::ShareGroupHeartbeat => VersionRange { min: 1, max: 1 },
             ApiKey::ShareGroupDescribe => VersionRange { min: 1, max: 1 },
-            ApiKey::ShareFetch => VersionRange { min: 1, max: 1 },
-            ApiKey::ShareAcknowledge => VersionRange { min: 1, max: 1 },
-            ApiKey::AddRaftVoter => VersionRange { min: 0, max: 0 },
+            ApiKey::ShareFetch => VersionRange { min: 1, max: 2 },
+            ApiKey::ShareAcknowledge => VersionRange { min: 1, max: 2 },
+            ApiKey::AddRaftVoter => VersionRange { min: 0, max: 1 },
             ApiKey::RemoveRaftVoter => VersionRange { min: 0, max: 0 },
             ApiKey::UpdateRaftVoter => VersionRange { min: 0, max: 0 },
             ApiKey::InitializeShareGroupState => VersionRange { min: 0, max: 0 },
             ApiKey::ReadShareGroupState => VersionRange { min: 0, max: 0 },
-            ApiKey::WriteShareGroupState => VersionRange { min: 0, max: 0 },
+            ApiKey::WriteShareGroupState => VersionRange { min: 0, max: 1 },
             ApiKey::DeleteShareGroupState => VersionRange { min: 0, max: 0 },
-            ApiKey::ReadShareGroupStateSummary => VersionRange { min: 0, max: 0 },
-            ApiKey::DescribeShareGroupOffsets => VersionRange { min: 0, max: 0 },
+            ApiKey::ReadShareGroupStateSummary => VersionRange { min: 0, max: 1 },
+            ApiKey::StreamsGroupHeartbeat => VersionRange { min: 0, max: 0 },
+            ApiKey::StreamsGroupDescribe => VersionRange { min: 0, max: 0 },
+            ApiKey::DescribeShareGroupOffsets => VersionRange { min: 0, max: 1 },
             ApiKey::AlterShareGroupOffsets => VersionRange { min: 0, max: 0 },
             ApiKey::DeleteShareGroupOffsets => VersionRange { min: 0, max: 0 },
         }
@@ -1721,6 +1761,8 @@ impl TryFrom<i16> for ApiKey {
             x if x == ApiKey::ReadShareGroupStateSummary as i16 => {
                 Ok(ApiKey::ReadShareGroupStateSummary)
             }
+            x if x == ApiKey::StreamsGroupHeartbeat as i16 => Ok(ApiKey::StreamsGroupHeartbeat),
+            x if x == ApiKey::StreamsGroupDescribe as i16 => Ok(ApiKey::StreamsGroupDescribe),
             x if x == ApiKey::DescribeShareGroupOffsets as i16 => {
                 Ok(ApiKey::DescribeShareGroupOffsets)
             }
@@ -1904,6 +1946,10 @@ pub enum RequestKind {
     DeleteShareGroupState(DeleteShareGroupStateRequest),
     /// ReadShareGroupStateSummaryRequest,
     ReadShareGroupStateSummary(ReadShareGroupStateSummaryRequest),
+    /// StreamsGroupHeartbeatRequest,
+    StreamsGroupHeartbeat(StreamsGroupHeartbeatRequest),
+    /// StreamsGroupDescribeRequest,
+    StreamsGroupDescribe(StreamsGroupDescribeRequest),
     /// DescribeShareGroupOffsetsRequest,
     DescribeShareGroupOffsets(DescribeShareGroupOffsetsRequest),
     /// AlterShareGroupOffsetsRequest,
@@ -2002,6 +2048,8 @@ impl RequestKind {
             RequestKind::WriteShareGroupState(x) => encode(x, bytes, version),
             RequestKind::DeleteShareGroupState(x) => encode(x, bytes, version),
             RequestKind::ReadShareGroupStateSummary(x) => encode(x, bytes, version),
+            RequestKind::StreamsGroupHeartbeat(x) => encode(x, bytes, version),
+            RequestKind::StreamsGroupDescribe(x) => encode(x, bytes, version),
             RequestKind::DescribeShareGroupOffsets(x) => encode(x, bytes, version),
             RequestKind::AlterShareGroupOffsets(x) => encode(x, bytes, version),
             RequestKind::DeleteShareGroupOffsets(x) => encode(x, bytes, version),
@@ -2163,6 +2211,12 @@ impl RequestKind {
             ApiKey::ReadShareGroupStateSummary => Ok(RequestKind::ReadShareGroupStateSummary(
                 decode(bytes, version)?,
             )),
+            ApiKey::StreamsGroupHeartbeat => {
+                Ok(RequestKind::StreamsGroupHeartbeat(decode(bytes, version)?))
+            }
+            ApiKey::StreamsGroupDescribe => {
+                Ok(RequestKind::StreamsGroupDescribe(decode(bytes, version)?))
+            }
             ApiKey::DescribeShareGroupOffsets => Ok(RequestKind::DescribeShareGroupOffsets(
                 decode(bytes, version)?,
             )),
@@ -2764,6 +2818,20 @@ impl From<ReadShareGroupStateSummaryRequest> for RequestKind {
 }
 
 #[cfg(feature = "messages_enums")]
+impl From<StreamsGroupHeartbeatRequest> for RequestKind {
+    fn from(value: StreamsGroupHeartbeatRequest) -> RequestKind {
+        RequestKind::StreamsGroupHeartbeat(value)
+    }
+}
+
+#[cfg(feature = "messages_enums")]
+impl From<StreamsGroupDescribeRequest> for RequestKind {
+    fn from(value: StreamsGroupDescribeRequest) -> RequestKind {
+        RequestKind::StreamsGroupDescribe(value)
+    }
+}
+
+#[cfg(feature = "messages_enums")]
 impl From<DescribeShareGroupOffsetsRequest> for RequestKind {
     fn from(value: DescribeShareGroupOffsetsRequest) -> RequestKind {
         RequestKind::DescribeShareGroupOffsets(value)
@@ -2981,6 +3049,10 @@ pub enum ResponseKind {
     DeleteShareGroupState(DeleteShareGroupStateResponse),
     /// ReadShareGroupStateSummaryResponse,
     ReadShareGroupStateSummary(ReadShareGroupStateSummaryResponse),
+    /// StreamsGroupHeartbeatResponse,
+    StreamsGroupHeartbeat(StreamsGroupHeartbeatResponse),
+    /// StreamsGroupDescribeResponse,
+    StreamsGroupDescribe(StreamsGroupDescribeResponse),
     /// DescribeShareGroupOffsetsResponse,
     DescribeShareGroupOffsets(DescribeShareGroupOffsetsResponse),
     /// AlterShareGroupOffsetsResponse,
@@ -3079,6 +3151,8 @@ impl ResponseKind {
             ResponseKind::WriteShareGroupState(x) => encode(x, bytes, version),
             ResponseKind::DeleteShareGroupState(x) => encode(x, bytes, version),
             ResponseKind::ReadShareGroupStateSummary(x) => encode(x, bytes, version),
+            ResponseKind::StreamsGroupHeartbeat(x) => encode(x, bytes, version),
+            ResponseKind::StreamsGroupDescribe(x) => encode(x, bytes, version),
             ResponseKind::DescribeShareGroupOffsets(x) => encode(x, bytes, version),
             ResponseKind::AlterShareGroupOffsets(x) => encode(x, bytes, version),
             ResponseKind::DeleteShareGroupOffsets(x) => encode(x, bytes, version),
@@ -3240,6 +3314,12 @@ impl ResponseKind {
             ApiKey::ReadShareGroupStateSummary => Ok(ResponseKind::ReadShareGroupStateSummary(
                 decode(bytes, version)?,
             )),
+            ApiKey::StreamsGroupHeartbeat => {
+                Ok(ResponseKind::StreamsGroupHeartbeat(decode(bytes, version)?))
+            }
+            ApiKey::StreamsGroupDescribe => {
+                Ok(ResponseKind::StreamsGroupDescribe(decode(bytes, version)?))
+            }
             ApiKey::DescribeShareGroupOffsets => Ok(ResponseKind::DescribeShareGroupOffsets(
                 decode(bytes, version)?,
             )),
@@ -3401,6 +3481,12 @@ impl ResponseKind {
             }
             ResponseKind::ReadShareGroupStateSummary(_) => {
                 ReadShareGroupStateSummaryResponse::header_version(version)
+            }
+            ResponseKind::StreamsGroupHeartbeat(_) => {
+                StreamsGroupHeartbeatResponse::header_version(version)
+            }
+            ResponseKind::StreamsGroupDescribe(_) => {
+                StreamsGroupDescribeResponse::header_version(version)
             }
             ResponseKind::DescribeShareGroupOffsets(_) => {
                 DescribeShareGroupOffsetsResponse::header_version(version)
@@ -4000,6 +4086,20 @@ impl From<DeleteShareGroupStateResponse> for ResponseKind {
 impl From<ReadShareGroupStateSummaryResponse> for ResponseKind {
     fn from(value: ReadShareGroupStateSummaryResponse) -> ResponseKind {
         ResponseKind::ReadShareGroupStateSummary(value)
+    }
+}
+
+#[cfg(feature = "messages_enums")]
+impl From<StreamsGroupHeartbeatResponse> for ResponseKind {
+    fn from(value: StreamsGroupHeartbeatResponse) -> ResponseKind {
+        ResponseKind::StreamsGroupHeartbeat(value)
+    }
+}
+
+#[cfg(feature = "messages_enums")]
+impl From<StreamsGroupDescribeResponse> for ResponseKind {
+    fn from(value: StreamsGroupDescribeResponse) -> ResponseKind {
+        ResponseKind::StreamsGroupDescribe(value)
     }
 }
 

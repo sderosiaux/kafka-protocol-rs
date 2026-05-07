@@ -7,27 +7,27 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
+use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
-use anyhow::{bail, Result};
 
 use crate::protocol::{
-    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
-    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
+    buf::{ByteBuf, ByteBufMut},
+    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
+    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
 };
-
 
 /// Valid versions: 0-1
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct AlterClientQuotasRequest {
     /// The quota configuration entries to alter.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub entries: Vec<EntryData>,
 
     /// Whether the alteration should be validated, but not performed.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub validate_only: bool,
 
@@ -37,31 +37,30 @@ pub struct AlterClientQuotasRequest {
 
 impl AlterClientQuotasRequest {
     /// Sets `entries` to the passed value.
-    /// 
+    ///
     /// The quota configuration entries to alter.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_entries(mut self, value: Vec<EntryData>) -> Self
-    {
+    pub fn with_entries(mut self, value: Vec<EntryData>) -> Self {
         self.entries = value;
         self
-    }/// Sets `validate_only` to the passed value.
-    /// 
+    }
+    /// Sets `validate_only` to the passed value.
+    ///
     /// Whether the alteration should be validated, but not performed.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_validate_only(mut self, value: bool) -> Self
-    {
+    pub fn with_validate_only(mut self, value: bool) -> Self {
         self.validate_only = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -82,7 +81,10 @@ impl Encodable for AlterClientQuotasRequest {
         if version >= 1 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -93,7 +95,8 @@ impl Encodable for AlterClientQuotasRequest {
     fn compute_size(&self, version: i16) -> Result<usize> {
         let mut total_size = 0;
         if version >= 1 {
-            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.entries)?;
+            total_size +=
+                types::CompactArray(types::Struct { version }).compute_size(&self.entries)?;
         } else {
             total_size += types::Array(types::Struct { version }).compute_size(&self.entries)?;
         }
@@ -101,7 +104,10 @@ impl Encodable for AlterClientQuotasRequest {
         if version >= 1 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -161,12 +167,12 @@ impl Message for AlterClientQuotasRequest {
 #[derive(Debug, Clone, PartialEq)]
 pub struct EntityData {
     /// The entity type.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub entity_type: StrBytes,
 
     /// The name of the entity, or null if the default.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub entity_name: Option<StrBytes>,
 
@@ -176,31 +182,30 @@ pub struct EntityData {
 
 impl EntityData {
     /// Sets `entity_type` to the passed value.
-    /// 
+    ///
     /// The entity type.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_entity_type(mut self, value: StrBytes) -> Self
-    {
+    pub fn with_entity_type(mut self, value: StrBytes) -> Self {
         self.entity_type = value;
         self
-    }/// Sets `entity_name` to the passed value.
-    /// 
+    }
+    /// Sets `entity_name` to the passed value.
+    ///
     /// The name of the entity, or null if the default.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_entity_name(mut self, value: Option<StrBytes>) -> Self
-    {
+    pub fn with_entity_name(mut self, value: Option<StrBytes>) -> Self {
         self.entity_name = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -225,7 +230,10 @@ impl Encodable for EntityData {
         if version >= 1 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -248,7 +256,10 @@ impl Encodable for EntityData {
         if version >= 1 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -312,12 +323,12 @@ impl Message for EntityData {
 #[derive(Debug, Clone, PartialEq)]
 pub struct EntryData {
     /// The quota entity to alter.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub entity: Vec<EntityData>,
 
     /// An individual quota configuration entry to alter.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub ops: Vec<OpData>,
 
@@ -327,31 +338,30 @@ pub struct EntryData {
 
 impl EntryData {
     /// Sets `entity` to the passed value.
-    /// 
+    ///
     /// The quota entity to alter.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_entity(mut self, value: Vec<EntityData>) -> Self
-    {
+    pub fn with_entity(mut self, value: Vec<EntityData>) -> Self {
         self.entity = value;
         self
-    }/// Sets `ops` to the passed value.
-    /// 
+    }
+    /// Sets `ops` to the passed value.
+    ///
     /// An individual quota configuration entry to alter.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_ops(mut self, value: Vec<OpData>) -> Self
-    {
+    pub fn with_ops(mut self, value: Vec<OpData>) -> Self {
         self.ops = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -376,7 +386,10 @@ impl Encodable for EntryData {
         if version >= 1 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -387,7 +400,8 @@ impl Encodable for EntryData {
     fn compute_size(&self, version: i16) -> Result<usize> {
         let mut total_size = 0;
         if version >= 1 {
-            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.entity)?;
+            total_size +=
+                types::CompactArray(types::Struct { version }).compute_size(&self.entity)?;
         } else {
             total_size += types::Array(types::Struct { version }).compute_size(&self.entity)?;
         }
@@ -399,7 +413,10 @@ impl Encodable for EntryData {
         if version >= 1 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -463,17 +480,17 @@ impl Message for EntryData {
 #[derive(Debug, Clone, PartialEq)]
 pub struct OpData {
     /// The quota configuration key.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub key: StrBytes,
 
     /// The value to set, otherwise ignored if the value is to be removed.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub value: f64,
 
     /// Whether the quota configuration value should be removed, otherwise set.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub remove: bool,
 
@@ -483,40 +500,39 @@ pub struct OpData {
 
 impl OpData {
     /// Sets `key` to the passed value.
-    /// 
+    ///
     /// The quota configuration key.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_key(mut self, value: StrBytes) -> Self
-    {
+    pub fn with_key(mut self, value: StrBytes) -> Self {
         self.key = value;
         self
-    }/// Sets `value` to the passed value.
-    /// 
+    }
+    /// Sets `value` to the passed value.
+    ///
     /// The value to set, otherwise ignored if the value is to be removed.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_value(mut self, value: f64) -> Self
-    {
+    pub fn with_value(mut self, value: f64) -> Self {
         self.value = value;
         self
-    }/// Sets `remove` to the passed value.
-    /// 
+    }
+    /// Sets `remove` to the passed value.
+    ///
     /// Whether the quota configuration value should be removed, otherwise set.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_remove(mut self, value: bool) -> Self
-    {
+    pub fn with_remove(mut self, value: bool) -> Self {
         self.remove = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -538,7 +554,10 @@ impl Encodable for OpData {
         if version >= 1 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -558,7 +577,10 @@ impl Encodable for OpData {
         if version >= 1 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -625,4 +647,3 @@ impl HeaderVersion for AlterClientQuotasRequest {
         }
     }
 }
-

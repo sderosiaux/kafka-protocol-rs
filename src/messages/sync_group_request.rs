@@ -7,52 +7,52 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
+use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
-use anyhow::{bail, Result};
 
 use crate::protocol::{
-    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
-    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
+    buf::{ByteBuf, ByteBufMut},
+    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
+    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
 };
-
 
 /// Valid versions: 0-5
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct SyncGroupRequest {
     /// The unique group identifier.
-    /// 
+    ///
     /// Supported API versions: 0-5
     pub group_id: super::GroupId,
 
     /// The generation of the group.
-    /// 
+    ///
     /// Supported API versions: 0-5
     pub generation_id: i32,
 
     /// The member ID assigned by the group.
-    /// 
+    ///
     /// Supported API versions: 0-5
     pub member_id: StrBytes,
 
     /// The unique identifier of the consumer instance provided by end user.
-    /// 
+    ///
     /// Supported API versions: 3-5
     pub group_instance_id: Option<StrBytes>,
 
     /// The group protocol type.
-    /// 
+    ///
     /// Supported API versions: 5
     pub protocol_type: Option<StrBytes>,
 
     /// The group protocol name.
-    /// 
+    ///
     /// Supported API versions: 5
     pub protocol_name: Option<StrBytes>,
 
     /// Each assignment.
-    /// 
+    ///
     /// Supported API versions: 0-5
     pub assignments: Vec<SyncGroupRequestAssignment>,
 
@@ -62,76 +62,75 @@ pub struct SyncGroupRequest {
 
 impl SyncGroupRequest {
     /// Sets `group_id` to the passed value.
-    /// 
+    ///
     /// The unique group identifier.
-    /// 
+    ///
     /// Supported API versions: 0-5
-    pub fn with_group_id(mut self, value: super::GroupId) -> Self
-    {
+    pub fn with_group_id(mut self, value: super::GroupId) -> Self {
         self.group_id = value;
         self
-    }/// Sets `generation_id` to the passed value.
-    /// 
+    }
+    /// Sets `generation_id` to the passed value.
+    ///
     /// The generation of the group.
-    /// 
+    ///
     /// Supported API versions: 0-5
-    pub fn with_generation_id(mut self, value: i32) -> Self
-    {
+    pub fn with_generation_id(mut self, value: i32) -> Self {
         self.generation_id = value;
         self
-    }/// Sets `member_id` to the passed value.
-    /// 
+    }
+    /// Sets `member_id` to the passed value.
+    ///
     /// The member ID assigned by the group.
-    /// 
+    ///
     /// Supported API versions: 0-5
-    pub fn with_member_id(mut self, value: StrBytes) -> Self
-    {
+    pub fn with_member_id(mut self, value: StrBytes) -> Self {
         self.member_id = value;
         self
-    }/// Sets `group_instance_id` to the passed value.
-    /// 
+    }
+    /// Sets `group_instance_id` to the passed value.
+    ///
     /// The unique identifier of the consumer instance provided by end user.
-    /// 
+    ///
     /// Supported API versions: 3-5
-    pub fn with_group_instance_id(mut self, value: Option<StrBytes>) -> Self
-    {
+    pub fn with_group_instance_id(mut self, value: Option<StrBytes>) -> Self {
         self.group_instance_id = value;
         self
-    }/// Sets `protocol_type` to the passed value.
-    /// 
+    }
+    /// Sets `protocol_type` to the passed value.
+    ///
     /// The group protocol type.
-    /// 
+    ///
     /// Supported API versions: 5
-    pub fn with_protocol_type(mut self, value: Option<StrBytes>) -> Self
-    {
+    pub fn with_protocol_type(mut self, value: Option<StrBytes>) -> Self {
         self.protocol_type = value;
         self
-    }/// Sets `protocol_name` to the passed value.
-    /// 
+    }
+    /// Sets `protocol_name` to the passed value.
+    ///
     /// The group protocol name.
-    /// 
+    ///
     /// Supported API versions: 5
-    pub fn with_protocol_name(mut self, value: Option<StrBytes>) -> Self
-    {
+    pub fn with_protocol_name(mut self, value: Option<StrBytes>) -> Self {
         self.protocol_name = value;
         self
-    }/// Sets `assignments` to the passed value.
-    /// 
+    }
+    /// Sets `assignments` to the passed value.
+    ///
     /// Each assignment.
-    /// 
+    ///
     /// Supported API versions: 0-5
-    pub fn with_assignments(mut self, value: Vec<SyncGroupRequestAssignment>) -> Self
-    {
+    pub fn with_assignments(mut self, value: Vec<SyncGroupRequestAssignment>) -> Self {
         self.assignments = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -179,7 +178,10 @@ impl Encodable for SyncGroupRequest {
         if version >= 4 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -218,14 +220,19 @@ impl Encodable for SyncGroupRequest {
             total_size += types::CompactString.compute_size(&self.protocol_name)?;
         }
         if version >= 4 {
-            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.assignments)?;
+            total_size +=
+                types::CompactArray(types::Struct { version }).compute_size(&self.assignments)?;
         } else {
-            total_size += types::Array(types::Struct { version }).compute_size(&self.assignments)?;
+            total_size +=
+                types::Array(types::Struct { version }).compute_size(&self.assignments)?;
         }
         if version >= 4 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -324,12 +331,12 @@ impl Message for SyncGroupRequest {
 #[derive(Debug, Clone, PartialEq)]
 pub struct SyncGroupRequestAssignment {
     /// The ID of the member to assign.
-    /// 
+    ///
     /// Supported API versions: 0-5
     pub member_id: StrBytes,
 
     /// The member assignment.
-    /// 
+    ///
     /// Supported API versions: 0-5
     pub assignment: Bytes,
 
@@ -339,31 +346,30 @@ pub struct SyncGroupRequestAssignment {
 
 impl SyncGroupRequestAssignment {
     /// Sets `member_id` to the passed value.
-    /// 
+    ///
     /// The ID of the member to assign.
-    /// 
+    ///
     /// Supported API versions: 0-5
-    pub fn with_member_id(mut self, value: StrBytes) -> Self
-    {
+    pub fn with_member_id(mut self, value: StrBytes) -> Self {
         self.member_id = value;
         self
-    }/// Sets `assignment` to the passed value.
-    /// 
+    }
+    /// Sets `assignment` to the passed value.
+    ///
     /// The member assignment.
-    /// 
+    ///
     /// Supported API versions: 0-5
-    pub fn with_assignment(mut self, value: Bytes) -> Self
-    {
+    pub fn with_assignment(mut self, value: Bytes) -> Self {
         self.assignment = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -388,7 +394,10 @@ impl Encodable for SyncGroupRequestAssignment {
         if version >= 4 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -411,7 +420,10 @@ impl Encodable for SyncGroupRequestAssignment {
         if version >= 4 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -479,4 +491,3 @@ impl HeaderVersion for SyncGroupRequest {
         }
     }
 }
-

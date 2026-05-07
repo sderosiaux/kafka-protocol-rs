@@ -7,42 +7,42 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
+use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
-use anyhow::{bail, Result};
 
 use crate::protocol::{
-    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
-    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
+    buf::{ByteBuf, ByteBufMut},
+    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
+    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
 };
-
 
 /// Valid versions: 0
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct ControllerRegistrationRequest {
     /// The ID of the controller to register.
-    /// 
+    ///
     /// Supported API versions: 0
     pub controller_id: i32,
 
     /// The controller incarnation ID, which is unique to each process run.
-    /// 
+    ///
     /// Supported API versions: 0
     pub incarnation_id: Uuid,
 
     /// Set if the required configurations for ZK migration are present.
-    /// 
+    ///
     /// Supported API versions: 0
     pub zk_migration_ready: bool,
 
     /// The listeners of this controller.
-    /// 
+    ///
     /// Supported API versions: 0
     pub listeners: Vec<Listener>,
 
     /// The features on this controller.
-    /// 
+    ///
     /// Supported API versions: 0
     pub features: Vec<Feature>,
 
@@ -52,58 +52,57 @@ pub struct ControllerRegistrationRequest {
 
 impl ControllerRegistrationRequest {
     /// Sets `controller_id` to the passed value.
-    /// 
+    ///
     /// The ID of the controller to register.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_controller_id(mut self, value: i32) -> Self
-    {
+    pub fn with_controller_id(mut self, value: i32) -> Self {
         self.controller_id = value;
         self
-    }/// Sets `incarnation_id` to the passed value.
-    /// 
+    }
+    /// Sets `incarnation_id` to the passed value.
+    ///
     /// The controller incarnation ID, which is unique to each process run.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_incarnation_id(mut self, value: Uuid) -> Self
-    {
+    pub fn with_incarnation_id(mut self, value: Uuid) -> Self {
         self.incarnation_id = value;
         self
-    }/// Sets `zk_migration_ready` to the passed value.
-    /// 
+    }
+    /// Sets `zk_migration_ready` to the passed value.
+    ///
     /// Set if the required configurations for ZK migration are present.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_zk_migration_ready(mut self, value: bool) -> Self
-    {
+    pub fn with_zk_migration_ready(mut self, value: bool) -> Self {
         self.zk_migration_ready = value;
         self
-    }/// Sets `listeners` to the passed value.
-    /// 
+    }
+    /// Sets `listeners` to the passed value.
+    ///
     /// The listeners of this controller.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_listeners(mut self, value: Vec<Listener>) -> Self
-    {
+    pub fn with_listeners(mut self, value: Vec<Listener>) -> Self {
         self.listeners = value;
         self
-    }/// Sets `features` to the passed value.
-    /// 
+    }
+    /// Sets `features` to the passed value.
+    ///
     /// The features on this controller.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_features(mut self, value: Vec<Feature>) -> Self
-    {
+    pub fn with_features(mut self, value: Vec<Feature>) -> Self {
         self.features = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -122,7 +121,10 @@ impl Encodable for ControllerRegistrationRequest {
         types::CompactArray(types::Struct { version }).encode(buf, &self.features)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -134,11 +136,16 @@ impl Encodable for ControllerRegistrationRequest {
         total_size += types::Int32.compute_size(&self.controller_id)?;
         total_size += types::Uuid.compute_size(&self.incarnation_id)?;
         total_size += types::Boolean.compute_size(&self.zk_migration_ready)?;
-        total_size += types::CompactArray(types::Struct { version }).compute_size(&self.listeners)?;
-        total_size += types::CompactArray(types::Struct { version }).compute_size(&self.features)?;
+        total_size +=
+            types::CompactArray(types::Struct { version }).compute_size(&self.listeners)?;
+        total_size +=
+            types::CompactArray(types::Struct { version }).compute_size(&self.features)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -200,17 +207,17 @@ impl Message for ControllerRegistrationRequest {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Feature {
     /// The feature name.
-    /// 
+    ///
     /// Supported API versions: 0
     pub name: StrBytes,
 
     /// The minimum supported feature level.
-    /// 
+    ///
     /// Supported API versions: 0
     pub min_supported_version: i16,
 
     /// The maximum supported feature level.
-    /// 
+    ///
     /// Supported API versions: 0
     pub max_supported_version: i16,
 
@@ -220,40 +227,39 @@ pub struct Feature {
 
 impl Feature {
     /// Sets `name` to the passed value.
-    /// 
+    ///
     /// The feature name.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_name(mut self, value: StrBytes) -> Self
-    {
+    pub fn with_name(mut self, value: StrBytes) -> Self {
         self.name = value;
         self
-    }/// Sets `min_supported_version` to the passed value.
-    /// 
+    }
+    /// Sets `min_supported_version` to the passed value.
+    ///
     /// The minimum supported feature level.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_min_supported_version(mut self, value: i16) -> Self
-    {
+    pub fn with_min_supported_version(mut self, value: i16) -> Self {
         self.min_supported_version = value;
         self
-    }/// Sets `max_supported_version` to the passed value.
-    /// 
+    }
+    /// Sets `max_supported_version` to the passed value.
+    ///
     /// The maximum supported feature level.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_max_supported_version(mut self, value: i16) -> Self
-    {
+    pub fn with_max_supported_version(mut self, value: i16) -> Self {
         self.max_supported_version = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -270,7 +276,10 @@ impl Encodable for Feature {
         types::Int16.encode(buf, &self.max_supported_version)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -284,7 +293,10 @@ impl Encodable for Feature {
         total_size += types::Int16.compute_size(&self.max_supported_version)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -340,22 +352,22 @@ impl Message for Feature {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Listener {
     /// The name of the endpoint.
-    /// 
+    ///
     /// Supported API versions: 0
     pub name: StrBytes,
 
     /// The hostname.
-    /// 
+    ///
     /// Supported API versions: 0
     pub host: StrBytes,
 
     /// The port.
-    /// 
+    ///
     /// Supported API versions: 0
     pub port: u16,
 
     /// The security protocol.
-    /// 
+    ///
     /// Supported API versions: 0
     pub security_protocol: i16,
 
@@ -365,49 +377,48 @@ pub struct Listener {
 
 impl Listener {
     /// Sets `name` to the passed value.
-    /// 
+    ///
     /// The name of the endpoint.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_name(mut self, value: StrBytes) -> Self
-    {
+    pub fn with_name(mut self, value: StrBytes) -> Self {
         self.name = value;
         self
-    }/// Sets `host` to the passed value.
-    /// 
+    }
+    /// Sets `host` to the passed value.
+    ///
     /// The hostname.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_host(mut self, value: StrBytes) -> Self
-    {
+    pub fn with_host(mut self, value: StrBytes) -> Self {
         self.host = value;
         self
-    }/// Sets `port` to the passed value.
-    /// 
+    }
+    /// Sets `port` to the passed value.
+    ///
     /// The port.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_port(mut self, value: u16) -> Self
-    {
+    pub fn with_port(mut self, value: u16) -> Self {
         self.port = value;
         self
-    }/// Sets `security_protocol` to the passed value.
-    /// 
+    }
+    /// Sets `security_protocol` to the passed value.
+    ///
     /// The security protocol.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_security_protocol(mut self, value: i16) -> Self
-    {
+    pub fn with_security_protocol(mut self, value: i16) -> Self {
         self.security_protocol = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -425,7 +436,10 @@ impl Encodable for Listener {
         types::Int16.encode(buf, &self.security_protocol)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -440,7 +454,10 @@ impl Encodable for Listener {
         total_size += types::Int16.compute_size(&self.security_protocol)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -499,4 +516,3 @@ impl HeaderVersion for ControllerRegistrationRequest {
         2
     }
 }
-

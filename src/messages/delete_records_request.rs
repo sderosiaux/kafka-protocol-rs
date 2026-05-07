@@ -7,27 +7,27 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
+use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
-use anyhow::{bail, Result};
 
 use crate::protocol::{
-    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
-    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
+    buf::{ByteBuf, ByteBufMut},
+    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
+    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
 };
-
 
 /// Valid versions: 0-2
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct DeleteRecordsPartition {
     /// The partition index.
-    /// 
+    ///
     /// Supported API versions: 0-2
     pub partition_index: i32,
 
     /// The deletion offset. -1 means that records should be truncated to the high watermark.
-    /// 
+    ///
     /// Supported API versions: 0-2
     pub offset: i64,
 
@@ -37,31 +37,30 @@ pub struct DeleteRecordsPartition {
 
 impl DeleteRecordsPartition {
     /// Sets `partition_index` to the passed value.
-    /// 
+    ///
     /// The partition index.
-    /// 
+    ///
     /// Supported API versions: 0-2
-    pub fn with_partition_index(mut self, value: i32) -> Self
-    {
+    pub fn with_partition_index(mut self, value: i32) -> Self {
         self.partition_index = value;
         self
-    }/// Sets `offset` to the passed value.
-    /// 
+    }
+    /// Sets `offset` to the passed value.
+    ///
     /// The deletion offset. -1 means that records should be truncated to the high watermark.
-    /// 
+    ///
     /// Supported API versions: 0-2
-    pub fn with_offset(mut self, value: i64) -> Self
-    {
+    pub fn with_offset(mut self, value: i64) -> Self {
         self.offset = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -78,7 +77,10 @@ impl Encodable for DeleteRecordsPartition {
         if version >= 2 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -93,7 +95,10 @@ impl Encodable for DeleteRecordsPartition {
         if version >= 2 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -149,12 +154,12 @@ impl Message for DeleteRecordsPartition {
 #[derive(Debug, Clone, PartialEq)]
 pub struct DeleteRecordsRequest {
     /// Each topic that we want to delete records from.
-    /// 
+    ///
     /// Supported API versions: 0-2
     pub topics: Vec<DeleteRecordsTopic>,
 
     /// How long to wait for the deletion to complete, in milliseconds.
-    /// 
+    ///
     /// Supported API versions: 0-2
     pub timeout_ms: i32,
 
@@ -164,31 +169,30 @@ pub struct DeleteRecordsRequest {
 
 impl DeleteRecordsRequest {
     /// Sets `topics` to the passed value.
-    /// 
+    ///
     /// Each topic that we want to delete records from.
-    /// 
+    ///
     /// Supported API versions: 0-2
-    pub fn with_topics(mut self, value: Vec<DeleteRecordsTopic>) -> Self
-    {
+    pub fn with_topics(mut self, value: Vec<DeleteRecordsTopic>) -> Self {
         self.topics = value;
         self
-    }/// Sets `timeout_ms` to the passed value.
-    /// 
+    }
+    /// Sets `timeout_ms` to the passed value.
+    ///
     /// How long to wait for the deletion to complete, in milliseconds.
-    /// 
+    ///
     /// Supported API versions: 0-2
-    pub fn with_timeout_ms(mut self, value: i32) -> Self
-    {
+    pub fn with_timeout_ms(mut self, value: i32) -> Self {
         self.timeout_ms = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -209,7 +213,10 @@ impl Encodable for DeleteRecordsRequest {
         if version >= 2 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -220,7 +227,8 @@ impl Encodable for DeleteRecordsRequest {
     fn compute_size(&self, version: i16) -> Result<usize> {
         let mut total_size = 0;
         if version >= 2 {
-            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
+            total_size +=
+                types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
         } else {
             total_size += types::Array(types::Struct { version }).compute_size(&self.topics)?;
         }
@@ -228,7 +236,10 @@ impl Encodable for DeleteRecordsRequest {
         if version >= 2 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -288,12 +299,12 @@ impl Message for DeleteRecordsRequest {
 #[derive(Debug, Clone, PartialEq)]
 pub struct DeleteRecordsTopic {
     /// The topic name.
-    /// 
+    ///
     /// Supported API versions: 0-2
     pub name: super::TopicName,
 
     /// Each partition that we want to delete records from.
-    /// 
+    ///
     /// Supported API versions: 0-2
     pub partitions: Vec<DeleteRecordsPartition>,
 
@@ -303,31 +314,30 @@ pub struct DeleteRecordsTopic {
 
 impl DeleteRecordsTopic {
     /// Sets `name` to the passed value.
-    /// 
+    ///
     /// The topic name.
-    /// 
+    ///
     /// Supported API versions: 0-2
-    pub fn with_name(mut self, value: super::TopicName) -> Self
-    {
+    pub fn with_name(mut self, value: super::TopicName) -> Self {
         self.name = value;
         self
-    }/// Sets `partitions` to the passed value.
-    /// 
+    }
+    /// Sets `partitions` to the passed value.
+    ///
     /// Each partition that we want to delete records from.
-    /// 
+    ///
     /// Supported API versions: 0-2
-    pub fn with_partitions(mut self, value: Vec<DeleteRecordsPartition>) -> Self
-    {
+    pub fn with_partitions(mut self, value: Vec<DeleteRecordsPartition>) -> Self {
         self.partitions = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -352,7 +362,10 @@ impl Encodable for DeleteRecordsTopic {
         if version >= 2 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -368,14 +381,18 @@ impl Encodable for DeleteRecordsTopic {
             total_size += types::String.compute_size(&self.name)?;
         }
         if version >= 2 {
-            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
+            total_size +=
+                types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
         } else {
             total_size += types::Array(types::Struct { version }).compute_size(&self.partitions)?;
         }
         if version >= 2 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -443,4 +460,3 @@ impl HeaderVersion for DeleteRecordsRequest {
         }
     }
 }
-

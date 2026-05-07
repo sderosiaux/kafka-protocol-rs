@@ -7,27 +7,27 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
+use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
-use anyhow::{bail, Result};
 
 use crate::protocol::{
-    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
-    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
+    buf::{ByteBuf, ByteBufMut},
+    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
+    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
 };
-
 
 /// Valid versions: 1-6
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct DeleteTopicState {
     /// The topic name.
-    /// 
+    ///
     /// Supported API versions: 6
     pub name: Option<super::TopicName>,
 
     /// The unique topic ID.
-    /// 
+    ///
     /// Supported API versions: 6
     pub topic_id: Uuid,
 
@@ -37,31 +37,30 @@ pub struct DeleteTopicState {
 
 impl DeleteTopicState {
     /// Sets `name` to the passed value.
-    /// 
+    ///
     /// The topic name.
-    /// 
+    ///
     /// Supported API versions: 6
-    pub fn with_name(mut self, value: Option<super::TopicName>) -> Self
-    {
+    pub fn with_name(mut self, value: Option<super::TopicName>) -> Self {
         self.name = value;
         self
-    }/// Sets `topic_id` to the passed value.
-    /// 
+    }
+    /// Sets `topic_id` to the passed value.
+    ///
     /// The unique topic ID.
-    /// 
+    ///
     /// Supported API versions: 6
-    pub fn with_topic_id(mut self, value: Uuid) -> Self
-    {
+    pub fn with_topic_id(mut self, value: Uuid) -> Self {
         self.topic_id = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -90,7 +89,10 @@ impl Encodable for DeleteTopicState {
         if version >= 4 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -117,7 +119,10 @@ impl Encodable for DeleteTopicState {
         if version >= 4 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -181,17 +186,17 @@ impl Message for DeleteTopicState {
 #[derive(Debug, Clone, PartialEq)]
 pub struct DeleteTopicsRequest {
     /// The name or topic ID of the topic.
-    /// 
+    ///
     /// Supported API versions: 6
     pub topics: Vec<DeleteTopicState>,
 
     /// The names of the topics to delete.
-    /// 
+    ///
     /// Supported API versions: 1-5
     pub topic_names: Vec<super::TopicName>,
 
     /// The length of time in milliseconds to wait for the deletions to complete.
-    /// 
+    ///
     /// Supported API versions: 1-6
     pub timeout_ms: i32,
 
@@ -201,40 +206,39 @@ pub struct DeleteTopicsRequest {
 
 impl DeleteTopicsRequest {
     /// Sets `topics` to the passed value.
-    /// 
+    ///
     /// The name or topic ID of the topic.
-    /// 
+    ///
     /// Supported API versions: 6
-    pub fn with_topics(mut self, value: Vec<DeleteTopicState>) -> Self
-    {
+    pub fn with_topics(mut self, value: Vec<DeleteTopicState>) -> Self {
         self.topics = value;
         self
-    }/// Sets `topic_names` to the passed value.
-    /// 
+    }
+    /// Sets `topic_names` to the passed value.
+    ///
     /// The names of the topics to delete.
-    /// 
+    ///
     /// Supported API versions: 1-5
-    pub fn with_topic_names(mut self, value: Vec<super::TopicName>) -> Self
-    {
+    pub fn with_topic_names(mut self, value: Vec<super::TopicName>) -> Self {
         self.topic_names = value;
         self
-    }/// Sets `timeout_ms` to the passed value.
-    /// 
+    }
+    /// Sets `timeout_ms` to the passed value.
+    ///
     /// The length of time in milliseconds to wait for the deletions to complete.
-    /// 
+    ///
     /// Supported API versions: 1-6
-    pub fn with_timeout_ms(mut self, value: i32) -> Self
-    {
+    pub fn with_timeout_ms(mut self, value: i32) -> Self {
         self.timeout_ms = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -264,7 +268,10 @@ impl Encodable for DeleteTopicsRequest {
         if version >= 4 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -275,7 +282,8 @@ impl Encodable for DeleteTopicsRequest {
     fn compute_size(&self, version: i16) -> Result<usize> {
         let mut total_size = 0;
         if version >= 6 {
-            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
+            total_size +=
+                types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
         } else {
             if !self.topics.is_empty() {
                 bail!("A field is set that is not available on the selected protocol version");
@@ -283,7 +291,8 @@ impl Encodable for DeleteTopicsRequest {
         }
         if version <= 5 {
             if version >= 4 {
-                total_size += types::CompactArray(types::CompactString).compute_size(&self.topic_names)?;
+                total_size +=
+                    types::CompactArray(types::CompactString).compute_size(&self.topic_names)?;
             } else {
                 total_size += types::Array(types::String).compute_size(&self.topic_names)?;
             }
@@ -292,7 +301,10 @@ impl Encodable for DeleteTopicsRequest {
         if version >= 4 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -367,4 +379,3 @@ impl HeaderVersion for DeleteTopicsRequest {
         }
     }
 }
-

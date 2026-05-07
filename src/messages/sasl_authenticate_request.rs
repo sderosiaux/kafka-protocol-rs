@@ -7,22 +7,22 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
+use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
-use anyhow::{bail, Result};
 
 use crate::protocol::{
-    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
-    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
+    buf::{ByteBuf, ByteBufMut},
+    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
+    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
 };
-
 
 /// Valid versions: 0-2
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct SaslAuthenticateRequest {
     /// The SASL authentication bytes from the client, as defined by the SASL mechanism.
-    /// 
+    ///
     /// Supported API versions: 0-2
     pub auth_bytes: Bytes,
 
@@ -32,22 +32,21 @@ pub struct SaslAuthenticateRequest {
 
 impl SaslAuthenticateRequest {
     /// Sets `auth_bytes` to the passed value.
-    /// 
+    ///
     /// The SASL authentication bytes from the client, as defined by the SASL mechanism.
-    /// 
+    ///
     /// Supported API versions: 0-2
-    pub fn with_auth_bytes(mut self, value: Bytes) -> Self
-    {
+    pub fn with_auth_bytes(mut self, value: Bytes) -> Self {
         self.auth_bytes = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -67,7 +66,10 @@ impl Encodable for SaslAuthenticateRequest {
         if version >= 2 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -85,7 +87,10 @@ impl Encodable for SaslAuthenticateRequest {
         if version >= 2 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -146,4 +151,3 @@ impl HeaderVersion for SaslAuthenticateRequest {
         }
     }
 }
-

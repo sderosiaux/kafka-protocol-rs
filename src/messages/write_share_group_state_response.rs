@@ -7,32 +7,32 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
+use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
-use anyhow::{bail, Result};
 
 use crate::protocol::{
-    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
-    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
+    buf::{ByteBuf, ByteBufMut},
+    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
+    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
 };
-
 
 /// Valid versions: 0-1
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct PartitionResult {
     /// The partition index.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub partition: i32,
 
     /// The error code, or 0 if there was no error.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub error_code: i16,
 
     /// The error message, or null if there was no error.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub error_message: Option<StrBytes>,
 
@@ -42,40 +42,39 @@ pub struct PartitionResult {
 
 impl PartitionResult {
     /// Sets `partition` to the passed value.
-    /// 
+    ///
     /// The partition index.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_partition(mut self, value: i32) -> Self
-    {
+    pub fn with_partition(mut self, value: i32) -> Self {
         self.partition = value;
         self
-    }/// Sets `error_code` to the passed value.
-    /// 
+    }
+    /// Sets `error_code` to the passed value.
+    ///
     /// The error code, or 0 if there was no error.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_error_code(mut self, value: i16) -> Self
-    {
+    pub fn with_error_code(mut self, value: i16) -> Self {
         self.error_code = value;
         self
-    }/// Sets `error_message` to the passed value.
-    /// 
+    }
+    /// Sets `error_message` to the passed value.
+    ///
     /// The error message, or null if there was no error.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_error_message(mut self, value: Option<StrBytes>) -> Self
-    {
+    pub fn with_error_message(mut self, value: Option<StrBytes>) -> Self {
         self.error_message = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -92,7 +91,10 @@ impl Encodable for PartitionResult {
         types::CompactString.encode(buf, &self.error_message)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -106,7 +108,10 @@ impl Encodable for PartitionResult {
         total_size += types::CompactString.compute_size(&self.error_message)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -162,7 +167,7 @@ impl Message for PartitionResult {
 #[derive(Debug, Clone, PartialEq)]
 pub struct WriteShareGroupStateResponse {
     /// The write results.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub results: Vec<WriteStateResult>,
 
@@ -172,22 +177,21 @@ pub struct WriteShareGroupStateResponse {
 
 impl WriteShareGroupStateResponse {
     /// Sets `results` to the passed value.
-    /// 
+    ///
     /// The write results.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_results(mut self, value: Vec<WriteStateResult>) -> Self
-    {
+    pub fn with_results(mut self, value: Vec<WriteStateResult>) -> Self {
         self.results = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -202,7 +206,10 @@ impl Encodable for WriteShareGroupStateResponse {
         types::CompactArray(types::Struct { version }).encode(buf, &self.results)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -214,7 +221,10 @@ impl Encodable for WriteShareGroupStateResponse {
         total_size += types::CompactArray(types::Struct { version }).compute_size(&self.results)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -264,12 +274,12 @@ impl Message for WriteShareGroupStateResponse {
 #[derive(Debug, Clone, PartialEq)]
 pub struct WriteStateResult {
     /// The topic identifier.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub topic_id: Uuid,
 
     /// The results for the partitions.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub partitions: Vec<PartitionResult>,
 
@@ -279,31 +289,30 @@ pub struct WriteStateResult {
 
 impl WriteStateResult {
     /// Sets `topic_id` to the passed value.
-    /// 
+    ///
     /// The topic identifier.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_topic_id(mut self, value: Uuid) -> Self
-    {
+    pub fn with_topic_id(mut self, value: Uuid) -> Self {
         self.topic_id = value;
         self
-    }/// Sets `partitions` to the passed value.
-    /// 
+    }
+    /// Sets `partitions` to the passed value.
+    ///
     /// The results for the partitions.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_partitions(mut self, value: Vec<PartitionResult>) -> Self
-    {
+    pub fn with_partitions(mut self, value: Vec<PartitionResult>) -> Self {
         self.partitions = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -319,7 +328,10 @@ impl Encodable for WriteStateResult {
         types::CompactArray(types::Struct { version }).encode(buf, &self.partitions)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -329,10 +341,14 @@ impl Encodable for WriteStateResult {
     fn compute_size(&self, version: i16) -> Result<usize> {
         let mut total_size = 0;
         total_size += types::Uuid.compute_size(&self.topic_id)?;
-        total_size += types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
+        total_size +=
+            types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -385,4 +401,3 @@ impl HeaderVersion for WriteShareGroupStateResponse {
         1
     }
 }
-

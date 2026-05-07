@@ -7,49 +7,47 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
+use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
-use anyhow::{bail, Result};
 
 use crate::protocol::{
-    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
-    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
+    buf::{ByteBuf, ByteBufMut},
+    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
+    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
 };
-
 
 /// Valid versions: 0-1
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct SaslHandshakeResponse {
     /// The error code, or 0 if there was no error.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub error_code: i16,
 
     /// The mechanisms enabled in the server.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub mechanisms: Vec<StrBytes>,
-
 }
 
 impl SaslHandshakeResponse {
     /// Sets `error_code` to the passed value.
-    /// 
+    ///
     /// The error code, or 0 if there was no error.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_error_code(mut self, value: i16) -> Self
-    {
+    pub fn with_error_code(mut self, value: i16) -> Self {
         self.error_code = value;
         self
-    }/// Sets `mechanisms` to the passed value.
-    /// 
+    }
+    /// Sets `mechanisms` to the passed value.
+    ///
     /// The mechanisms enabled in the server.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_mechanisms(mut self, value: Vec<StrBytes>) -> Self
-    {
+    pub fn with_mechanisms(mut self, value: Vec<StrBytes>) -> Self {
         self.mechanisms = value;
         self
     }
@@ -109,4 +107,3 @@ impl HeaderVersion for SaslHandshakeResponse {
         0
     }
 }
-

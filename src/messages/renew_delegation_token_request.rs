@@ -7,27 +7,27 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
+use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
-use anyhow::{bail, Result};
 
 use crate::protocol::{
-    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
-    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
+    buf::{ByteBuf, ByteBufMut},
+    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
+    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
 };
-
 
 /// Valid versions: 1-2
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct RenewDelegationTokenRequest {
     /// The HMAC of the delegation token to be renewed.
-    /// 
+    ///
     /// Supported API versions: 1-2
     pub hmac: Bytes,
 
     /// The renewal time period in milliseconds.
-    /// 
+    ///
     /// Supported API versions: 1-2
     pub renew_period_ms: i64,
 
@@ -37,31 +37,30 @@ pub struct RenewDelegationTokenRequest {
 
 impl RenewDelegationTokenRequest {
     /// Sets `hmac` to the passed value.
-    /// 
+    ///
     /// The HMAC of the delegation token to be renewed.
-    /// 
+    ///
     /// Supported API versions: 1-2
-    pub fn with_hmac(mut self, value: Bytes) -> Self
-    {
+    pub fn with_hmac(mut self, value: Bytes) -> Self {
         self.hmac = value;
         self
-    }/// Sets `renew_period_ms` to the passed value.
-    /// 
+    }
+    /// Sets `renew_period_ms` to the passed value.
+    ///
     /// The renewal time period in milliseconds.
-    /// 
+    ///
     /// Supported API versions: 1-2
-    pub fn with_renew_period_ms(mut self, value: i64) -> Self
-    {
+    pub fn with_renew_period_ms(mut self, value: i64) -> Self {
         self.renew_period_ms = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -82,7 +81,10 @@ impl Encodable for RenewDelegationTokenRequest {
         if version >= 2 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -101,7 +103,10 @@ impl Encodable for RenewDelegationTokenRequest {
         if version >= 2 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -165,4 +170,3 @@ impl HeaderVersion for RenewDelegationTokenRequest {
         }
     }
 }
-

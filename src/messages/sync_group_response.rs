@@ -7,42 +7,42 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
+use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
-use anyhow::{bail, Result};
 
 use crate::protocol::{
-    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
-    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
+    buf::{ByteBuf, ByteBufMut},
+    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
+    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
 };
-
 
 /// Valid versions: 0-5
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct SyncGroupResponse {
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    /// 
+    ///
     /// Supported API versions: 1-5
     pub throttle_time_ms: i32,
 
     /// The error code, or 0 if there was no error.
-    /// 
+    ///
     /// Supported API versions: 0-5
     pub error_code: i16,
 
     /// The group protocol type.
-    /// 
+    ///
     /// Supported API versions: 5
     pub protocol_type: Option<StrBytes>,
 
     /// The group protocol name.
-    /// 
+    ///
     /// Supported API versions: 5
     pub protocol_name: Option<StrBytes>,
 
     /// The member assignment.
-    /// 
+    ///
     /// Supported API versions: 0-5
     pub assignment: Bytes,
 
@@ -52,58 +52,57 @@ pub struct SyncGroupResponse {
 
 impl SyncGroupResponse {
     /// Sets `throttle_time_ms` to the passed value.
-    /// 
+    ///
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    /// 
+    ///
     /// Supported API versions: 1-5
-    pub fn with_throttle_time_ms(mut self, value: i32) -> Self
-    {
+    pub fn with_throttle_time_ms(mut self, value: i32) -> Self {
         self.throttle_time_ms = value;
         self
-    }/// Sets `error_code` to the passed value.
-    /// 
+    }
+    /// Sets `error_code` to the passed value.
+    ///
     /// The error code, or 0 if there was no error.
-    /// 
+    ///
     /// Supported API versions: 0-5
-    pub fn with_error_code(mut self, value: i16) -> Self
-    {
+    pub fn with_error_code(mut self, value: i16) -> Self {
         self.error_code = value;
         self
-    }/// Sets `protocol_type` to the passed value.
-    /// 
+    }
+    /// Sets `protocol_type` to the passed value.
+    ///
     /// The group protocol type.
-    /// 
+    ///
     /// Supported API versions: 5
-    pub fn with_protocol_type(mut self, value: Option<StrBytes>) -> Self
-    {
+    pub fn with_protocol_type(mut self, value: Option<StrBytes>) -> Self {
         self.protocol_type = value;
         self
-    }/// Sets `protocol_name` to the passed value.
-    /// 
+    }
+    /// Sets `protocol_name` to the passed value.
+    ///
     /// The group protocol name.
-    /// 
+    ///
     /// Supported API versions: 5
-    pub fn with_protocol_name(mut self, value: Option<StrBytes>) -> Self
-    {
+    pub fn with_protocol_name(mut self, value: Option<StrBytes>) -> Self {
         self.protocol_name = value;
         self
-    }/// Sets `assignment` to the passed value.
-    /// 
+    }
+    /// Sets `assignment` to the passed value.
+    ///
     /// The member assignment.
-    /// 
+    ///
     /// Supported API versions: 0-5
-    pub fn with_assignment(mut self, value: Bytes) -> Self
-    {
+    pub fn with_assignment(mut self, value: Bytes) -> Self {
         self.assignment = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -133,7 +132,10 @@ impl Encodable for SyncGroupResponse {
         if version >= 4 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -161,7 +163,10 @@ impl Encodable for SyncGroupResponse {
         if version >= 4 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -246,4 +251,3 @@ impl HeaderVersion for SyncGroupResponse {
         }
     }
 }
-

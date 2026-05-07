@@ -7,37 +7,37 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
+use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
-use anyhow::{bail, Result};
 
 use crate::protocol::{
-    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
-    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
+    buf::{ByteBuf, ByteBufMut},
+    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
+    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
 };
-
 
 /// Valid versions: 0-2
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct FeatureUpdateKey {
     /// The name of the finalized feature to be updated.
-    /// 
+    ///
     /// Supported API versions: 0-2
     pub feature: StrBytes,
 
     /// The new maximum version level for the finalized feature. A value >= 1 is valid. A value < 1, is special, and can be used to request the deletion of the finalized feature.
-    /// 
+    ///
     /// Supported API versions: 0-2
     pub max_version_level: i16,
 
     /// DEPRECATED in version 1 (see DowngradeType). When set to true, the finalized feature version level is allowed to be downgraded/deleted. The downgrade request will fail if the new maximum version level is a value that's not lower than the existing maximum finalized version level.
-    /// 
+    ///
     /// Supported API versions: 0
     pub allow_downgrade: bool,
 
     /// Determine which type of upgrade will be performed: 1 will perform an upgrade only (default), 2 is safe downgrades only (lossless), 3 is unsafe downgrades (lossy).
-    /// 
+    ///
     /// Supported API versions: 1-2
     pub upgrade_type: i8,
 
@@ -47,49 +47,48 @@ pub struct FeatureUpdateKey {
 
 impl FeatureUpdateKey {
     /// Sets `feature` to the passed value.
-    /// 
+    ///
     /// The name of the finalized feature to be updated.
-    /// 
+    ///
     /// Supported API versions: 0-2
-    pub fn with_feature(mut self, value: StrBytes) -> Self
-    {
+    pub fn with_feature(mut self, value: StrBytes) -> Self {
         self.feature = value;
         self
-    }/// Sets `max_version_level` to the passed value.
-    /// 
+    }
+    /// Sets `max_version_level` to the passed value.
+    ///
     /// The new maximum version level for the finalized feature. A value >= 1 is valid. A value < 1, is special, and can be used to request the deletion of the finalized feature.
-    /// 
+    ///
     /// Supported API versions: 0-2
-    pub fn with_max_version_level(mut self, value: i16) -> Self
-    {
+    pub fn with_max_version_level(mut self, value: i16) -> Self {
         self.max_version_level = value;
         self
-    }/// Sets `allow_downgrade` to the passed value.
-    /// 
+    }
+    /// Sets `allow_downgrade` to the passed value.
+    ///
     /// DEPRECATED in version 1 (see DowngradeType). When set to true, the finalized feature version level is allowed to be downgraded/deleted. The downgrade request will fail if the new maximum version level is a value that's not lower than the existing maximum finalized version level.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_allow_downgrade(mut self, value: bool) -> Self
-    {
+    pub fn with_allow_downgrade(mut self, value: bool) -> Self {
         self.allow_downgrade = value;
         self
-    }/// Sets `upgrade_type` to the passed value.
-    /// 
+    }
+    /// Sets `upgrade_type` to the passed value.
+    ///
     /// Determine which type of upgrade will be performed: 1 will perform an upgrade only (default), 2 is safe downgrades only (lossless), 3 is unsafe downgrades (lossy).
-    /// 
+    ///
     /// Supported API versions: 1-2
-    pub fn with_upgrade_type(mut self, value: i8) -> Self
-    {
+    pub fn with_upgrade_type(mut self, value: i8) -> Self {
         self.upgrade_type = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -119,7 +118,10 @@ impl Encodable for FeatureUpdateKey {
         }
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -146,7 +148,10 @@ impl Encodable for FeatureUpdateKey {
         }
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -213,17 +218,17 @@ impl Message for FeatureUpdateKey {
 #[derive(Debug, Clone, PartialEq)]
 pub struct UpdateFeaturesRequest {
     /// How long to wait in milliseconds before timing out the request.
-    /// 
+    ///
     /// Supported API versions: 0-2
     pub timeout_ms: i32,
 
     /// The list of updates to finalized features.
-    /// 
+    ///
     /// Supported API versions: 0-2
     pub feature_updates: Vec<FeatureUpdateKey>,
 
     /// True if we should validate the request, but not perform the upgrade or downgrade.
-    /// 
+    ///
     /// Supported API versions: 1-2
     pub validate_only: bool,
 
@@ -233,40 +238,39 @@ pub struct UpdateFeaturesRequest {
 
 impl UpdateFeaturesRequest {
     /// Sets `timeout_ms` to the passed value.
-    /// 
+    ///
     /// How long to wait in milliseconds before timing out the request.
-    /// 
+    ///
     /// Supported API versions: 0-2
-    pub fn with_timeout_ms(mut self, value: i32) -> Self
-    {
+    pub fn with_timeout_ms(mut self, value: i32) -> Self {
         self.timeout_ms = value;
         self
-    }/// Sets `feature_updates` to the passed value.
-    /// 
+    }
+    /// Sets `feature_updates` to the passed value.
+    ///
     /// The list of updates to finalized features.
-    /// 
+    ///
     /// Supported API versions: 0-2
-    pub fn with_feature_updates(mut self, value: Vec<FeatureUpdateKey>) -> Self
-    {
+    pub fn with_feature_updates(mut self, value: Vec<FeatureUpdateKey>) -> Self {
         self.feature_updates = value;
         self
-    }/// Sets `validate_only` to the passed value.
-    /// 
+    }
+    /// Sets `validate_only` to the passed value.
+    ///
     /// True if we should validate the request, but not perform the upgrade or downgrade.
-    /// 
+    ///
     /// Supported API versions: 1-2
-    pub fn with_validate_only(mut self, value: bool) -> Self
-    {
+    pub fn with_validate_only(mut self, value: bool) -> Self {
         self.validate_only = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -289,7 +293,10 @@ impl Encodable for UpdateFeaturesRequest {
         }
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -299,7 +306,8 @@ impl Encodable for UpdateFeaturesRequest {
     fn compute_size(&self, version: i16) -> Result<usize> {
         let mut total_size = 0;
         total_size += types::Int32.compute_size(&self.timeout_ms)?;
-        total_size += types::CompactArray(types::Struct { version }).compute_size(&self.feature_updates)?;
+        total_size +=
+            types::CompactArray(types::Struct { version }).compute_size(&self.feature_updates)?;
         if version >= 1 {
             total_size += types::Boolean.compute_size(&self.validate_only)?;
         } else {
@@ -309,7 +317,10 @@ impl Encodable for UpdateFeaturesRequest {
         }
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -369,4 +380,3 @@ impl HeaderVersion for UpdateFeaturesRequest {
         2
     }
 }
-

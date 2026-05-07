@@ -7,32 +7,32 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
+use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
-use anyhow::{bail, Result};
 
 use crate::protocol::{
-    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
-    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
+    buf::{ByteBuf, ByteBufMut},
+    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
+    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
 };
-
 
 /// Valid versions: 0-6
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct FindCoordinatorRequest {
     /// The coordinator key.
-    /// 
+    ///
     /// Supported API versions: 0-3
     pub key: StrBytes,
 
     /// The coordinator key type. (group, transaction, share).
-    /// 
+    ///
     /// Supported API versions: 1-6
     pub key_type: i8,
 
     /// The coordinator keys.
-    /// 
+    ///
     /// Supported API versions: 4-6
     pub coordinator_keys: Vec<StrBytes>,
 
@@ -42,40 +42,39 @@ pub struct FindCoordinatorRequest {
 
 impl FindCoordinatorRequest {
     /// Sets `key` to the passed value.
-    /// 
+    ///
     /// The coordinator key.
-    /// 
+    ///
     /// Supported API versions: 0-3
-    pub fn with_key(mut self, value: StrBytes) -> Self
-    {
+    pub fn with_key(mut self, value: StrBytes) -> Self {
         self.key = value;
         self
-    }/// Sets `key_type` to the passed value.
-    /// 
+    }
+    /// Sets `key_type` to the passed value.
+    ///
     /// The coordinator key type. (group, transaction, share).
-    /// 
+    ///
     /// Supported API versions: 1-6
-    pub fn with_key_type(mut self, value: i8) -> Self
-    {
+    pub fn with_key_type(mut self, value: i8) -> Self {
         self.key_type = value;
         self
-    }/// Sets `coordinator_keys` to the passed value.
-    /// 
+    }
+    /// Sets `coordinator_keys` to the passed value.
+    ///
     /// The coordinator keys.
-    /// 
+    ///
     /// Supported API versions: 4-6
-    pub fn with_coordinator_keys(mut self, value: Vec<StrBytes>) -> Self
-    {
+    pub fn with_coordinator_keys(mut self, value: Vec<StrBytes>) -> Self {
         self.coordinator_keys = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -115,7 +114,10 @@ impl Encodable for FindCoordinatorRequest {
         if version >= 3 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -144,7 +146,8 @@ impl Encodable for FindCoordinatorRequest {
             }
         }
         if version >= 4 {
-            total_size += types::CompactArray(types::CompactString).compute_size(&self.coordinator_keys)?;
+            total_size +=
+                types::CompactArray(types::CompactString).compute_size(&self.coordinator_keys)?;
         } else {
             if !self.coordinator_keys.is_empty() {
                 bail!("A field is set that is not available on the selected protocol version");
@@ -153,7 +156,10 @@ impl Encodable for FindCoordinatorRequest {
         if version >= 3 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -232,4 +238,3 @@ impl HeaderVersion for FindCoordinatorRequest {
         }
     }
 }
-

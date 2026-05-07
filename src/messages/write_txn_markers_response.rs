@@ -7,27 +7,27 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
+use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
-use anyhow::{bail, Result};
 
 use crate::protocol::{
-    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
-    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
+    buf::{ByteBuf, ByteBufMut},
+    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
+    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
 };
-
 
 /// Valid versions: 1-2
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct WritableTxnMarkerPartitionResult {
     /// The partition index.
-    /// 
+    ///
     /// Supported API versions: 1-2
     pub partition_index: i32,
 
     /// The error code, or 0 if there was no error.
-    /// 
+    ///
     /// Supported API versions: 1-2
     pub error_code: i16,
 
@@ -37,31 +37,30 @@ pub struct WritableTxnMarkerPartitionResult {
 
 impl WritableTxnMarkerPartitionResult {
     /// Sets `partition_index` to the passed value.
-    /// 
+    ///
     /// The partition index.
-    /// 
+    ///
     /// Supported API versions: 1-2
-    pub fn with_partition_index(mut self, value: i32) -> Self
-    {
+    pub fn with_partition_index(mut self, value: i32) -> Self {
         self.partition_index = value;
         self
-    }/// Sets `error_code` to the passed value.
-    /// 
+    }
+    /// Sets `error_code` to the passed value.
+    ///
     /// The error code, or 0 if there was no error.
-    /// 
+    ///
     /// Supported API versions: 1-2
-    pub fn with_error_code(mut self, value: i16) -> Self
-    {
+    pub fn with_error_code(mut self, value: i16) -> Self {
         self.error_code = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -77,7 +76,10 @@ impl Encodable for WritableTxnMarkerPartitionResult {
         types::Int16.encode(buf, &self.error_code)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -90,7 +92,10 @@ impl Encodable for WritableTxnMarkerPartitionResult {
         total_size += types::Int16.compute_size(&self.error_code)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -143,12 +148,12 @@ impl Message for WritableTxnMarkerPartitionResult {
 #[derive(Debug, Clone, PartialEq)]
 pub struct WritableTxnMarkerResult {
     /// The current producer ID in use by the transactional ID.
-    /// 
+    ///
     /// Supported API versions: 1-2
     pub producer_id: super::ProducerId,
 
     /// The results by topic.
-    /// 
+    ///
     /// Supported API versions: 1-2
     pub topics: Vec<WritableTxnMarkerTopicResult>,
 
@@ -158,31 +163,30 @@ pub struct WritableTxnMarkerResult {
 
 impl WritableTxnMarkerResult {
     /// Sets `producer_id` to the passed value.
-    /// 
+    ///
     /// The current producer ID in use by the transactional ID.
-    /// 
+    ///
     /// Supported API versions: 1-2
-    pub fn with_producer_id(mut self, value: super::ProducerId) -> Self
-    {
+    pub fn with_producer_id(mut self, value: super::ProducerId) -> Self {
         self.producer_id = value;
         self
-    }/// Sets `topics` to the passed value.
-    /// 
+    }
+    /// Sets `topics` to the passed value.
+    ///
     /// The results by topic.
-    /// 
+    ///
     /// Supported API versions: 1-2
-    pub fn with_topics(mut self, value: Vec<WritableTxnMarkerTopicResult>) -> Self
-    {
+    pub fn with_topics(mut self, value: Vec<WritableTxnMarkerTopicResult>) -> Self {
         self.topics = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -198,7 +202,10 @@ impl Encodable for WritableTxnMarkerResult {
         types::CompactArray(types::Struct { version }).encode(buf, &self.topics)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -211,7 +218,10 @@ impl Encodable for WritableTxnMarkerResult {
         total_size += types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -264,12 +274,12 @@ impl Message for WritableTxnMarkerResult {
 #[derive(Debug, Clone, PartialEq)]
 pub struct WritableTxnMarkerTopicResult {
     /// The topic name.
-    /// 
+    ///
     /// Supported API versions: 1-2
     pub name: super::TopicName,
 
     /// The results by partition.
-    /// 
+    ///
     /// Supported API versions: 1-2
     pub partitions: Vec<WritableTxnMarkerPartitionResult>,
 
@@ -279,31 +289,30 @@ pub struct WritableTxnMarkerTopicResult {
 
 impl WritableTxnMarkerTopicResult {
     /// Sets `name` to the passed value.
-    /// 
+    ///
     /// The topic name.
-    /// 
+    ///
     /// Supported API versions: 1-2
-    pub fn with_name(mut self, value: super::TopicName) -> Self
-    {
+    pub fn with_name(mut self, value: super::TopicName) -> Self {
         self.name = value;
         self
-    }/// Sets `partitions` to the passed value.
-    /// 
+    }
+    /// Sets `partitions` to the passed value.
+    ///
     /// The results by partition.
-    /// 
+    ///
     /// Supported API versions: 1-2
-    pub fn with_partitions(mut self, value: Vec<WritableTxnMarkerPartitionResult>) -> Self
-    {
+    pub fn with_partitions(mut self, value: Vec<WritableTxnMarkerPartitionResult>) -> Self {
         self.partitions = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -319,7 +328,10 @@ impl Encodable for WritableTxnMarkerTopicResult {
         types::CompactArray(types::Struct { version }).encode(buf, &self.partitions)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -329,10 +341,14 @@ impl Encodable for WritableTxnMarkerTopicResult {
     fn compute_size(&self, version: i16) -> Result<usize> {
         let mut total_size = 0;
         total_size += types::CompactString.compute_size(&self.name)?;
-        total_size += types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
+        total_size +=
+            types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -385,7 +401,7 @@ impl Message for WritableTxnMarkerTopicResult {
 #[derive(Debug, Clone, PartialEq)]
 pub struct WriteTxnMarkersResponse {
     /// The results for writing makers.
-    /// 
+    ///
     /// Supported API versions: 1-2
     pub markers: Vec<WritableTxnMarkerResult>,
 
@@ -395,22 +411,21 @@ pub struct WriteTxnMarkersResponse {
 
 impl WriteTxnMarkersResponse {
     /// Sets `markers` to the passed value.
-    /// 
+    ///
     /// The results for writing makers.
-    /// 
+    ///
     /// Supported API versions: 1-2
-    pub fn with_markers(mut self, value: Vec<WritableTxnMarkerResult>) -> Self
-    {
+    pub fn with_markers(mut self, value: Vec<WritableTxnMarkerResult>) -> Self {
         self.markers = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -425,7 +440,10 @@ impl Encodable for WriteTxnMarkersResponse {
         types::CompactArray(types::Struct { version }).encode(buf, &self.markers)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -437,7 +455,10 @@ impl Encodable for WriteTxnMarkersResponse {
         total_size += types::CompactArray(types::Struct { version }).compute_size(&self.markers)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -487,4 +508,3 @@ impl HeaderVersion for WriteTxnMarkersResponse {
         1
     }
 }
-

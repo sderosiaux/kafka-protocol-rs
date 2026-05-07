@@ -7,32 +7,32 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
+use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
-use anyhow::{bail, Result};
 
 use crate::protocol::{
-    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
-    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
+    buf::{ByteBuf, ByteBufMut},
+    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
+    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
 };
-
 
 /// Valid versions: 0
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct AssignReplicasToDirsResponse {
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    /// 
+    ///
     /// Supported API versions: 0
     pub throttle_time_ms: i32,
 
     /// The top level response error code.
-    /// 
+    ///
     /// Supported API versions: 0
     pub error_code: i16,
 
     /// The list of directories and their assigned partitions.
-    /// 
+    ///
     /// Supported API versions: 0
     pub directories: Vec<DirectoryData>,
 
@@ -42,40 +42,39 @@ pub struct AssignReplicasToDirsResponse {
 
 impl AssignReplicasToDirsResponse {
     /// Sets `throttle_time_ms` to the passed value.
-    /// 
+    ///
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_throttle_time_ms(mut self, value: i32) -> Self
-    {
+    pub fn with_throttle_time_ms(mut self, value: i32) -> Self {
         self.throttle_time_ms = value;
         self
-    }/// Sets `error_code` to the passed value.
-    /// 
+    }
+    /// Sets `error_code` to the passed value.
+    ///
     /// The top level response error code.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_error_code(mut self, value: i16) -> Self
-    {
+    pub fn with_error_code(mut self, value: i16) -> Self {
         self.error_code = value;
         self
-    }/// Sets `directories` to the passed value.
-    /// 
+    }
+    /// Sets `directories` to the passed value.
+    ///
     /// The list of directories and their assigned partitions.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_directories(mut self, value: Vec<DirectoryData>) -> Self
-    {
+    pub fn with_directories(mut self, value: Vec<DirectoryData>) -> Self {
         self.directories = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -92,7 +91,10 @@ impl Encodable for AssignReplicasToDirsResponse {
         types::CompactArray(types::Struct { version }).encode(buf, &self.directories)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -103,10 +105,14 @@ impl Encodable for AssignReplicasToDirsResponse {
         let mut total_size = 0;
         total_size += types::Int32.compute_size(&self.throttle_time_ms)?;
         total_size += types::Int16.compute_size(&self.error_code)?;
-        total_size += types::CompactArray(types::Struct { version }).compute_size(&self.directories)?;
+        total_size +=
+            types::CompactArray(types::Struct { version }).compute_size(&self.directories)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -162,12 +168,12 @@ impl Message for AssignReplicasToDirsResponse {
 #[derive(Debug, Clone, PartialEq)]
 pub struct DirectoryData {
     /// The ID of the directory.
-    /// 
+    ///
     /// Supported API versions: 0
     pub id: Uuid,
 
     /// The list of topics and their assigned partitions.
-    /// 
+    ///
     /// Supported API versions: 0
     pub topics: Vec<TopicData>,
 
@@ -177,31 +183,30 @@ pub struct DirectoryData {
 
 impl DirectoryData {
     /// Sets `id` to the passed value.
-    /// 
+    ///
     /// The ID of the directory.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_id(mut self, value: Uuid) -> Self
-    {
+    pub fn with_id(mut self, value: Uuid) -> Self {
         self.id = value;
         self
-    }/// Sets `topics` to the passed value.
-    /// 
+    }
+    /// Sets `topics` to the passed value.
+    ///
     /// The list of topics and their assigned partitions.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_topics(mut self, value: Vec<TopicData>) -> Self
-    {
+    pub fn with_topics(mut self, value: Vec<TopicData>) -> Self {
         self.topics = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -217,7 +222,10 @@ impl Encodable for DirectoryData {
         types::CompactArray(types::Struct { version }).encode(buf, &self.topics)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -230,7 +238,10 @@ impl Encodable for DirectoryData {
         total_size += types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -283,12 +294,12 @@ impl Message for DirectoryData {
 #[derive(Debug, Clone, PartialEq)]
 pub struct PartitionData {
     /// The partition index.
-    /// 
+    ///
     /// Supported API versions: 0
     pub partition_index: i32,
 
     /// The partition level error code.
-    /// 
+    ///
     /// Supported API versions: 0
     pub error_code: i16,
 
@@ -298,31 +309,30 @@ pub struct PartitionData {
 
 impl PartitionData {
     /// Sets `partition_index` to the passed value.
-    /// 
+    ///
     /// The partition index.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_partition_index(mut self, value: i32) -> Self
-    {
+    pub fn with_partition_index(mut self, value: i32) -> Self {
         self.partition_index = value;
         self
-    }/// Sets `error_code` to the passed value.
-    /// 
+    }
+    /// Sets `error_code` to the passed value.
+    ///
     /// The partition level error code.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_error_code(mut self, value: i16) -> Self
-    {
+    pub fn with_error_code(mut self, value: i16) -> Self {
         self.error_code = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -338,7 +348,10 @@ impl Encodable for PartitionData {
         types::Int16.encode(buf, &self.error_code)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -351,7 +364,10 @@ impl Encodable for PartitionData {
         total_size += types::Int16.compute_size(&self.error_code)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -404,12 +420,12 @@ impl Message for PartitionData {
 #[derive(Debug, Clone, PartialEq)]
 pub struct TopicData {
     /// The ID of the assigned topic.
-    /// 
+    ///
     /// Supported API versions: 0
     pub topic_id: Uuid,
 
     /// The list of assigned partitions.
-    /// 
+    ///
     /// Supported API versions: 0
     pub partitions: Vec<PartitionData>,
 
@@ -419,31 +435,30 @@ pub struct TopicData {
 
 impl TopicData {
     /// Sets `topic_id` to the passed value.
-    /// 
+    ///
     /// The ID of the assigned topic.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_topic_id(mut self, value: Uuid) -> Self
-    {
+    pub fn with_topic_id(mut self, value: Uuid) -> Self {
         self.topic_id = value;
         self
-    }/// Sets `partitions` to the passed value.
-    /// 
+    }
+    /// Sets `partitions` to the passed value.
+    ///
     /// The list of assigned partitions.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_partitions(mut self, value: Vec<PartitionData>) -> Self
-    {
+    pub fn with_partitions(mut self, value: Vec<PartitionData>) -> Self {
         self.partitions = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -459,7 +474,10 @@ impl Encodable for TopicData {
         types::CompactArray(types::Struct { version }).encode(buf, &self.partitions)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -469,10 +487,14 @@ impl Encodable for TopicData {
     fn compute_size(&self, version: i16) -> Result<usize> {
         let mut total_size = 0;
         total_size += types::Uuid.compute_size(&self.topic_id)?;
-        total_size += types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
+        total_size +=
+            types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -525,4 +547,3 @@ impl HeaderVersion for AssignReplicasToDirsResponse {
         1
     }
 }
-

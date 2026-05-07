@@ -7,22 +7,22 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
+use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
-use anyhow::{bail, Result};
 
 use crate::protocol::{
-    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
-    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
+    buf::{ByteBuf, ByteBufMut},
+    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
+    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
 };
-
 
 /// Valid versions: 0-1
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct Assignment {
     /// The assigned topic-partitions to the member.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub topic_partitions: Vec<TopicPartitions>,
 
@@ -32,22 +32,21 @@ pub struct Assignment {
 
 impl Assignment {
     /// Sets `topic_partitions` to the passed value.
-    /// 
+    ///
     /// The assigned topic-partitions to the member.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_topic_partitions(mut self, value: Vec<TopicPartitions>) -> Self
-    {
+    pub fn with_topic_partitions(mut self, value: Vec<TopicPartitions>) -> Self {
         self.topic_partitions = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -62,7 +61,10 @@ impl Encodable for Assignment {
         types::CompactArray(types::Struct { version }).encode(buf, &self.topic_partitions)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -71,10 +73,14 @@ impl Encodable for Assignment {
     }
     fn compute_size(&self, version: i16) -> Result<usize> {
         let mut total_size = 0;
-        total_size += types::CompactArray(types::Struct { version }).compute_size(&self.topic_partitions)?;
+        total_size +=
+            types::CompactArray(types::Struct { version }).compute_size(&self.topic_partitions)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -124,12 +130,12 @@ impl Message for Assignment {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ConsumerGroupDescribeResponse {
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub throttle_time_ms: i32,
 
     /// Each described group.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub groups: Vec<DescribedGroup>,
 
@@ -139,31 +145,30 @@ pub struct ConsumerGroupDescribeResponse {
 
 impl ConsumerGroupDescribeResponse {
     /// Sets `throttle_time_ms` to the passed value.
-    /// 
+    ///
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_throttle_time_ms(mut self, value: i32) -> Self
-    {
+    pub fn with_throttle_time_ms(mut self, value: i32) -> Self {
         self.throttle_time_ms = value;
         self
-    }/// Sets `groups` to the passed value.
-    /// 
+    }
+    /// Sets `groups` to the passed value.
+    ///
     /// Each described group.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_groups(mut self, value: Vec<DescribedGroup>) -> Self
-    {
+    pub fn with_groups(mut self, value: Vec<DescribedGroup>) -> Self {
         self.groups = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -179,7 +184,10 @@ impl Encodable for ConsumerGroupDescribeResponse {
         types::CompactArray(types::Struct { version }).encode(buf, &self.groups)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -192,7 +200,10 @@ impl Encodable for ConsumerGroupDescribeResponse {
         total_size += types::CompactArray(types::Struct { version }).compute_size(&self.groups)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -245,47 +256,47 @@ impl Message for ConsumerGroupDescribeResponse {
 #[derive(Debug, Clone, PartialEq)]
 pub struct DescribedGroup {
     /// The describe error, or 0 if there was no error.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub error_code: i16,
 
     /// The top-level error message, or null if there was no error.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub error_message: Option<StrBytes>,
 
     /// The group ID string.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub group_id: super::GroupId,
 
     /// The group state string, or the empty string.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub group_state: StrBytes,
 
     /// The group epoch.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub group_epoch: i32,
 
     /// The assignment epoch.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub assignment_epoch: i32,
 
     /// The selected assignor.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub assignor_name: StrBytes,
 
     /// The members.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub members: Vec<Member>,
 
     /// 32-bit bitfield to represent authorized operations for this group.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub authorized_operations: i32,
 
@@ -295,94 +306,93 @@ pub struct DescribedGroup {
 
 impl DescribedGroup {
     /// Sets `error_code` to the passed value.
-    /// 
+    ///
     /// The describe error, or 0 if there was no error.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_error_code(mut self, value: i16) -> Self
-    {
+    pub fn with_error_code(mut self, value: i16) -> Self {
         self.error_code = value;
         self
-    }/// Sets `error_message` to the passed value.
-    /// 
+    }
+    /// Sets `error_message` to the passed value.
+    ///
     /// The top-level error message, or null if there was no error.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_error_message(mut self, value: Option<StrBytes>) -> Self
-    {
+    pub fn with_error_message(mut self, value: Option<StrBytes>) -> Self {
         self.error_message = value;
         self
-    }/// Sets `group_id` to the passed value.
-    /// 
+    }
+    /// Sets `group_id` to the passed value.
+    ///
     /// The group ID string.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_group_id(mut self, value: super::GroupId) -> Self
-    {
+    pub fn with_group_id(mut self, value: super::GroupId) -> Self {
         self.group_id = value;
         self
-    }/// Sets `group_state` to the passed value.
-    /// 
+    }
+    /// Sets `group_state` to the passed value.
+    ///
     /// The group state string, or the empty string.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_group_state(mut self, value: StrBytes) -> Self
-    {
+    pub fn with_group_state(mut self, value: StrBytes) -> Self {
         self.group_state = value;
         self
-    }/// Sets `group_epoch` to the passed value.
-    /// 
+    }
+    /// Sets `group_epoch` to the passed value.
+    ///
     /// The group epoch.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_group_epoch(mut self, value: i32) -> Self
-    {
+    pub fn with_group_epoch(mut self, value: i32) -> Self {
         self.group_epoch = value;
         self
-    }/// Sets `assignment_epoch` to the passed value.
-    /// 
+    }
+    /// Sets `assignment_epoch` to the passed value.
+    ///
     /// The assignment epoch.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_assignment_epoch(mut self, value: i32) -> Self
-    {
+    pub fn with_assignment_epoch(mut self, value: i32) -> Self {
         self.assignment_epoch = value;
         self
-    }/// Sets `assignor_name` to the passed value.
-    /// 
+    }
+    /// Sets `assignor_name` to the passed value.
+    ///
     /// The selected assignor.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_assignor_name(mut self, value: StrBytes) -> Self
-    {
+    pub fn with_assignor_name(mut self, value: StrBytes) -> Self {
         self.assignor_name = value;
         self
-    }/// Sets `members` to the passed value.
-    /// 
+    }
+    /// Sets `members` to the passed value.
+    ///
     /// The members.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_members(mut self, value: Vec<Member>) -> Self
-    {
+    pub fn with_members(mut self, value: Vec<Member>) -> Self {
         self.members = value;
         self
-    }/// Sets `authorized_operations` to the passed value.
-    /// 
+    }
+    /// Sets `authorized_operations` to the passed value.
+    ///
     /// 32-bit bitfield to represent authorized operations for this group.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_authorized_operations(mut self, value: i32) -> Self
-    {
+    pub fn with_authorized_operations(mut self, value: i32) -> Self {
         self.authorized_operations = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -405,7 +415,10 @@ impl Encodable for DescribedGroup {
         types::Int32.encode(buf, &self.authorized_operations)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -425,7 +438,10 @@ impl Encodable for DescribedGroup {
         total_size += types::Int32.compute_size(&self.authorized_operations)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -499,57 +515,57 @@ impl Message for DescribedGroup {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Member {
     /// The member ID.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub member_id: StrBytes,
 
     /// The member instance ID.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub instance_id: Option<StrBytes>,
 
     /// The member rack ID.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub rack_id: Option<StrBytes>,
 
     /// The current member epoch.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub member_epoch: i32,
 
     /// The client ID.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub client_id: StrBytes,
 
     /// The client host.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub client_host: StrBytes,
 
     /// The subscribed topic names.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub subscribed_topic_names: Vec<super::TopicName>,
 
     /// the subscribed topic regex otherwise or null of not provided.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub subscribed_topic_regex: Option<StrBytes>,
 
     /// The current assignment.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub assignment: Assignment,
 
     /// The target assignment.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub target_assignment: Assignment,
 
     /// -1 for unknown. 0 for classic member. +1 for consumer member.
-    /// 
+    ///
     /// Supported API versions: 1
     pub member_type: i8,
 
@@ -559,112 +575,111 @@ pub struct Member {
 
 impl Member {
     /// Sets `member_id` to the passed value.
-    /// 
+    ///
     /// The member ID.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_member_id(mut self, value: StrBytes) -> Self
-    {
+    pub fn with_member_id(mut self, value: StrBytes) -> Self {
         self.member_id = value;
         self
-    }/// Sets `instance_id` to the passed value.
-    /// 
+    }
+    /// Sets `instance_id` to the passed value.
+    ///
     /// The member instance ID.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_instance_id(mut self, value: Option<StrBytes>) -> Self
-    {
+    pub fn with_instance_id(mut self, value: Option<StrBytes>) -> Self {
         self.instance_id = value;
         self
-    }/// Sets `rack_id` to the passed value.
-    /// 
+    }
+    /// Sets `rack_id` to the passed value.
+    ///
     /// The member rack ID.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_rack_id(mut self, value: Option<StrBytes>) -> Self
-    {
+    pub fn with_rack_id(mut self, value: Option<StrBytes>) -> Self {
         self.rack_id = value;
         self
-    }/// Sets `member_epoch` to the passed value.
-    /// 
+    }
+    /// Sets `member_epoch` to the passed value.
+    ///
     /// The current member epoch.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_member_epoch(mut self, value: i32) -> Self
-    {
+    pub fn with_member_epoch(mut self, value: i32) -> Self {
         self.member_epoch = value;
         self
-    }/// Sets `client_id` to the passed value.
-    /// 
+    }
+    /// Sets `client_id` to the passed value.
+    ///
     /// The client ID.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_client_id(mut self, value: StrBytes) -> Self
-    {
+    pub fn with_client_id(mut self, value: StrBytes) -> Self {
         self.client_id = value;
         self
-    }/// Sets `client_host` to the passed value.
-    /// 
+    }
+    /// Sets `client_host` to the passed value.
+    ///
     /// The client host.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_client_host(mut self, value: StrBytes) -> Self
-    {
+    pub fn with_client_host(mut self, value: StrBytes) -> Self {
         self.client_host = value;
         self
-    }/// Sets `subscribed_topic_names` to the passed value.
-    /// 
+    }
+    /// Sets `subscribed_topic_names` to the passed value.
+    ///
     /// The subscribed topic names.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_subscribed_topic_names(mut self, value: Vec<super::TopicName>) -> Self
-    {
+    pub fn with_subscribed_topic_names(mut self, value: Vec<super::TopicName>) -> Self {
         self.subscribed_topic_names = value;
         self
-    }/// Sets `subscribed_topic_regex` to the passed value.
-    /// 
+    }
+    /// Sets `subscribed_topic_regex` to the passed value.
+    ///
     /// the subscribed topic regex otherwise or null of not provided.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_subscribed_topic_regex(mut self, value: Option<StrBytes>) -> Self
-    {
+    pub fn with_subscribed_topic_regex(mut self, value: Option<StrBytes>) -> Self {
         self.subscribed_topic_regex = value;
         self
-    }/// Sets `assignment` to the passed value.
-    /// 
+    }
+    /// Sets `assignment` to the passed value.
+    ///
     /// The current assignment.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_assignment(mut self, value: Assignment) -> Self
-    {
+    pub fn with_assignment(mut self, value: Assignment) -> Self {
         self.assignment = value;
         self
-    }/// Sets `target_assignment` to the passed value.
-    /// 
+    }
+    /// Sets `target_assignment` to the passed value.
+    ///
     /// The target assignment.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_target_assignment(mut self, value: Assignment) -> Self
-    {
+    pub fn with_target_assignment(mut self, value: Assignment) -> Self {
         self.target_assignment = value;
         self
-    }/// Sets `member_type` to the passed value.
-    /// 
+    }
+    /// Sets `member_type` to the passed value.
+    ///
     /// -1 for unknown. 0 for classic member. +1 for consumer member.
-    /// 
+    ///
     /// Supported API versions: 1
-    pub fn with_member_type(mut self, value: i8) -> Self
-    {
+    pub fn with_member_type(mut self, value: i8) -> Self {
         self.member_type = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -691,7 +706,10 @@ impl Encodable for Member {
         }
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -706,7 +724,8 @@ impl Encodable for Member {
         total_size += types::Int32.compute_size(&self.member_epoch)?;
         total_size += types::CompactString.compute_size(&self.client_id)?;
         total_size += types::CompactString.compute_size(&self.client_host)?;
-        total_size += types::CompactArray(types::CompactString).compute_size(&self.subscribed_topic_names)?;
+        total_size +=
+            types::CompactArray(types::CompactString).compute_size(&self.subscribed_topic_names)?;
         total_size += types::CompactString.compute_size(&self.subscribed_topic_regex)?;
         total_size += types::Struct { version }.compute_size(&self.assignment)?;
         total_size += types::Struct { version }.compute_size(&self.target_assignment)?;
@@ -715,7 +734,10 @@ impl Encodable for Member {
         }
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -799,17 +821,17 @@ impl Message for Member {
 #[derive(Debug, Clone, PartialEq)]
 pub struct TopicPartitions {
     /// The topic ID.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub topic_id: Uuid,
 
     /// The topic name.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub topic_name: super::TopicName,
 
     /// The partitions.
-    /// 
+    ///
     /// Supported API versions: 0-1
     pub partitions: Vec<i32>,
 
@@ -819,40 +841,39 @@ pub struct TopicPartitions {
 
 impl TopicPartitions {
     /// Sets `topic_id` to the passed value.
-    /// 
+    ///
     /// The topic ID.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_topic_id(mut self, value: Uuid) -> Self
-    {
+    pub fn with_topic_id(mut self, value: Uuid) -> Self {
         self.topic_id = value;
         self
-    }/// Sets `topic_name` to the passed value.
-    /// 
+    }
+    /// Sets `topic_name` to the passed value.
+    ///
     /// The topic name.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_topic_name(mut self, value: super::TopicName) -> Self
-    {
+    pub fn with_topic_name(mut self, value: super::TopicName) -> Self {
         self.topic_name = value;
         self
-    }/// Sets `partitions` to the passed value.
-    /// 
+    }
+    /// Sets `partitions` to the passed value.
+    ///
     /// The partitions.
-    /// 
+    ///
     /// Supported API versions: 0-1
-    pub fn with_partitions(mut self, value: Vec<i32>) -> Self
-    {
+    pub fn with_partitions(mut self, value: Vec<i32>) -> Self {
         self.partitions = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -869,7 +890,10 @@ impl Encodable for TopicPartitions {
         types::CompactArray(types::Int32).encode(buf, &self.partitions)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -883,7 +907,10 @@ impl Encodable for TopicPartitions {
         total_size += types::CompactArray(types::Int32).compute_size(&self.partitions)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -939,4 +966,3 @@ impl HeaderVersion for ConsumerGroupDescribeResponse {
         1
     }
 }
-

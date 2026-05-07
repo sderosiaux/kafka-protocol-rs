@@ -7,27 +7,27 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
+use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
-use anyhow::{bail, Result};
 
 use crate::protocol::{
-    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
-    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
+    buf::{ByteBuf, ByteBufMut},
+    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
+    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
 };
-
 
 /// Valid versions: 0
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct CredentialInfo {
     /// The SCRAM mechanism.
-    /// 
+    ///
     /// Supported API versions: 0
     pub mechanism: i8,
 
     /// The number of iterations used in the SCRAM credential.
-    /// 
+    ///
     /// Supported API versions: 0
     pub iterations: i32,
 
@@ -37,31 +37,30 @@ pub struct CredentialInfo {
 
 impl CredentialInfo {
     /// Sets `mechanism` to the passed value.
-    /// 
+    ///
     /// The SCRAM mechanism.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_mechanism(mut self, value: i8) -> Self
-    {
+    pub fn with_mechanism(mut self, value: i8) -> Self {
         self.mechanism = value;
         self
-    }/// Sets `iterations` to the passed value.
-    /// 
+    }
+    /// Sets `iterations` to the passed value.
+    ///
     /// The number of iterations used in the SCRAM credential.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_iterations(mut self, value: i32) -> Self
-    {
+    pub fn with_iterations(mut self, value: i32) -> Self {
         self.iterations = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -77,7 +76,10 @@ impl Encodable for CredentialInfo {
         types::Int32.encode(buf, &self.iterations)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -90,7 +92,10 @@ impl Encodable for CredentialInfo {
         total_size += types::Int32.compute_size(&self.iterations)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -143,22 +148,22 @@ impl Message for CredentialInfo {
 #[derive(Debug, Clone, PartialEq)]
 pub struct DescribeUserScramCredentialsResponse {
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    /// 
+    ///
     /// Supported API versions: 0
     pub throttle_time_ms: i32,
 
     /// The message-level error code, 0 except for user authorization or infrastructure issues.
-    /// 
+    ///
     /// Supported API versions: 0
     pub error_code: i16,
 
     /// The message-level error message, if any.
-    /// 
+    ///
     /// Supported API versions: 0
     pub error_message: Option<StrBytes>,
 
     /// The results for descriptions, one per user.
-    /// 
+    ///
     /// Supported API versions: 0
     pub results: Vec<DescribeUserScramCredentialsResult>,
 
@@ -168,49 +173,48 @@ pub struct DescribeUserScramCredentialsResponse {
 
 impl DescribeUserScramCredentialsResponse {
     /// Sets `throttle_time_ms` to the passed value.
-    /// 
+    ///
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_throttle_time_ms(mut self, value: i32) -> Self
-    {
+    pub fn with_throttle_time_ms(mut self, value: i32) -> Self {
         self.throttle_time_ms = value;
         self
-    }/// Sets `error_code` to the passed value.
-    /// 
+    }
+    /// Sets `error_code` to the passed value.
+    ///
     /// The message-level error code, 0 except for user authorization or infrastructure issues.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_error_code(mut self, value: i16) -> Self
-    {
+    pub fn with_error_code(mut self, value: i16) -> Self {
         self.error_code = value;
         self
-    }/// Sets `error_message` to the passed value.
-    /// 
+    }
+    /// Sets `error_message` to the passed value.
+    ///
     /// The message-level error message, if any.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_error_message(mut self, value: Option<StrBytes>) -> Self
-    {
+    pub fn with_error_message(mut self, value: Option<StrBytes>) -> Self {
         self.error_message = value;
         self
-    }/// Sets `results` to the passed value.
-    /// 
+    }
+    /// Sets `results` to the passed value.
+    ///
     /// The results for descriptions, one per user.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_results(mut self, value: Vec<DescribeUserScramCredentialsResult>) -> Self
-    {
+    pub fn with_results(mut self, value: Vec<DescribeUserScramCredentialsResult>) -> Self {
         self.results = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -228,7 +232,10 @@ impl Encodable for DescribeUserScramCredentialsResponse {
         types::CompactArray(types::Struct { version }).encode(buf, &self.results)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -243,7 +250,10 @@ impl Encodable for DescribeUserScramCredentialsResponse {
         total_size += types::CompactArray(types::Struct { version }).compute_size(&self.results)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -302,22 +312,22 @@ impl Message for DescribeUserScramCredentialsResponse {
 #[derive(Debug, Clone, PartialEq)]
 pub struct DescribeUserScramCredentialsResult {
     /// The user name.
-    /// 
+    ///
     /// Supported API versions: 0
     pub user: StrBytes,
 
     /// The user-level error code.
-    /// 
+    ///
     /// Supported API versions: 0
     pub error_code: i16,
 
     /// The user-level error message, if any.
-    /// 
+    ///
     /// Supported API versions: 0
     pub error_message: Option<StrBytes>,
 
     /// The mechanism and related information associated with the user's SCRAM credentials.
-    /// 
+    ///
     /// Supported API versions: 0
     pub credential_infos: Vec<CredentialInfo>,
 
@@ -327,49 +337,48 @@ pub struct DescribeUserScramCredentialsResult {
 
 impl DescribeUserScramCredentialsResult {
     /// Sets `user` to the passed value.
-    /// 
+    ///
     /// The user name.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_user(mut self, value: StrBytes) -> Self
-    {
+    pub fn with_user(mut self, value: StrBytes) -> Self {
         self.user = value;
         self
-    }/// Sets `error_code` to the passed value.
-    /// 
+    }
+    /// Sets `error_code` to the passed value.
+    ///
     /// The user-level error code.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_error_code(mut self, value: i16) -> Self
-    {
+    pub fn with_error_code(mut self, value: i16) -> Self {
         self.error_code = value;
         self
-    }/// Sets `error_message` to the passed value.
-    /// 
+    }
+    /// Sets `error_message` to the passed value.
+    ///
     /// The user-level error message, if any.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_error_message(mut self, value: Option<StrBytes>) -> Self
-    {
+    pub fn with_error_message(mut self, value: Option<StrBytes>) -> Self {
         self.error_message = value;
         self
-    }/// Sets `credential_infos` to the passed value.
-    /// 
+    }
+    /// Sets `credential_infos` to the passed value.
+    ///
     /// The mechanism and related information associated with the user's SCRAM credentials.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_credential_infos(mut self, value: Vec<CredentialInfo>) -> Self
-    {
+    pub fn with_credential_infos(mut self, value: Vec<CredentialInfo>) -> Self {
         self.credential_infos = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -387,7 +396,10 @@ impl Encodable for DescribeUserScramCredentialsResult {
         types::CompactArray(types::Struct { version }).encode(buf, &self.credential_infos)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -399,10 +411,14 @@ impl Encodable for DescribeUserScramCredentialsResult {
         total_size += types::CompactString.compute_size(&self.user)?;
         total_size += types::Int16.compute_size(&self.error_code)?;
         total_size += types::CompactString.compute_size(&self.error_message)?;
-        total_size += types::CompactArray(types::Struct { version }).compute_size(&self.credential_infos)?;
+        total_size +=
+            types::CompactArray(types::Struct { version }).compute_size(&self.credential_infos)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -461,4 +477,3 @@ impl HeaderVersion for DescribeUserScramCredentialsResponse {
         1
     }
 }
-

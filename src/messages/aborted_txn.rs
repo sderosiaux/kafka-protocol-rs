@@ -7,77 +7,75 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
+use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
-use anyhow::{bail, Result};
 
 use crate::protocol::{
-    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
-    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
+    buf::{ByteBuf, ByteBufMut},
+    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
+    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
 };
-
 
 /// Valid versions: 0
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct AbortedTxn {
     /// The producer id associated with the aborted transaction
-    /// 
+    ///
     /// Supported API versions: 0
     pub producer_id: i64,
 
     /// The first offset in the aborted transaction
-    /// 
+    ///
     /// Supported API versions: 0
     pub first_offset: i64,
 
     /// The last offset in the aborted transaction
-    /// 
+    ///
     /// Supported API versions: 0
     pub last_offset: i64,
 
     /// The last stable offset at the time the transaction was aborted
-    /// 
+    ///
     /// Supported API versions: 0
     pub last_stable_offset: i64,
-
 }
 
 impl AbortedTxn {
     /// Sets `producer_id` to the passed value.
-    /// 
+    ///
     /// The producer id associated with the aborted transaction
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_producer_id(mut self, value: i64) -> Self
-    {
+    pub fn with_producer_id(mut self, value: i64) -> Self {
         self.producer_id = value;
         self
-    }/// Sets `first_offset` to the passed value.
-    /// 
+    }
+    /// Sets `first_offset` to the passed value.
+    ///
     /// The first offset in the aborted transaction
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_first_offset(mut self, value: i64) -> Self
-    {
+    pub fn with_first_offset(mut self, value: i64) -> Self {
         self.first_offset = value;
         self
-    }/// Sets `last_offset` to the passed value.
-    /// 
+    }
+    /// Sets `last_offset` to the passed value.
+    ///
     /// The last offset in the aborted transaction
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_last_offset(mut self, value: i64) -> Self
-    {
+    pub fn with_last_offset(mut self, value: i64) -> Self {
         self.last_offset = value;
         self
-    }/// Sets `last_stable_offset` to the passed value.
-    /// 
+    }
+    /// Sets `last_stable_offset` to the passed value.
+    ///
     /// The last stable offset at the time the transaction was aborted
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_last_stable_offset(mut self, value: i64) -> Self
-    {
+    pub fn with_last_stable_offset(mut self, value: i64) -> Self {
         self.last_stable_offset = value;
         self
     }
@@ -139,4 +137,3 @@ impl Message for AbortedTxn {
     const VERSIONS: VersionRange = VersionRange { min: 0, max: 0 };
     const DEPRECATED_VERSIONS: Option<VersionRange> = None;
 }
-

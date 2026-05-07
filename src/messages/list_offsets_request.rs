@@ -7,32 +7,32 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
+use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
-use anyhow::{bail, Result};
 
 use crate::protocol::{
-    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
-    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
+    buf::{ByteBuf, ByteBufMut},
+    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
+    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
 };
-
 
 /// Valid versions: 1-11
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct ListOffsetsPartition {
     /// The partition index.
-    /// 
+    ///
     /// Supported API versions: 1-11
     pub partition_index: i32,
 
     /// The current leader epoch.
-    /// 
+    ///
     /// Supported API versions: 4-11
     pub current_leader_epoch: i32,
 
     /// The current timestamp.
-    /// 
+    ///
     /// Supported API versions: 1-11
     pub timestamp: i64,
 
@@ -42,40 +42,39 @@ pub struct ListOffsetsPartition {
 
 impl ListOffsetsPartition {
     /// Sets `partition_index` to the passed value.
-    /// 
+    ///
     /// The partition index.
-    /// 
+    ///
     /// Supported API versions: 1-11
-    pub fn with_partition_index(mut self, value: i32) -> Self
-    {
+    pub fn with_partition_index(mut self, value: i32) -> Self {
         self.partition_index = value;
         self
-    }/// Sets `current_leader_epoch` to the passed value.
-    /// 
+    }
+    /// Sets `current_leader_epoch` to the passed value.
+    ///
     /// The current leader epoch.
-    /// 
+    ///
     /// Supported API versions: 4-11
-    pub fn with_current_leader_epoch(mut self, value: i32) -> Self
-    {
+    pub fn with_current_leader_epoch(mut self, value: i32) -> Self {
         self.current_leader_epoch = value;
         self
-    }/// Sets `timestamp` to the passed value.
-    /// 
+    }
+    /// Sets `timestamp` to the passed value.
+    ///
     /// The current timestamp.
-    /// 
+    ///
     /// Supported API versions: 1-11
-    pub fn with_timestamp(mut self, value: i64) -> Self
-    {
+    pub fn with_timestamp(mut self, value: i64) -> Self {
         self.timestamp = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -95,7 +94,10 @@ impl Encodable for ListOffsetsPartition {
         if version >= 6 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -113,7 +115,10 @@ impl Encodable for ListOffsetsPartition {
         if version >= 6 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -176,22 +181,22 @@ impl Message for ListOffsetsPartition {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ListOffsetsRequest {
     /// The broker ID of the requester, or -1 if this request is being made by a normal consumer.
-    /// 
+    ///
     /// Supported API versions: 1-11
     pub replica_id: super::BrokerId,
 
     /// This setting controls the visibility of transactional records. Using READ_UNCOMMITTED (isolation_level = 0) makes all records visible. With READ_COMMITTED (isolation_level = 1), non-transactional and COMMITTED transactional records are visible. To be more concrete, READ_COMMITTED returns all data from offsets smaller than the current LSO (last stable offset), and enables the inclusion of the list of aborted transactions in the result, which allows consumers to discard ABORTED transactional records.
-    /// 
+    ///
     /// Supported API versions: 2-11
     pub isolation_level: i8,
 
     /// Each topic in the request.
-    /// 
+    ///
     /// Supported API versions: 1-11
     pub topics: Vec<ListOffsetsTopic>,
 
     /// The timeout to await a response in milliseconds for requests that require reading from remote storage for topics enabled with tiered storage.
-    /// 
+    ///
     /// Supported API versions: 10-11
     pub timeout_ms: i32,
 
@@ -201,49 +206,48 @@ pub struct ListOffsetsRequest {
 
 impl ListOffsetsRequest {
     /// Sets `replica_id` to the passed value.
-    /// 
+    ///
     /// The broker ID of the requester, or -1 if this request is being made by a normal consumer.
-    /// 
+    ///
     /// Supported API versions: 1-11
-    pub fn with_replica_id(mut self, value: super::BrokerId) -> Self
-    {
+    pub fn with_replica_id(mut self, value: super::BrokerId) -> Self {
         self.replica_id = value;
         self
-    }/// Sets `isolation_level` to the passed value.
-    /// 
+    }
+    /// Sets `isolation_level` to the passed value.
+    ///
     /// This setting controls the visibility of transactional records. Using READ_UNCOMMITTED (isolation_level = 0) makes all records visible. With READ_COMMITTED (isolation_level = 1), non-transactional and COMMITTED transactional records are visible. To be more concrete, READ_COMMITTED returns all data from offsets smaller than the current LSO (last stable offset), and enables the inclusion of the list of aborted transactions in the result, which allows consumers to discard ABORTED transactional records.
-    /// 
+    ///
     /// Supported API versions: 2-11
-    pub fn with_isolation_level(mut self, value: i8) -> Self
-    {
+    pub fn with_isolation_level(mut self, value: i8) -> Self {
         self.isolation_level = value;
         self
-    }/// Sets `topics` to the passed value.
-    /// 
+    }
+    /// Sets `topics` to the passed value.
+    ///
     /// Each topic in the request.
-    /// 
+    ///
     /// Supported API versions: 1-11
-    pub fn with_topics(mut self, value: Vec<ListOffsetsTopic>) -> Self
-    {
+    pub fn with_topics(mut self, value: Vec<ListOffsetsTopic>) -> Self {
         self.topics = value;
         self
-    }/// Sets `timeout_ms` to the passed value.
-    /// 
+    }
+    /// Sets `timeout_ms` to the passed value.
+    ///
     /// The timeout to await a response in milliseconds for requests that require reading from remote storage for topics enabled with tiered storage.
-    /// 
+    ///
     /// Supported API versions: 10-11
-    pub fn with_timeout_ms(mut self, value: i32) -> Self
-    {
+    pub fn with_timeout_ms(mut self, value: i32) -> Self {
         self.timeout_ms = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -274,7 +278,10 @@ impl Encodable for ListOffsetsRequest {
         if version >= 6 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -293,7 +300,8 @@ impl Encodable for ListOffsetsRequest {
             }
         }
         if version >= 6 {
-            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
+            total_size +=
+                types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
         } else {
             total_size += types::Array(types::Struct { version }).compute_size(&self.topics)?;
         }
@@ -303,7 +311,10 @@ impl Encodable for ListOffsetsRequest {
         if version >= 6 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -377,12 +388,12 @@ impl Message for ListOffsetsRequest {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ListOffsetsTopic {
     /// The topic name.
-    /// 
+    ///
     /// Supported API versions: 1-11
     pub name: super::TopicName,
 
     /// Each partition in the request.
-    /// 
+    ///
     /// Supported API versions: 1-11
     pub partitions: Vec<ListOffsetsPartition>,
 
@@ -392,31 +403,30 @@ pub struct ListOffsetsTopic {
 
 impl ListOffsetsTopic {
     /// Sets `name` to the passed value.
-    /// 
+    ///
     /// The topic name.
-    /// 
+    ///
     /// Supported API versions: 1-11
-    pub fn with_name(mut self, value: super::TopicName) -> Self
-    {
+    pub fn with_name(mut self, value: super::TopicName) -> Self {
         self.name = value;
         self
-    }/// Sets `partitions` to the passed value.
-    /// 
+    }
+    /// Sets `partitions` to the passed value.
+    ///
     /// Each partition in the request.
-    /// 
+    ///
     /// Supported API versions: 1-11
-    pub fn with_partitions(mut self, value: Vec<ListOffsetsPartition>) -> Self
-    {
+    pub fn with_partitions(mut self, value: Vec<ListOffsetsPartition>) -> Self {
         self.partitions = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -441,7 +451,10 @@ impl Encodable for ListOffsetsTopic {
         if version >= 6 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -457,14 +470,18 @@ impl Encodable for ListOffsetsTopic {
             total_size += types::String.compute_size(&self.name)?;
         }
         if version >= 6 {
-            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
+            total_size +=
+                types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
         } else {
             total_size += types::Array(types::Struct { version }).compute_size(&self.partitions)?;
         }
         if version >= 6 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -532,4 +549,3 @@ impl HeaderVersion for ListOffsetsRequest {
         }
     }
 }
-

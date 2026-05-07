@@ -7,32 +7,32 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
+use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
-use anyhow::{bail, Result};
 
 use crate::protocol::{
-    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
-    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
+    buf::{ByteBuf, ByteBufMut},
+    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
+    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
 };
-
 
 /// Valid versions: 1-3
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct DescribeDelegationTokenResponse {
     /// The error code, or 0 if there was no error.
-    /// 
+    ///
     /// Supported API versions: 1-3
     pub error_code: i16,
 
     /// The tokens.
-    /// 
+    ///
     /// Supported API versions: 1-3
     pub tokens: Vec<DescribedDelegationToken>,
 
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    /// 
+    ///
     /// Supported API versions: 1-3
     pub throttle_time_ms: i32,
 
@@ -42,40 +42,39 @@ pub struct DescribeDelegationTokenResponse {
 
 impl DescribeDelegationTokenResponse {
     /// Sets `error_code` to the passed value.
-    /// 
+    ///
     /// The error code, or 0 if there was no error.
-    /// 
+    ///
     /// Supported API versions: 1-3
-    pub fn with_error_code(mut self, value: i16) -> Self
-    {
+    pub fn with_error_code(mut self, value: i16) -> Self {
         self.error_code = value;
         self
-    }/// Sets `tokens` to the passed value.
-    /// 
+    }
+    /// Sets `tokens` to the passed value.
+    ///
     /// The tokens.
-    /// 
+    ///
     /// Supported API versions: 1-3
-    pub fn with_tokens(mut self, value: Vec<DescribedDelegationToken>) -> Self
-    {
+    pub fn with_tokens(mut self, value: Vec<DescribedDelegationToken>) -> Self {
         self.tokens = value;
         self
-    }/// Sets `throttle_time_ms` to the passed value.
-    /// 
+    }
+    /// Sets `throttle_time_ms` to the passed value.
+    ///
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    /// 
+    ///
     /// Supported API versions: 1-3
-    pub fn with_throttle_time_ms(mut self, value: i32) -> Self
-    {
+    pub fn with_throttle_time_ms(mut self, value: i32) -> Self {
         self.throttle_time_ms = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -97,7 +96,10 @@ impl Encodable for DescribeDelegationTokenResponse {
         if version >= 2 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -109,7 +111,8 @@ impl Encodable for DescribeDelegationTokenResponse {
         let mut total_size = 0;
         total_size += types::Int16.compute_size(&self.error_code)?;
         if version >= 2 {
-            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.tokens)?;
+            total_size +=
+                types::CompactArray(types::Struct { version }).compute_size(&self.tokens)?;
         } else {
             total_size += types::Array(types::Struct { version }).compute_size(&self.tokens)?;
         }
@@ -117,7 +120,10 @@ impl Encodable for DescribeDelegationTokenResponse {
         if version >= 2 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -180,52 +186,52 @@ impl Message for DescribeDelegationTokenResponse {
 #[derive(Debug, Clone, PartialEq)]
 pub struct DescribedDelegationToken {
     /// The token principal type.
-    /// 
+    ///
     /// Supported API versions: 1-3
     pub principal_type: StrBytes,
 
     /// The token principal name.
-    /// 
+    ///
     /// Supported API versions: 1-3
     pub principal_name: StrBytes,
 
     /// The principal type of the requester of the token.
-    /// 
+    ///
     /// Supported API versions: 3
     pub token_requester_principal_type: StrBytes,
 
     /// The principal type of the requester of the token.
-    /// 
+    ///
     /// Supported API versions: 3
     pub token_requester_principal_name: StrBytes,
 
     /// The token issue timestamp in milliseconds.
-    /// 
+    ///
     /// Supported API versions: 1-3
     pub issue_timestamp: i64,
 
     /// The token expiry timestamp in milliseconds.
-    /// 
+    ///
     /// Supported API versions: 1-3
     pub expiry_timestamp: i64,
 
     /// The token maximum timestamp length in milliseconds.
-    /// 
+    ///
     /// Supported API versions: 1-3
     pub max_timestamp: i64,
 
     /// The token ID.
-    /// 
+    ///
     /// Supported API versions: 1-3
     pub token_id: StrBytes,
 
     /// The token HMAC.
-    /// 
+    ///
     /// Supported API versions: 1-3
     pub hmac: Bytes,
 
     /// Those who are able to renew this token before it expires.
-    /// 
+    ///
     /// Supported API versions: 1-3
     pub renewers: Vec<DescribedDelegationTokenRenewer>,
 
@@ -235,103 +241,102 @@ pub struct DescribedDelegationToken {
 
 impl DescribedDelegationToken {
     /// Sets `principal_type` to the passed value.
-    /// 
+    ///
     /// The token principal type.
-    /// 
+    ///
     /// Supported API versions: 1-3
-    pub fn with_principal_type(mut self, value: StrBytes) -> Self
-    {
+    pub fn with_principal_type(mut self, value: StrBytes) -> Self {
         self.principal_type = value;
         self
-    }/// Sets `principal_name` to the passed value.
-    /// 
+    }
+    /// Sets `principal_name` to the passed value.
+    ///
     /// The token principal name.
-    /// 
+    ///
     /// Supported API versions: 1-3
-    pub fn with_principal_name(mut self, value: StrBytes) -> Self
-    {
+    pub fn with_principal_name(mut self, value: StrBytes) -> Self {
         self.principal_name = value;
         self
-    }/// Sets `token_requester_principal_type` to the passed value.
-    /// 
+    }
+    /// Sets `token_requester_principal_type` to the passed value.
+    ///
     /// The principal type of the requester of the token.
-    /// 
+    ///
     /// Supported API versions: 3
-    pub fn with_token_requester_principal_type(mut self, value: StrBytes) -> Self
-    {
+    pub fn with_token_requester_principal_type(mut self, value: StrBytes) -> Self {
         self.token_requester_principal_type = value;
         self
-    }/// Sets `token_requester_principal_name` to the passed value.
-    /// 
+    }
+    /// Sets `token_requester_principal_name` to the passed value.
+    ///
     /// The principal type of the requester of the token.
-    /// 
+    ///
     /// Supported API versions: 3
-    pub fn with_token_requester_principal_name(mut self, value: StrBytes) -> Self
-    {
+    pub fn with_token_requester_principal_name(mut self, value: StrBytes) -> Self {
         self.token_requester_principal_name = value;
         self
-    }/// Sets `issue_timestamp` to the passed value.
-    /// 
+    }
+    /// Sets `issue_timestamp` to the passed value.
+    ///
     /// The token issue timestamp in milliseconds.
-    /// 
+    ///
     /// Supported API versions: 1-3
-    pub fn with_issue_timestamp(mut self, value: i64) -> Self
-    {
+    pub fn with_issue_timestamp(mut self, value: i64) -> Self {
         self.issue_timestamp = value;
         self
-    }/// Sets `expiry_timestamp` to the passed value.
-    /// 
+    }
+    /// Sets `expiry_timestamp` to the passed value.
+    ///
     /// The token expiry timestamp in milliseconds.
-    /// 
+    ///
     /// Supported API versions: 1-3
-    pub fn with_expiry_timestamp(mut self, value: i64) -> Self
-    {
+    pub fn with_expiry_timestamp(mut self, value: i64) -> Self {
         self.expiry_timestamp = value;
         self
-    }/// Sets `max_timestamp` to the passed value.
-    /// 
+    }
+    /// Sets `max_timestamp` to the passed value.
+    ///
     /// The token maximum timestamp length in milliseconds.
-    /// 
+    ///
     /// Supported API versions: 1-3
-    pub fn with_max_timestamp(mut self, value: i64) -> Self
-    {
+    pub fn with_max_timestamp(mut self, value: i64) -> Self {
         self.max_timestamp = value;
         self
-    }/// Sets `token_id` to the passed value.
-    /// 
+    }
+    /// Sets `token_id` to the passed value.
+    ///
     /// The token ID.
-    /// 
+    ///
     /// Supported API versions: 1-3
-    pub fn with_token_id(mut self, value: StrBytes) -> Self
-    {
+    pub fn with_token_id(mut self, value: StrBytes) -> Self {
         self.token_id = value;
         self
-    }/// Sets `hmac` to the passed value.
-    /// 
+    }
+    /// Sets `hmac` to the passed value.
+    ///
     /// The token HMAC.
-    /// 
+    ///
     /// Supported API versions: 1-3
-    pub fn with_hmac(mut self, value: Bytes) -> Self
-    {
+    pub fn with_hmac(mut self, value: Bytes) -> Self {
         self.hmac = value;
         self
-    }/// Sets `renewers` to the passed value.
-    /// 
+    }
+    /// Sets `renewers` to the passed value.
+    ///
     /// Those who are able to renew this token before it expires.
-    /// 
+    ///
     /// Supported API versions: 1-3
-    pub fn with_renewers(mut self, value: Vec<DescribedDelegationTokenRenewer>) -> Self
-    {
+    pub fn with_renewers(mut self, value: Vec<DescribedDelegationTokenRenewer>) -> Self {
         self.renewers = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -388,7 +393,10 @@ impl Encodable for DescribedDelegationToken {
         if version >= 2 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -409,14 +417,16 @@ impl Encodable for DescribedDelegationToken {
             total_size += types::String.compute_size(&self.principal_name)?;
         }
         if version >= 3 {
-            total_size += types::CompactString.compute_size(&self.token_requester_principal_type)?;
+            total_size +=
+                types::CompactString.compute_size(&self.token_requester_principal_type)?;
         } else {
             if !self.token_requester_principal_type.is_empty() {
                 bail!("A field is set that is not available on the selected protocol version");
             }
         }
         if version >= 3 {
-            total_size += types::CompactString.compute_size(&self.token_requester_principal_name)?;
+            total_size +=
+                types::CompactString.compute_size(&self.token_requester_principal_name)?;
         } else {
             if !self.token_requester_principal_name.is_empty() {
                 bail!("A field is set that is not available on the selected protocol version");
@@ -436,14 +446,18 @@ impl Encodable for DescribedDelegationToken {
             total_size += types::Bytes.compute_size(&self.hmac)?;
         }
         if version >= 2 {
-            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.renewers)?;
+            total_size +=
+                types::CompactArray(types::Struct { version }).compute_size(&self.renewers)?;
         } else {
             total_size += types::Array(types::Struct { version }).compute_size(&self.renewers)?;
         }
         if version >= 2 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -551,12 +565,12 @@ impl Message for DescribedDelegationToken {
 #[derive(Debug, Clone, PartialEq)]
 pub struct DescribedDelegationTokenRenewer {
     /// The renewer principal type.
-    /// 
+    ///
     /// Supported API versions: 1-3
     pub principal_type: StrBytes,
 
     /// The renewer principal name.
-    /// 
+    ///
     /// Supported API versions: 1-3
     pub principal_name: StrBytes,
 
@@ -566,31 +580,30 @@ pub struct DescribedDelegationTokenRenewer {
 
 impl DescribedDelegationTokenRenewer {
     /// Sets `principal_type` to the passed value.
-    /// 
+    ///
     /// The renewer principal type.
-    /// 
+    ///
     /// Supported API versions: 1-3
-    pub fn with_principal_type(mut self, value: StrBytes) -> Self
-    {
+    pub fn with_principal_type(mut self, value: StrBytes) -> Self {
         self.principal_type = value;
         self
-    }/// Sets `principal_name` to the passed value.
-    /// 
+    }
+    /// Sets `principal_name` to the passed value.
+    ///
     /// The renewer principal name.
-    /// 
+    ///
     /// Supported API versions: 1-3
-    pub fn with_principal_name(mut self, value: StrBytes) -> Self
-    {
+    pub fn with_principal_name(mut self, value: StrBytes) -> Self {
         self.principal_name = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -615,7 +628,10 @@ impl Encodable for DescribedDelegationTokenRenewer {
         if version >= 2 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -638,7 +654,10 @@ impl Encodable for DescribedDelegationTokenRenewer {
         if version >= 2 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -706,4 +725,3 @@ impl HeaderVersion for DescribeDelegationTokenResponse {
         }
     }
 }
-

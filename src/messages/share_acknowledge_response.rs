@@ -7,27 +7,27 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
+use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
-use anyhow::{bail, Result};
 
 use crate::protocol::{
-    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
-    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
+    buf::{ByteBuf, ByteBufMut},
+    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
+    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
 };
-
 
 /// Valid versions: 1-2
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct LeaderIdAndEpoch {
     /// The ID of the current leader or -1 if the leader is unknown.
-    /// 
+    ///
     /// Supported API versions: 1-2
     pub leader_id: i32,
 
     /// The latest known leader epoch.
-    /// 
+    ///
     /// Supported API versions: 1-2
     pub leader_epoch: i32,
 
@@ -37,31 +37,30 @@ pub struct LeaderIdAndEpoch {
 
 impl LeaderIdAndEpoch {
     /// Sets `leader_id` to the passed value.
-    /// 
+    ///
     /// The ID of the current leader or -1 if the leader is unknown.
-    /// 
+    ///
     /// Supported API versions: 1-2
-    pub fn with_leader_id(mut self, value: i32) -> Self
-    {
+    pub fn with_leader_id(mut self, value: i32) -> Self {
         self.leader_id = value;
         self
-    }/// Sets `leader_epoch` to the passed value.
-    /// 
+    }
+    /// Sets `leader_epoch` to the passed value.
+    ///
     /// The latest known leader epoch.
-    /// 
+    ///
     /// Supported API versions: 1-2
-    pub fn with_leader_epoch(mut self, value: i32) -> Self
-    {
+    pub fn with_leader_epoch(mut self, value: i32) -> Self {
         self.leader_epoch = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -77,7 +76,10 @@ impl Encodable for LeaderIdAndEpoch {
         types::Int32.encode(buf, &self.leader_epoch)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -90,7 +92,10 @@ impl Encodable for LeaderIdAndEpoch {
         total_size += types::Int32.compute_size(&self.leader_epoch)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -143,22 +148,22 @@ impl Message for LeaderIdAndEpoch {
 #[derive(Debug, Clone, PartialEq)]
 pub struct NodeEndpoint {
     /// The ID of the associated node.
-    /// 
+    ///
     /// Supported API versions: 1-2
     pub node_id: super::BrokerId,
 
     /// The node's hostname.
-    /// 
+    ///
     /// Supported API versions: 1-2
     pub host: StrBytes,
 
     /// The node's port.
-    /// 
+    ///
     /// Supported API versions: 1-2
     pub port: i32,
 
     /// The rack of the node, or null if it has not been assigned to a rack.
-    /// 
+    ///
     /// Supported API versions: 1-2
     pub rack: Option<StrBytes>,
 
@@ -168,49 +173,48 @@ pub struct NodeEndpoint {
 
 impl NodeEndpoint {
     /// Sets `node_id` to the passed value.
-    /// 
+    ///
     /// The ID of the associated node.
-    /// 
+    ///
     /// Supported API versions: 1-2
-    pub fn with_node_id(mut self, value: super::BrokerId) -> Self
-    {
+    pub fn with_node_id(mut self, value: super::BrokerId) -> Self {
         self.node_id = value;
         self
-    }/// Sets `host` to the passed value.
-    /// 
+    }
+    /// Sets `host` to the passed value.
+    ///
     /// The node's hostname.
-    /// 
+    ///
     /// Supported API versions: 1-2
-    pub fn with_host(mut self, value: StrBytes) -> Self
-    {
+    pub fn with_host(mut self, value: StrBytes) -> Self {
         self.host = value;
         self
-    }/// Sets `port` to the passed value.
-    /// 
+    }
+    /// Sets `port` to the passed value.
+    ///
     /// The node's port.
-    /// 
+    ///
     /// Supported API versions: 1-2
-    pub fn with_port(mut self, value: i32) -> Self
-    {
+    pub fn with_port(mut self, value: i32) -> Self {
         self.port = value;
         self
-    }/// Sets `rack` to the passed value.
-    /// 
+    }
+    /// Sets `rack` to the passed value.
+    ///
     /// The rack of the node, or null if it has not been assigned to a rack.
-    /// 
+    ///
     /// Supported API versions: 1-2
-    pub fn with_rack(mut self, value: Option<StrBytes>) -> Self
-    {
+    pub fn with_rack(mut self, value: Option<StrBytes>) -> Self {
         self.rack = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -228,7 +232,10 @@ impl Encodable for NodeEndpoint {
         types::CompactString.encode(buf, &self.rack)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -243,7 +250,10 @@ impl Encodable for NodeEndpoint {
         total_size += types::CompactString.compute_size(&self.rack)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -302,22 +312,22 @@ impl Message for NodeEndpoint {
 #[derive(Debug, Clone, PartialEq)]
 pub struct PartitionData {
     /// The partition index.
-    /// 
+    ///
     /// Supported API versions: 1-2
     pub partition_index: i32,
 
     /// The error code, or 0 if there was no error.
-    /// 
+    ///
     /// Supported API versions: 1-2
     pub error_code: i16,
 
     /// The error message, or null if there was no error.
-    /// 
+    ///
     /// Supported API versions: 1-2
     pub error_message: Option<StrBytes>,
 
     /// The current leader of the partition.
-    /// 
+    ///
     /// Supported API versions: 1-2
     pub current_leader: LeaderIdAndEpoch,
 
@@ -327,49 +337,48 @@ pub struct PartitionData {
 
 impl PartitionData {
     /// Sets `partition_index` to the passed value.
-    /// 
+    ///
     /// The partition index.
-    /// 
+    ///
     /// Supported API versions: 1-2
-    pub fn with_partition_index(mut self, value: i32) -> Self
-    {
+    pub fn with_partition_index(mut self, value: i32) -> Self {
         self.partition_index = value;
         self
-    }/// Sets `error_code` to the passed value.
-    /// 
+    }
+    /// Sets `error_code` to the passed value.
+    ///
     /// The error code, or 0 if there was no error.
-    /// 
+    ///
     /// Supported API versions: 1-2
-    pub fn with_error_code(mut self, value: i16) -> Self
-    {
+    pub fn with_error_code(mut self, value: i16) -> Self {
         self.error_code = value;
         self
-    }/// Sets `error_message` to the passed value.
-    /// 
+    }
+    /// Sets `error_message` to the passed value.
+    ///
     /// The error message, or null if there was no error.
-    /// 
+    ///
     /// Supported API versions: 1-2
-    pub fn with_error_message(mut self, value: Option<StrBytes>) -> Self
-    {
+    pub fn with_error_message(mut self, value: Option<StrBytes>) -> Self {
         self.error_message = value;
         self
-    }/// Sets `current_leader` to the passed value.
-    /// 
+    }
+    /// Sets `current_leader` to the passed value.
+    ///
     /// The current leader of the partition.
-    /// 
+    ///
     /// Supported API versions: 1-2
-    pub fn with_current_leader(mut self, value: LeaderIdAndEpoch) -> Self
-    {
+    pub fn with_current_leader(mut self, value: LeaderIdAndEpoch) -> Self {
         self.current_leader = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -387,7 +396,10 @@ impl Encodable for PartitionData {
         types::Struct { version }.encode(buf, &self.current_leader)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -402,7 +414,10 @@ impl Encodable for PartitionData {
         total_size += types::Struct { version }.compute_size(&self.current_leader)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -461,32 +476,32 @@ impl Message for PartitionData {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShareAcknowledgeResponse {
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    /// 
+    ///
     /// Supported API versions: 1-2
     pub throttle_time_ms: i32,
 
     /// The top level response error code.
-    /// 
+    ///
     /// Supported API versions: 1-2
     pub error_code: i16,
 
     /// The top-level error message, or null if there was no error.
-    /// 
+    ///
     /// Supported API versions: 1-2
     pub error_message: Option<StrBytes>,
 
     /// The time in milliseconds for which the acquired records are locked.
-    /// 
+    ///
     /// Supported API versions: 2
     pub acquisition_lock_timeout_ms: i32,
 
     /// The response topics.
-    /// 
+    ///
     /// Supported API versions: 1-2
     pub responses: Vec<ShareAcknowledgeTopicResponse>,
 
     /// Endpoints for all current leaders enumerated in PartitionData with error NOT_LEADER_OR_FOLLOWER.
-    /// 
+    ///
     /// Supported API versions: 1-2
     pub node_endpoints: Vec<NodeEndpoint>,
 
@@ -496,67 +511,66 @@ pub struct ShareAcknowledgeResponse {
 
 impl ShareAcknowledgeResponse {
     /// Sets `throttle_time_ms` to the passed value.
-    /// 
+    ///
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    /// 
+    ///
     /// Supported API versions: 1-2
-    pub fn with_throttle_time_ms(mut self, value: i32) -> Self
-    {
+    pub fn with_throttle_time_ms(mut self, value: i32) -> Self {
         self.throttle_time_ms = value;
         self
-    }/// Sets `error_code` to the passed value.
-    /// 
+    }
+    /// Sets `error_code` to the passed value.
+    ///
     /// The top level response error code.
-    /// 
+    ///
     /// Supported API versions: 1-2
-    pub fn with_error_code(mut self, value: i16) -> Self
-    {
+    pub fn with_error_code(mut self, value: i16) -> Self {
         self.error_code = value;
         self
-    }/// Sets `error_message` to the passed value.
-    /// 
+    }
+    /// Sets `error_message` to the passed value.
+    ///
     /// The top-level error message, or null if there was no error.
-    /// 
+    ///
     /// Supported API versions: 1-2
-    pub fn with_error_message(mut self, value: Option<StrBytes>) -> Self
-    {
+    pub fn with_error_message(mut self, value: Option<StrBytes>) -> Self {
         self.error_message = value;
         self
-    }/// Sets `acquisition_lock_timeout_ms` to the passed value.
-    /// 
+    }
+    /// Sets `acquisition_lock_timeout_ms` to the passed value.
+    ///
     /// The time in milliseconds for which the acquired records are locked.
-    /// 
+    ///
     /// Supported API versions: 2
-    pub fn with_acquisition_lock_timeout_ms(mut self, value: i32) -> Self
-    {
+    pub fn with_acquisition_lock_timeout_ms(mut self, value: i32) -> Self {
         self.acquisition_lock_timeout_ms = value;
         self
-    }/// Sets `responses` to the passed value.
-    /// 
+    }
+    /// Sets `responses` to the passed value.
+    ///
     /// The response topics.
-    /// 
+    ///
     /// Supported API versions: 1-2
-    pub fn with_responses(mut self, value: Vec<ShareAcknowledgeTopicResponse>) -> Self
-    {
+    pub fn with_responses(mut self, value: Vec<ShareAcknowledgeTopicResponse>) -> Self {
         self.responses = value;
         self
-    }/// Sets `node_endpoints` to the passed value.
-    /// 
+    }
+    /// Sets `node_endpoints` to the passed value.
+    ///
     /// Endpoints for all current leaders enumerated in PartitionData with error NOT_LEADER_OR_FOLLOWER.
-    /// 
+    ///
     /// Supported API versions: 1-2
-    pub fn with_node_endpoints(mut self, value: Vec<NodeEndpoint>) -> Self
-    {
+    pub fn with_node_endpoints(mut self, value: Vec<NodeEndpoint>) -> Self {
         self.node_endpoints = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -578,7 +592,10 @@ impl Encodable for ShareAcknowledgeResponse {
         types::CompactArray(types::Struct { version }).encode(buf, &self.node_endpoints)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -593,11 +610,16 @@ impl Encodable for ShareAcknowledgeResponse {
         if version >= 2 {
             total_size += types::Int32.compute_size(&self.acquisition_lock_timeout_ms)?;
         }
-        total_size += types::CompactArray(types::Struct { version }).compute_size(&self.responses)?;
-        total_size += types::CompactArray(types::Struct { version }).compute_size(&self.node_endpoints)?;
+        total_size +=
+            types::CompactArray(types::Struct { version }).compute_size(&self.responses)?;
+        total_size +=
+            types::CompactArray(types::Struct { version }).compute_size(&self.node_endpoints)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -666,12 +688,12 @@ impl Message for ShareAcknowledgeResponse {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShareAcknowledgeTopicResponse {
     /// The unique topic ID.
-    /// 
+    ///
     /// Supported API versions: 1-2
     pub topic_id: Uuid,
 
     /// The topic partitions.
-    /// 
+    ///
     /// Supported API versions: 1-2
     pub partitions: Vec<PartitionData>,
 
@@ -681,31 +703,30 @@ pub struct ShareAcknowledgeTopicResponse {
 
 impl ShareAcknowledgeTopicResponse {
     /// Sets `topic_id` to the passed value.
-    /// 
+    ///
     /// The unique topic ID.
-    /// 
+    ///
     /// Supported API versions: 1-2
-    pub fn with_topic_id(mut self, value: Uuid) -> Self
-    {
+    pub fn with_topic_id(mut self, value: Uuid) -> Self {
         self.topic_id = value;
         self
-    }/// Sets `partitions` to the passed value.
-    /// 
+    }
+    /// Sets `partitions` to the passed value.
+    ///
     /// The topic partitions.
-    /// 
+    ///
     /// Supported API versions: 1-2
-    pub fn with_partitions(mut self, value: Vec<PartitionData>) -> Self
-    {
+    pub fn with_partitions(mut self, value: Vec<PartitionData>) -> Self {
         self.partitions = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -721,7 +742,10 @@ impl Encodable for ShareAcknowledgeTopicResponse {
         types::CompactArray(types::Struct { version }).encode(buf, &self.partitions)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -731,10 +755,14 @@ impl Encodable for ShareAcknowledgeTopicResponse {
     fn compute_size(&self, version: i16) -> Result<usize> {
         let mut total_size = 0;
         total_size += types::Uuid.compute_size(&self.topic_id)?;
-        total_size += types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
+        total_size +=
+            types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -787,4 +815,3 @@ impl HeaderVersion for ShareAcknowledgeResponse {
         1
     }
 }
-

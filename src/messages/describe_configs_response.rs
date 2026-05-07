@@ -7,57 +7,57 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
+use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
-use anyhow::{bail, Result};
 
 use crate::protocol::{
-    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
-    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
+    buf::{ByteBuf, ByteBufMut},
+    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
+    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
 };
-
 
 /// Valid versions: 1-4
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct DescribeConfigsResourceResult {
     /// The configuration name.
-    /// 
+    ///
     /// Supported API versions: 1-4
     pub name: StrBytes,
 
     /// The configuration value.
-    /// 
+    ///
     /// Supported API versions: 1-4
     pub value: Option<StrBytes>,
 
     /// True if the configuration is read-only.
-    /// 
+    ///
     /// Supported API versions: 1-4
     pub read_only: bool,
 
     /// The configuration source.
-    /// 
+    ///
     /// Supported API versions: 1-4
     pub config_source: i8,
 
     /// True if this configuration is sensitive.
-    /// 
+    ///
     /// Supported API versions: 1-4
     pub is_sensitive: bool,
 
     /// The synonyms for this configuration key.
-    /// 
+    ///
     /// Supported API versions: 1-4
     pub synonyms: Vec<DescribeConfigsSynonym>,
 
     /// The configuration data type. Type can be one of the following values - BOOLEAN, STRING, INT, SHORT, LONG, DOUBLE, LIST, CLASS, PASSWORD.
-    /// 
+    ///
     /// Supported API versions: 3-4
     pub config_type: i8,
 
     /// The configuration documentation.
-    /// 
+    ///
     /// Supported API versions: 3-4
     pub documentation: Option<StrBytes>,
 
@@ -67,85 +67,84 @@ pub struct DescribeConfigsResourceResult {
 
 impl DescribeConfigsResourceResult {
     /// Sets `name` to the passed value.
-    /// 
+    ///
     /// The configuration name.
-    /// 
+    ///
     /// Supported API versions: 1-4
-    pub fn with_name(mut self, value: StrBytes) -> Self
-    {
+    pub fn with_name(mut self, value: StrBytes) -> Self {
         self.name = value;
         self
-    }/// Sets `value` to the passed value.
-    /// 
+    }
+    /// Sets `value` to the passed value.
+    ///
     /// The configuration value.
-    /// 
+    ///
     /// Supported API versions: 1-4
-    pub fn with_value(mut self, value: Option<StrBytes>) -> Self
-    {
+    pub fn with_value(mut self, value: Option<StrBytes>) -> Self {
         self.value = value;
         self
-    }/// Sets `read_only` to the passed value.
-    /// 
+    }
+    /// Sets `read_only` to the passed value.
+    ///
     /// True if the configuration is read-only.
-    /// 
+    ///
     /// Supported API versions: 1-4
-    pub fn with_read_only(mut self, value: bool) -> Self
-    {
+    pub fn with_read_only(mut self, value: bool) -> Self {
         self.read_only = value;
         self
-    }/// Sets `config_source` to the passed value.
-    /// 
+    }
+    /// Sets `config_source` to the passed value.
+    ///
     /// The configuration source.
-    /// 
+    ///
     /// Supported API versions: 1-4
-    pub fn with_config_source(mut self, value: i8) -> Self
-    {
+    pub fn with_config_source(mut self, value: i8) -> Self {
         self.config_source = value;
         self
-    }/// Sets `is_sensitive` to the passed value.
-    /// 
+    }
+    /// Sets `is_sensitive` to the passed value.
+    ///
     /// True if this configuration is sensitive.
-    /// 
+    ///
     /// Supported API versions: 1-4
-    pub fn with_is_sensitive(mut self, value: bool) -> Self
-    {
+    pub fn with_is_sensitive(mut self, value: bool) -> Self {
         self.is_sensitive = value;
         self
-    }/// Sets `synonyms` to the passed value.
-    /// 
+    }
+    /// Sets `synonyms` to the passed value.
+    ///
     /// The synonyms for this configuration key.
-    /// 
+    ///
     /// Supported API versions: 1-4
-    pub fn with_synonyms(mut self, value: Vec<DescribeConfigsSynonym>) -> Self
-    {
+    pub fn with_synonyms(mut self, value: Vec<DescribeConfigsSynonym>) -> Self {
         self.synonyms = value;
         self
-    }/// Sets `config_type` to the passed value.
-    /// 
+    }
+    /// Sets `config_type` to the passed value.
+    ///
     /// The configuration data type. Type can be one of the following values - BOOLEAN, STRING, INT, SHORT, LONG, DOUBLE, LIST, CLASS, PASSWORD.
-    /// 
+    ///
     /// Supported API versions: 3-4
-    pub fn with_config_type(mut self, value: i8) -> Self
-    {
+    pub fn with_config_type(mut self, value: i8) -> Self {
         self.config_type = value;
         self
-    }/// Sets `documentation` to the passed value.
-    /// 
+    }
+    /// Sets `documentation` to the passed value.
+    ///
     /// The configuration documentation.
-    /// 
+    ///
     /// Supported API versions: 3-4
-    pub fn with_documentation(mut self, value: Option<StrBytes>) -> Self
-    {
+    pub fn with_documentation(mut self, value: Option<StrBytes>) -> Self {
         self.documentation = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -188,7 +187,10 @@ impl Encodable for DescribeConfigsResourceResult {
         if version >= 4 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -212,7 +214,8 @@ impl Encodable for DescribeConfigsResourceResult {
         total_size += types::Int8.compute_size(&self.config_source)?;
         total_size += types::Boolean.compute_size(&self.is_sensitive)?;
         if version >= 4 {
-            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.synonyms)?;
+            total_size +=
+                types::CompactArray(types::Struct { version }).compute_size(&self.synonyms)?;
         } else {
             total_size += types::Array(types::Struct { version }).compute_size(&self.synonyms)?;
         }
@@ -229,7 +232,10 @@ impl Encodable for DescribeConfigsResourceResult {
         if version >= 4 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -327,12 +333,12 @@ impl Message for DescribeConfigsResourceResult {
 #[derive(Debug, Clone, PartialEq)]
 pub struct DescribeConfigsResponse {
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    /// 
+    ///
     /// Supported API versions: 1-4
     pub throttle_time_ms: i32,
 
     /// The results for each resource.
-    /// 
+    ///
     /// Supported API versions: 1-4
     pub results: Vec<DescribeConfigsResult>,
 
@@ -342,31 +348,30 @@ pub struct DescribeConfigsResponse {
 
 impl DescribeConfigsResponse {
     /// Sets `throttle_time_ms` to the passed value.
-    /// 
+    ///
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    /// 
+    ///
     /// Supported API versions: 1-4
-    pub fn with_throttle_time_ms(mut self, value: i32) -> Self
-    {
+    pub fn with_throttle_time_ms(mut self, value: i32) -> Self {
         self.throttle_time_ms = value;
         self
-    }/// Sets `results` to the passed value.
-    /// 
+    }
+    /// Sets `results` to the passed value.
+    ///
     /// The results for each resource.
-    /// 
+    ///
     /// Supported API versions: 1-4
-    pub fn with_results(mut self, value: Vec<DescribeConfigsResult>) -> Self
-    {
+    pub fn with_results(mut self, value: Vec<DescribeConfigsResult>) -> Self {
         self.results = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -387,7 +392,10 @@ impl Encodable for DescribeConfigsResponse {
         if version >= 4 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -399,14 +407,18 @@ impl Encodable for DescribeConfigsResponse {
         let mut total_size = 0;
         total_size += types::Int32.compute_size(&self.throttle_time_ms)?;
         if version >= 4 {
-            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.results)?;
+            total_size +=
+                types::CompactArray(types::Struct { version }).compute_size(&self.results)?;
         } else {
             total_size += types::Array(types::Struct { version }).compute_size(&self.results)?;
         }
         if version >= 4 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -466,27 +478,27 @@ impl Message for DescribeConfigsResponse {
 #[derive(Debug, Clone, PartialEq)]
 pub struct DescribeConfigsResult {
     /// The error code, or 0 if we were able to successfully describe the configurations.
-    /// 
+    ///
     /// Supported API versions: 1-4
     pub error_code: i16,
 
     /// The error message, or null if we were able to successfully describe the configurations.
-    /// 
+    ///
     /// Supported API versions: 1-4
     pub error_message: Option<StrBytes>,
 
     /// The resource type.
-    /// 
+    ///
     /// Supported API versions: 1-4
     pub resource_type: i8,
 
     /// The resource name.
-    /// 
+    ///
     /// Supported API versions: 1-4
     pub resource_name: StrBytes,
 
     /// Each listed configuration.
-    /// 
+    ///
     /// Supported API versions: 1-4
     pub configs: Vec<DescribeConfigsResourceResult>,
 
@@ -496,58 +508,57 @@ pub struct DescribeConfigsResult {
 
 impl DescribeConfigsResult {
     /// Sets `error_code` to the passed value.
-    /// 
+    ///
     /// The error code, or 0 if we were able to successfully describe the configurations.
-    /// 
+    ///
     /// Supported API versions: 1-4
-    pub fn with_error_code(mut self, value: i16) -> Self
-    {
+    pub fn with_error_code(mut self, value: i16) -> Self {
         self.error_code = value;
         self
-    }/// Sets `error_message` to the passed value.
-    /// 
+    }
+    /// Sets `error_message` to the passed value.
+    ///
     /// The error message, or null if we were able to successfully describe the configurations.
-    /// 
+    ///
     /// Supported API versions: 1-4
-    pub fn with_error_message(mut self, value: Option<StrBytes>) -> Self
-    {
+    pub fn with_error_message(mut self, value: Option<StrBytes>) -> Self {
         self.error_message = value;
         self
-    }/// Sets `resource_type` to the passed value.
-    /// 
+    }
+    /// Sets `resource_type` to the passed value.
+    ///
     /// The resource type.
-    /// 
+    ///
     /// Supported API versions: 1-4
-    pub fn with_resource_type(mut self, value: i8) -> Self
-    {
+    pub fn with_resource_type(mut self, value: i8) -> Self {
         self.resource_type = value;
         self
-    }/// Sets `resource_name` to the passed value.
-    /// 
+    }
+    /// Sets `resource_name` to the passed value.
+    ///
     /// The resource name.
-    /// 
+    ///
     /// Supported API versions: 1-4
-    pub fn with_resource_name(mut self, value: StrBytes) -> Self
-    {
+    pub fn with_resource_name(mut self, value: StrBytes) -> Self {
         self.resource_name = value;
         self
-    }/// Sets `configs` to the passed value.
-    /// 
+    }
+    /// Sets `configs` to the passed value.
+    ///
     /// Each listed configuration.
-    /// 
+    ///
     /// Supported API versions: 1-4
-    pub fn with_configs(mut self, value: Vec<DescribeConfigsResourceResult>) -> Self
-    {
+    pub fn with_configs(mut self, value: Vec<DescribeConfigsResourceResult>) -> Self {
         self.configs = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -579,7 +590,10 @@ impl Encodable for DescribeConfigsResult {
         if version >= 4 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -602,14 +616,18 @@ impl Encodable for DescribeConfigsResult {
             total_size += types::String.compute_size(&self.resource_name)?;
         }
         if version >= 4 {
-            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.configs)?;
+            total_size +=
+                types::CompactArray(types::Struct { version }).compute_size(&self.configs)?;
         } else {
             total_size += types::Array(types::Struct { version }).compute_size(&self.configs)?;
         }
         if version >= 4 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -686,17 +704,17 @@ impl Message for DescribeConfigsResult {
 #[derive(Debug, Clone, PartialEq)]
 pub struct DescribeConfigsSynonym {
     /// The synonym name.
-    /// 
+    ///
     /// Supported API versions: 1-4
     pub name: StrBytes,
 
     /// The synonym value.
-    /// 
+    ///
     /// Supported API versions: 1-4
     pub value: Option<StrBytes>,
 
     /// The synonym source.
-    /// 
+    ///
     /// Supported API versions: 1-4
     pub source: i8,
 
@@ -706,40 +724,39 @@ pub struct DescribeConfigsSynonym {
 
 impl DescribeConfigsSynonym {
     /// Sets `name` to the passed value.
-    /// 
+    ///
     /// The synonym name.
-    /// 
+    ///
     /// Supported API versions: 1-4
-    pub fn with_name(mut self, value: StrBytes) -> Self
-    {
+    pub fn with_name(mut self, value: StrBytes) -> Self {
         self.name = value;
         self
-    }/// Sets `value` to the passed value.
-    /// 
+    }
+    /// Sets `value` to the passed value.
+    ///
     /// The synonym value.
-    /// 
+    ///
     /// Supported API versions: 1-4
-    pub fn with_value(mut self, value: Option<StrBytes>) -> Self
-    {
+    pub fn with_value(mut self, value: Option<StrBytes>) -> Self {
         self.value = value;
         self
-    }/// Sets `source` to the passed value.
-    /// 
+    }
+    /// Sets `source` to the passed value.
+    ///
     /// The synonym source.
-    /// 
+    ///
     /// Supported API versions: 1-4
-    pub fn with_source(mut self, value: i8) -> Self
-    {
+    pub fn with_source(mut self, value: i8) -> Self {
         self.source = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -765,7 +782,10 @@ impl Encodable for DescribeConfigsSynonym {
         if version >= 4 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -789,7 +809,10 @@ impl Encodable for DescribeConfigsSynonym {
         if version >= 4 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -860,4 +883,3 @@ impl HeaderVersion for DescribeConfigsResponse {
         }
     }
 }
-

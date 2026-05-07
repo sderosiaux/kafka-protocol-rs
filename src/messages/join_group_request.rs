@@ -7,57 +7,57 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
+use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
-use anyhow::{bail, Result};
 
 use crate::protocol::{
-    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
-    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
+    buf::{ByteBuf, ByteBufMut},
+    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
+    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
 };
-
 
 /// Valid versions: 0-9
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct JoinGroupRequest {
     /// The group identifier.
-    /// 
+    ///
     /// Supported API versions: 0-9
     pub group_id: super::GroupId,
 
     /// The coordinator considers the consumer dead if it receives no heartbeat after this timeout in milliseconds.
-    /// 
+    ///
     /// Supported API versions: 0-9
     pub session_timeout_ms: i32,
 
     /// The maximum time in milliseconds that the coordinator will wait for each member to rejoin when rebalancing the group.
-    /// 
+    ///
     /// Supported API versions: 1-9
     pub rebalance_timeout_ms: i32,
 
     /// The member id assigned by the group coordinator.
-    /// 
+    ///
     /// Supported API versions: 0-9
     pub member_id: StrBytes,
 
     /// The unique identifier of the consumer instance provided by end user.
-    /// 
+    ///
     /// Supported API versions: 5-9
     pub group_instance_id: Option<StrBytes>,
 
     /// The unique name the for class of protocols implemented by the group we want to join.
-    /// 
+    ///
     /// Supported API versions: 0-9
     pub protocol_type: StrBytes,
 
     /// The list of protocols that the member supports.
-    /// 
+    ///
     /// Supported API versions: 0-9
     pub protocols: Vec<JoinGroupRequestProtocol>,
 
     /// The reason why the member (re-)joins the group.
-    /// 
+    ///
     /// Supported API versions: 8-9
     pub reason: Option<StrBytes>,
 
@@ -67,85 +67,84 @@ pub struct JoinGroupRequest {
 
 impl JoinGroupRequest {
     /// Sets `group_id` to the passed value.
-    /// 
+    ///
     /// The group identifier.
-    /// 
+    ///
     /// Supported API versions: 0-9
-    pub fn with_group_id(mut self, value: super::GroupId) -> Self
-    {
+    pub fn with_group_id(mut self, value: super::GroupId) -> Self {
         self.group_id = value;
         self
-    }/// Sets `session_timeout_ms` to the passed value.
-    /// 
+    }
+    /// Sets `session_timeout_ms` to the passed value.
+    ///
     /// The coordinator considers the consumer dead if it receives no heartbeat after this timeout in milliseconds.
-    /// 
+    ///
     /// Supported API versions: 0-9
-    pub fn with_session_timeout_ms(mut self, value: i32) -> Self
-    {
+    pub fn with_session_timeout_ms(mut self, value: i32) -> Self {
         self.session_timeout_ms = value;
         self
-    }/// Sets `rebalance_timeout_ms` to the passed value.
-    /// 
+    }
+    /// Sets `rebalance_timeout_ms` to the passed value.
+    ///
     /// The maximum time in milliseconds that the coordinator will wait for each member to rejoin when rebalancing the group.
-    /// 
+    ///
     /// Supported API versions: 1-9
-    pub fn with_rebalance_timeout_ms(mut self, value: i32) -> Self
-    {
+    pub fn with_rebalance_timeout_ms(mut self, value: i32) -> Self {
         self.rebalance_timeout_ms = value;
         self
-    }/// Sets `member_id` to the passed value.
-    /// 
+    }
+    /// Sets `member_id` to the passed value.
+    ///
     /// The member id assigned by the group coordinator.
-    /// 
+    ///
     /// Supported API versions: 0-9
-    pub fn with_member_id(mut self, value: StrBytes) -> Self
-    {
+    pub fn with_member_id(mut self, value: StrBytes) -> Self {
         self.member_id = value;
         self
-    }/// Sets `group_instance_id` to the passed value.
-    /// 
+    }
+    /// Sets `group_instance_id` to the passed value.
+    ///
     /// The unique identifier of the consumer instance provided by end user.
-    /// 
+    ///
     /// Supported API versions: 5-9
-    pub fn with_group_instance_id(mut self, value: Option<StrBytes>) -> Self
-    {
+    pub fn with_group_instance_id(mut self, value: Option<StrBytes>) -> Self {
         self.group_instance_id = value;
         self
-    }/// Sets `protocol_type` to the passed value.
-    /// 
+    }
+    /// Sets `protocol_type` to the passed value.
+    ///
     /// The unique name the for class of protocols implemented by the group we want to join.
-    /// 
+    ///
     /// Supported API versions: 0-9
-    pub fn with_protocol_type(mut self, value: StrBytes) -> Self
-    {
+    pub fn with_protocol_type(mut self, value: StrBytes) -> Self {
         self.protocol_type = value;
         self
-    }/// Sets `protocols` to the passed value.
-    /// 
+    }
+    /// Sets `protocols` to the passed value.
+    ///
     /// The list of protocols that the member supports.
-    /// 
+    ///
     /// Supported API versions: 0-9
-    pub fn with_protocols(mut self, value: Vec<JoinGroupRequestProtocol>) -> Self
-    {
+    pub fn with_protocols(mut self, value: Vec<JoinGroupRequestProtocol>) -> Self {
         self.protocols = value;
         self
-    }/// Sets `reason` to the passed value.
-    /// 
+    }
+    /// Sets `reason` to the passed value.
+    ///
     /// The reason why the member (re-)joins the group.
-    /// 
+    ///
     /// Supported API versions: 8-9
-    pub fn with_reason(mut self, value: Option<StrBytes>) -> Self
-    {
+    pub fn with_reason(mut self, value: Option<StrBytes>) -> Self {
         self.reason = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -198,7 +197,10 @@ impl Encodable for JoinGroupRequest {
         if version >= 6 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -239,7 +241,8 @@ impl Encodable for JoinGroupRequest {
             total_size += types::String.compute_size(&self.protocol_type)?;
         }
         if version >= 6 {
-            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.protocols)?;
+            total_size +=
+                types::CompactArray(types::Struct { version }).compute_size(&self.protocols)?;
         } else {
             total_size += types::Array(types::Struct { version }).compute_size(&self.protocols)?;
         }
@@ -249,7 +252,10 @@ impl Encodable for JoinGroupRequest {
         if version >= 6 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -355,12 +361,12 @@ impl Message for JoinGroupRequest {
 #[derive(Debug, Clone, PartialEq)]
 pub struct JoinGroupRequestProtocol {
     /// The protocol name.
-    /// 
+    ///
     /// Supported API versions: 0-9
     pub name: StrBytes,
 
     /// The protocol metadata.
-    /// 
+    ///
     /// Supported API versions: 0-9
     pub metadata: Bytes,
 
@@ -370,31 +376,30 @@ pub struct JoinGroupRequestProtocol {
 
 impl JoinGroupRequestProtocol {
     /// Sets `name` to the passed value.
-    /// 
+    ///
     /// The protocol name.
-    /// 
+    ///
     /// Supported API versions: 0-9
-    pub fn with_name(mut self, value: StrBytes) -> Self
-    {
+    pub fn with_name(mut self, value: StrBytes) -> Self {
         self.name = value;
         self
-    }/// Sets `metadata` to the passed value.
-    /// 
+    }
+    /// Sets `metadata` to the passed value.
+    ///
     /// The protocol metadata.
-    /// 
+    ///
     /// Supported API versions: 0-9
-    pub fn with_metadata(mut self, value: Bytes) -> Self
-    {
+    pub fn with_metadata(mut self, value: Bytes) -> Self {
         self.metadata = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -419,7 +424,10 @@ impl Encodable for JoinGroupRequestProtocol {
         if version >= 6 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -442,7 +450,10 @@ impl Encodable for JoinGroupRequestProtocol {
         if version >= 6 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+                bail!(
+                    "Too many tagged fields to encode ({} fields)",
+                    num_tagged_fields
+                );
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -510,4 +521,3 @@ impl HeaderVersion for JoinGroupRequest {
         }
     }
 }
-

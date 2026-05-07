@@ -7,32 +7,32 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
+use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
-use anyhow::{bail, Result};
 
 use crate::protocol::{
-    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
-    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
+    buf::{ByteBuf, ByteBufMut},
+    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
+    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
 };
-
 
 /// Valid versions: 0
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct Endpoint {
     /// The name of the endpoint.
-    /// 
+    ///
     /// Supported API versions: 0
     pub name: StrBytes,
 
     /// The hostname.
-    /// 
+    ///
     /// Supported API versions: 0
     pub host: StrBytes,
 
     /// The port.
-    /// 
+    ///
     /// Supported API versions: 0
     pub port: u16,
 
@@ -42,40 +42,39 @@ pub struct Endpoint {
 
 impl Endpoint {
     /// Sets `name` to the passed value.
-    /// 
+    ///
     /// The name of the endpoint.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_name(mut self, value: StrBytes) -> Self
-    {
+    pub fn with_name(mut self, value: StrBytes) -> Self {
         self.name = value;
         self
-    }/// Sets `host` to the passed value.
-    /// 
+    }
+    /// Sets `host` to the passed value.
+    ///
     /// The hostname.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_host(mut self, value: StrBytes) -> Self
-    {
+    pub fn with_host(mut self, value: StrBytes) -> Self {
         self.host = value;
         self
-    }/// Sets `port` to the passed value.
-    /// 
+    }
+    /// Sets `port` to the passed value.
+    ///
     /// The port.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_port(mut self, value: u16) -> Self
-    {
+    pub fn with_port(mut self, value: u16) -> Self {
         self.port = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -91,7 +90,10 @@ impl Encodable for Endpoint {
         types::UInt16.encode(buf, &self.port)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -105,7 +107,10 @@ impl Encodable for Endpoint {
         total_size += types::UInt16.compute_size(&self.port)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -160,12 +165,12 @@ impl Message for Endpoint {
 #[derive(Debug, Clone, PartialEq)]
 pub struct KRaftVersionFeature {
     /// The minimum supported KRaft protocol version.
-    /// 
+    ///
     /// Supported API versions: 0
     pub min_supported_version: i16,
 
     /// The maximum supported KRaft protocol version.
-    /// 
+    ///
     /// Supported API versions: 0
     pub max_supported_version: i16,
 
@@ -175,31 +180,30 @@ pub struct KRaftVersionFeature {
 
 impl KRaftVersionFeature {
     /// Sets `min_supported_version` to the passed value.
-    /// 
+    ///
     /// The minimum supported KRaft protocol version.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_min_supported_version(mut self, value: i16) -> Self
-    {
+    pub fn with_min_supported_version(mut self, value: i16) -> Self {
         self.min_supported_version = value;
         self
-    }/// Sets `max_supported_version` to the passed value.
-    /// 
+    }
+    /// Sets `max_supported_version` to the passed value.
+    ///
     /// The maximum supported KRaft protocol version.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_max_supported_version(mut self, value: i16) -> Self
-    {
+    pub fn with_max_supported_version(mut self, value: i16) -> Self {
         self.max_supported_version = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -214,7 +218,10 @@ impl Encodable for KRaftVersionFeature {
         types::Int16.encode(buf, &self.max_supported_version)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -227,7 +234,10 @@ impl Encodable for KRaftVersionFeature {
         total_size += types::Int16.compute_size(&self.max_supported_version)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -279,22 +289,22 @@ impl Message for KRaftVersionFeature {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Voter {
     /// The replica id of the voter in the topic partition.
-    /// 
+    ///
     /// Supported API versions: 0
     pub voter_id: super::BrokerId,
 
     /// The directory id of the voter in the topic partition.
-    /// 
+    ///
     /// Supported API versions: 0
     pub voter_directory_id: Uuid,
 
     /// The endpoint that can be used to communicate with the voter.
-    /// 
+    ///
     /// Supported API versions: 0
     pub endpoints: Vec<Endpoint>,
 
     /// The range of versions of the protocol that the replica supports.
-    /// 
+    ///
     /// Supported API versions: 0
     pub k_raft_version_feature: KRaftVersionFeature,
 
@@ -304,49 +314,48 @@ pub struct Voter {
 
 impl Voter {
     /// Sets `voter_id` to the passed value.
-    /// 
+    ///
     /// The replica id of the voter in the topic partition.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_voter_id(mut self, value: super::BrokerId) -> Self
-    {
+    pub fn with_voter_id(mut self, value: super::BrokerId) -> Self {
         self.voter_id = value;
         self
-    }/// Sets `voter_directory_id` to the passed value.
-    /// 
+    }
+    /// Sets `voter_directory_id` to the passed value.
+    ///
     /// The directory id of the voter in the topic partition.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_voter_directory_id(mut self, value: Uuid) -> Self
-    {
+    pub fn with_voter_directory_id(mut self, value: Uuid) -> Self {
         self.voter_directory_id = value;
         self
-    }/// Sets `endpoints` to the passed value.
-    /// 
+    }
+    /// Sets `endpoints` to the passed value.
+    ///
     /// The endpoint that can be used to communicate with the voter.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_endpoints(mut self, value: Vec<Endpoint>) -> Self
-    {
+    pub fn with_endpoints(mut self, value: Vec<Endpoint>) -> Self {
         self.endpoints = value;
         self
-    }/// Sets `k_raft_version_feature` to the passed value.
-    /// 
+    }
+    /// Sets `k_raft_version_feature` to the passed value.
+    ///
     /// The range of versions of the protocol that the replica supports.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_k_raft_version_feature(mut self, value: KRaftVersionFeature) -> Self
-    {
+    pub fn with_k_raft_version_feature(mut self, value: KRaftVersionFeature) -> Self {
         self.k_raft_version_feature = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -363,7 +372,10 @@ impl Encodable for Voter {
         types::Struct { version }.encode(buf, &self.k_raft_version_feature)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -374,11 +386,15 @@ impl Encodable for Voter {
         let mut total_size = 0;
         total_size += types::Int32.compute_size(&self.voter_id)?;
         total_size += types::Uuid.compute_size(&self.voter_directory_id)?;
-        total_size += types::CompactArray(types::Struct { version }).compute_size(&self.endpoints)?;
+        total_size +=
+            types::CompactArray(types::Struct { version }).compute_size(&self.endpoints)?;
         total_size += types::Struct { version }.compute_size(&self.k_raft_version_feature)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -436,12 +452,12 @@ impl Message for Voter {
 #[derive(Debug, Clone, PartialEq)]
 pub struct VotersRecord {
     /// The version of the voters record.
-    /// 
+    ///
     /// Supported API versions: 0
     pub version: i16,
 
     /// The set of voters in the quorum for this epoch.
-    /// 
+    ///
     /// Supported API versions: 0
     pub voters: Vec<Voter>,
 
@@ -451,31 +467,30 @@ pub struct VotersRecord {
 
 impl VotersRecord {
     /// Sets `version` to the passed value.
-    /// 
+    ///
     /// The version of the voters record.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_version(mut self, value: i16) -> Self
-    {
+    pub fn with_version(mut self, value: i16) -> Self {
         self.version = value;
         self
-    }/// Sets `voters` to the passed value.
-    /// 
+    }
+    /// Sets `voters` to the passed value.
+    ///
     /// The set of voters in the quorum for this epoch.
-    /// 
+    ///
     /// Supported API versions: 0
-    pub fn with_voters(mut self, value: Vec<Voter>) -> Self
-    {
+    pub fn with_voters(mut self, value: Vec<Voter>) -> Self {
         self.voters = value;
         self
-    }/// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
-    {
+    }
+    /// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
         self.unknown_tagged_fields = value;
         self
-    }/// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
-    {
+    }
+    /// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -490,7 +505,10 @@ impl Encodable for VotersRecord {
         types::CompactArray(types::Struct { version }).encode(buf, &self.voters)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -503,7 +521,10 @@ impl Encodable for VotersRecord {
         total_size += types::CompactArray(types::Struct { version }).compute_size(&self.voters)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
+            bail!(
+                "Too many tagged fields to encode ({} fields)",
+                num_tagged_fields
+            );
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -549,4 +570,3 @@ impl Message for VotersRecord {
     const VERSIONS: VersionRange = VersionRange { min: 0, max: 0 };
     const DEPRECATED_VERSIONS: Option<VersionRange> = None;
 }
-
