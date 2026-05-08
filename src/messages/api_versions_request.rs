@@ -7,37 +7,38 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 0-5
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ApiVersionsRequest {
     /// The name of the client.
-    ///
+    /// 
     /// Supported API versions: 3-5
     pub client_software_name: StrBytes,
 
     /// The version of the client.
-    ///
+    /// 
     /// Supported API versions: 3-5
     pub client_software_version: StrBytes,
 
     /// The cluster ID the client intends to connect to, if known.
-    ///
+    /// 
     /// Supported API versions: 5
     pub cluster_id: Option<StrBytes>,
 
     /// The node ID the client intends to connect to, if known.
-    ///
+    /// 
     /// Supported API versions: 5
     pub node_id: i32,
 
@@ -47,48 +48,49 @@ pub struct ApiVersionsRequest {
 
 impl ApiVersionsRequest {
     /// Sets `client_software_name` to the passed value.
-    ///
+    /// 
     /// The name of the client.
-    ///
+    /// 
     /// Supported API versions: 3-5
-    pub fn with_client_software_name(mut self, value: StrBytes) -> Self {
+    pub fn with_client_software_name(mut self, value: StrBytes) -> Self
+    {
         self.client_software_name = value;
         self
-    }
-    /// Sets `client_software_version` to the passed value.
-    ///
+    }/// Sets `client_software_version` to the passed value.
+    /// 
     /// The version of the client.
-    ///
+    /// 
     /// Supported API versions: 3-5
-    pub fn with_client_software_version(mut self, value: StrBytes) -> Self {
+    pub fn with_client_software_version(mut self, value: StrBytes) -> Self
+    {
         self.client_software_version = value;
         self
-    }
-    /// Sets `cluster_id` to the passed value.
-    ///
+    }/// Sets `cluster_id` to the passed value.
+    /// 
     /// The cluster ID the client intends to connect to, if known.
-    ///
+    /// 
     /// Supported API versions: 5
-    pub fn with_cluster_id(mut self, value: Option<StrBytes>) -> Self {
+    pub fn with_cluster_id(mut self, value: Option<StrBytes>) -> Self
+    {
         self.cluster_id = value;
         self
-    }
-    /// Sets `node_id` to the passed value.
-    ///
+    }/// Sets `node_id` to the passed value.
+    /// 
     /// The node ID the client intends to connect to, if known.
-    ///
+    /// 
     /// Supported API versions: 5
-    pub fn with_node_id(mut self, value: i32) -> Self {
+    pub fn with_node_id(mut self, value: i32) -> Self
+    {
         self.node_id = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -115,10 +117,7 @@ impl Encodable for ApiVersionsRequest {
         if version >= 3 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -143,10 +142,7 @@ impl Encodable for ApiVersionsRequest {
         if version >= 3 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -228,3 +224,4 @@ impl HeaderVersion for ApiVersionsRequest {
         }
     }
 }
+

@@ -7,22 +7,23 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 0-1
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DescribeShareGroupOffsetsRequest {
     /// The groups to describe offsets for.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub groups: Vec<DescribeShareGroupOffsetsRequestGroup>,
 
@@ -32,21 +33,22 @@ pub struct DescribeShareGroupOffsetsRequest {
 
 impl DescribeShareGroupOffsetsRequest {
     /// Sets `groups` to the passed value.
-    ///
+    /// 
     /// The groups to describe offsets for.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_groups(mut self, value: Vec<DescribeShareGroupOffsetsRequestGroup>) -> Self {
+    pub fn with_groups(mut self, value: Vec<DescribeShareGroupOffsetsRequestGroup>) -> Self
+    {
         self.groups = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -61,10 +63,7 @@ impl Encodable for DescribeShareGroupOffsetsRequest {
         types::CompactArray(types::Struct { version }).encode(buf, &self.groups)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -76,10 +75,7 @@ impl Encodable for DescribeShareGroupOffsetsRequest {
         total_size += types::CompactArray(types::Struct { version }).compute_size(&self.groups)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -127,14 +123,15 @@ impl Message for DescribeShareGroupOffsetsRequest {
 /// Valid versions: 0-1
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DescribeShareGroupOffsetsRequestGroup {
     /// The group identifier.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub group_id: super::GroupId,
 
     /// The topics to describe offsets for, or null for all topic-partitions.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub topics: Option<Vec<DescribeShareGroupOffsetsRequestTopic>>,
 
@@ -144,33 +141,31 @@ pub struct DescribeShareGroupOffsetsRequestGroup {
 
 impl DescribeShareGroupOffsetsRequestGroup {
     /// Sets `group_id` to the passed value.
-    ///
+    /// 
     /// The group identifier.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_group_id(mut self, value: super::GroupId) -> Self {
+    pub fn with_group_id(mut self, value: super::GroupId) -> Self
+    {
         self.group_id = value;
         self
-    }
-    /// Sets `topics` to the passed value.
-    ///
+    }/// Sets `topics` to the passed value.
+    /// 
     /// The topics to describe offsets for, or null for all topic-partitions.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_topics(
-        mut self,
-        value: Option<Vec<DescribeShareGroupOffsetsRequestTopic>>,
-    ) -> Self {
+    pub fn with_topics(mut self, value: Option<Vec<DescribeShareGroupOffsetsRequestTopic>>) -> Self
+    {
         self.topics = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -186,10 +181,7 @@ impl Encodable for DescribeShareGroupOffsetsRequestGroup {
         types::CompactArray(types::Struct { version }).encode(buf, &self.topics)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -202,10 +194,7 @@ impl Encodable for DescribeShareGroupOffsetsRequestGroup {
         total_size += types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -256,14 +245,15 @@ impl Message for DescribeShareGroupOffsetsRequestGroup {
 /// Valid versions: 0-1
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DescribeShareGroupOffsetsRequestTopic {
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub topic_name: super::TopicName,
 
     /// The partitions.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub partitions: Vec<i32>,
 
@@ -273,30 +263,31 @@ pub struct DescribeShareGroupOffsetsRequestTopic {
 
 impl DescribeShareGroupOffsetsRequestTopic {
     /// Sets `topic_name` to the passed value.
-    ///
+    /// 
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_topic_name(mut self, value: super::TopicName) -> Self {
+    pub fn with_topic_name(mut self, value: super::TopicName) -> Self
+    {
         self.topic_name = value;
         self
-    }
-    /// Sets `partitions` to the passed value.
-    ///
+    }/// Sets `partitions` to the passed value.
+    /// 
     /// The partitions.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_partitions(mut self, value: Vec<i32>) -> Self {
+    pub fn with_partitions(mut self, value: Vec<i32>) -> Self
+    {
         self.partitions = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -312,10 +303,7 @@ impl Encodable for DescribeShareGroupOffsetsRequestTopic {
         types::CompactArray(types::Int32).encode(buf, &self.partitions)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -328,10 +316,7 @@ impl Encodable for DescribeShareGroupOffsetsRequestTopic {
         total_size += types::CompactArray(types::Int32).compute_size(&self.partitions)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -384,3 +369,4 @@ impl HeaderVersion for DescribeShareGroupOffsetsRequest {
         2
     }
 }
+

@@ -7,37 +7,38 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 0-1
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct LeaderChangeMessage {
     /// The version of the leader change message.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub version: i16,
 
     /// The ID of the newly elected leader.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub leader_id: super::BrokerId,
 
     /// The set of voters in the quorum for this epoch.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub voters: Vec<Voter>,
 
     /// The voters who voted for the leader at the time of election.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub granting_voters: Vec<Voter>,
 
@@ -47,48 +48,49 @@ pub struct LeaderChangeMessage {
 
 impl LeaderChangeMessage {
     /// Sets `version` to the passed value.
-    ///
+    /// 
     /// The version of the leader change message.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_version(mut self, value: i16) -> Self {
+    pub fn with_version(mut self, value: i16) -> Self
+    {
         self.version = value;
         self
-    }
-    /// Sets `leader_id` to the passed value.
-    ///
+    }/// Sets `leader_id` to the passed value.
+    /// 
     /// The ID of the newly elected leader.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_leader_id(mut self, value: super::BrokerId) -> Self {
+    pub fn with_leader_id(mut self, value: super::BrokerId) -> Self
+    {
         self.leader_id = value;
         self
-    }
-    /// Sets `voters` to the passed value.
-    ///
+    }/// Sets `voters` to the passed value.
+    /// 
     /// The set of voters in the quorum for this epoch.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_voters(mut self, value: Vec<Voter>) -> Self {
+    pub fn with_voters(mut self, value: Vec<Voter>) -> Self
+    {
         self.voters = value;
         self
-    }
-    /// Sets `granting_voters` to the passed value.
-    ///
+    }/// Sets `granting_voters` to the passed value.
+    /// 
     /// The voters who voted for the leader at the time of election.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_granting_voters(mut self, value: Vec<Voter>) -> Self {
+    pub fn with_granting_voters(mut self, value: Vec<Voter>) -> Self
+    {
         self.granting_voters = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -105,10 +107,7 @@ impl Encodable for LeaderChangeMessage {
         types::CompactArray(types::Struct { version }).encode(buf, &self.granting_voters)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -120,14 +119,10 @@ impl Encodable for LeaderChangeMessage {
         total_size += types::Int16.compute_size(&self.version)?;
         total_size += types::Int32.compute_size(&self.leader_id)?;
         total_size += types::CompactArray(types::Struct { version }).compute_size(&self.voters)?;
-        total_size +=
-            types::CompactArray(types::Struct { version }).compute_size(&self.granting_voters)?;
+        total_size += types::CompactArray(types::Struct { version }).compute_size(&self.granting_voters)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -183,14 +178,15 @@ impl Message for LeaderChangeMessage {
 /// Valid versions: 0-1
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Voter {
     /// The ID of the voter.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub voter_id: i32,
 
     /// The directory id of the voter.
-    ///
+    /// 
     /// Supported API versions: 1
     pub voter_directory_id: Uuid,
 
@@ -200,30 +196,31 @@ pub struct Voter {
 
 impl Voter {
     /// Sets `voter_id` to the passed value.
-    ///
+    /// 
     /// The ID of the voter.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_voter_id(mut self, value: i32) -> Self {
+    pub fn with_voter_id(mut self, value: i32) -> Self
+    {
         self.voter_id = value;
         self
-    }
-    /// Sets `voter_directory_id` to the passed value.
-    ///
+    }/// Sets `voter_directory_id` to the passed value.
+    /// 
     /// The directory id of the voter.
-    ///
+    /// 
     /// Supported API versions: 1
-    pub fn with_voter_directory_id(mut self, value: Uuid) -> Self {
+    pub fn with_voter_directory_id(mut self, value: Uuid) -> Self
+    {
         self.voter_directory_id = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -244,10 +241,7 @@ impl Encodable for Voter {
         }
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -266,10 +260,7 @@ impl Encodable for Voter {
         }
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -319,3 +310,4 @@ impl Message for Voter {
     const VERSIONS: VersionRange = VersionRange { min: 0, max: 1 };
     const DEPRECATED_VERSIONS: Option<VersionRange> = None;
 }
+

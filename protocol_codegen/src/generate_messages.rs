@@ -131,6 +131,10 @@ pub fn run(messages_module_dir: &str, mut input_file_paths: Vec<PathBuf>) -> Res
 
     writeln!(m, "/// Valid API keys in the Kafka protocol.")?;
     writeln!(m, "#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]")?;
+    writeln!(
+        m,
+        "#[cfg_attr(feature = \"serde\", derive(serde::Serialize, serde::Deserialize))]"
+    )?;
     writeln!(m, "pub enum ApiKey {{")?;
     for (api_key, request_type) in request_types.iter() {
         writeln!(m, "    /// API key for request {}", request_type)?;
@@ -247,6 +251,10 @@ pub fn run(messages_module_dir: &str, mut input_file_paths: Vec<PathBuf>) -> Res
     writeln!(m, "#[cfg(feature = \"messages_enums\")]")?;
     writeln!(m, "#[non_exhaustive]")?;
     writeln!(m, "#[derive(Debug, Clone, PartialEq)]")?;
+    writeln!(
+        m,
+        "#[cfg_attr(feature = \"serde\", derive(serde::Serialize, serde::Deserialize))]"
+    )?;
     writeln!(m, "pub enum RequestKind {{")?;
     for (_, request_type) in request_types.iter() {
         writeln!(m, "    /// {},", request_type)?;
@@ -344,6 +352,10 @@ fn encode<T: Encodable>(encodable: &T, bytes: &mut bytes::BytesMut, version: i16
     )?;
     writeln!(m, "#[non_exhaustive]")?;
     writeln!(m, "#[derive(Debug, Clone, PartialEq)]")?;
+    writeln!(
+        m,
+        "#[cfg_attr(feature = \"serde\", derive(serde::Serialize, serde::Deserialize))]"
+    )?;
     writeln!(m, "#[cfg(feature = \"messages_enums\")]")?;
     writeln!(m, "pub enum ResponseKind {{")?;
     for (_, response_type) in response_types.iter() {
@@ -444,6 +456,10 @@ fn encode<T: Encodable>(encodable: &T, bytes: &mut bytes::BytesMut, version: i16
 
         writeln!(m, "/// {}", entity_type.doc)?;
         writeln!(m, "#[derive({})]", derives.join(", "))?;
+        writeln!(
+            m,
+            "#[cfg_attr(feature = \"serde\", derive(serde::Serialize, serde::Deserialize))]"
+        )?;
         writeln!(m, "pub struct {}(pub {});\n", entity_type.name, rust_name)?;
         writeln!(m, "impl From<{}> for {} {{", rust_name, entity_type.name)?;
         writeln!(

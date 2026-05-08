@@ -7,27 +7,28 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 0-6
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DescribeGroupsResponse {
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    ///
+    /// 
     /// Supported API versions: 1-6
     pub throttle_time_ms: i32,
 
     /// Each described group.
-    ///
+    /// 
     /// Supported API versions: 0-6
     pub groups: Vec<DescribedGroup>,
 
@@ -37,30 +38,31 @@ pub struct DescribeGroupsResponse {
 
 impl DescribeGroupsResponse {
     /// Sets `throttle_time_ms` to the passed value.
-    ///
+    /// 
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    ///
+    /// 
     /// Supported API versions: 1-6
-    pub fn with_throttle_time_ms(mut self, value: i32) -> Self {
+    pub fn with_throttle_time_ms(mut self, value: i32) -> Self
+    {
         self.throttle_time_ms = value;
         self
-    }
-    /// Sets `groups` to the passed value.
-    ///
+    }/// Sets `groups` to the passed value.
+    /// 
     /// Each described group.
-    ///
+    /// 
     /// Supported API versions: 0-6
-    pub fn with_groups(mut self, value: Vec<DescribedGroup>) -> Self {
+    pub fn with_groups(mut self, value: Vec<DescribedGroup>) -> Self
+    {
         self.groups = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -83,10 +85,7 @@ impl Encodable for DescribeGroupsResponse {
         if version >= 5 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -100,18 +99,14 @@ impl Encodable for DescribeGroupsResponse {
             total_size += types::Int32.compute_size(&self.throttle_time_ms)?;
         }
         if version >= 5 {
-            total_size +=
-                types::CompactArray(types::Struct { version }).compute_size(&self.groups)?;
+            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.groups)?;
         } else {
             total_size += types::Array(types::Struct { version }).compute_size(&self.groups)?;
         }
         if version >= 5 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -173,44 +168,45 @@ impl Message for DescribeGroupsResponse {
 /// Valid versions: 0-6
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DescribedGroup {
     /// The describe error, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 0-6
     pub error_code: i16,
 
     /// The describe error message, or null if there was no error.
-    ///
+    /// 
     /// Supported API versions: 6
     pub error_message: Option<StrBytes>,
 
     /// The group ID string.
-    ///
+    /// 
     /// Supported API versions: 0-6
     pub group_id: super::GroupId,
 
     /// The group state string, or the empty string.
-    ///
+    /// 
     /// Supported API versions: 0-6
     pub group_state: StrBytes,
 
     /// The group protocol type, or the empty string.
-    ///
+    /// 
     /// Supported API versions: 0-6
     pub protocol_type: StrBytes,
 
     /// The group protocol data, or the empty string.
-    ///
+    /// 
     /// Supported API versions: 0-6
     pub protocol_data: StrBytes,
 
     /// The group members.
-    ///
+    /// 
     /// Supported API versions: 0-6
     pub members: Vec<DescribedGroupMember>,
 
     /// 32-bit bitfield to represent authorized operations for this group.
-    ///
+    /// 
     /// Supported API versions: 3-6
     pub authorized_operations: i32,
 
@@ -220,84 +216,85 @@ pub struct DescribedGroup {
 
 impl DescribedGroup {
     /// Sets `error_code` to the passed value.
-    ///
+    /// 
     /// The describe error, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 0-6
-    pub fn with_error_code(mut self, value: i16) -> Self {
+    pub fn with_error_code(mut self, value: i16) -> Self
+    {
         self.error_code = value;
         self
-    }
-    /// Sets `error_message` to the passed value.
-    ///
+    }/// Sets `error_message` to the passed value.
+    /// 
     /// The describe error message, or null if there was no error.
-    ///
+    /// 
     /// Supported API versions: 6
-    pub fn with_error_message(mut self, value: Option<StrBytes>) -> Self {
+    pub fn with_error_message(mut self, value: Option<StrBytes>) -> Self
+    {
         self.error_message = value;
         self
-    }
-    /// Sets `group_id` to the passed value.
-    ///
+    }/// Sets `group_id` to the passed value.
+    /// 
     /// The group ID string.
-    ///
+    /// 
     /// Supported API versions: 0-6
-    pub fn with_group_id(mut self, value: super::GroupId) -> Self {
+    pub fn with_group_id(mut self, value: super::GroupId) -> Self
+    {
         self.group_id = value;
         self
-    }
-    /// Sets `group_state` to the passed value.
-    ///
+    }/// Sets `group_state` to the passed value.
+    /// 
     /// The group state string, or the empty string.
-    ///
+    /// 
     /// Supported API versions: 0-6
-    pub fn with_group_state(mut self, value: StrBytes) -> Self {
+    pub fn with_group_state(mut self, value: StrBytes) -> Self
+    {
         self.group_state = value;
         self
-    }
-    /// Sets `protocol_type` to the passed value.
-    ///
+    }/// Sets `protocol_type` to the passed value.
+    /// 
     /// The group protocol type, or the empty string.
-    ///
+    /// 
     /// Supported API versions: 0-6
-    pub fn with_protocol_type(mut self, value: StrBytes) -> Self {
+    pub fn with_protocol_type(mut self, value: StrBytes) -> Self
+    {
         self.protocol_type = value;
         self
-    }
-    /// Sets `protocol_data` to the passed value.
-    ///
+    }/// Sets `protocol_data` to the passed value.
+    /// 
     /// The group protocol data, or the empty string.
-    ///
+    /// 
     /// Supported API versions: 0-6
-    pub fn with_protocol_data(mut self, value: StrBytes) -> Self {
+    pub fn with_protocol_data(mut self, value: StrBytes) -> Self
+    {
         self.protocol_data = value;
         self
-    }
-    /// Sets `members` to the passed value.
-    ///
+    }/// Sets `members` to the passed value.
+    /// 
     /// The group members.
-    ///
+    /// 
     /// Supported API versions: 0-6
-    pub fn with_members(mut self, value: Vec<DescribedGroupMember>) -> Self {
+    pub fn with_members(mut self, value: Vec<DescribedGroupMember>) -> Self
+    {
         self.members = value;
         self
-    }
-    /// Sets `authorized_operations` to the passed value.
-    ///
+    }/// Sets `authorized_operations` to the passed value.
+    /// 
     /// 32-bit bitfield to represent authorized operations for this group.
-    ///
+    /// 
     /// Supported API versions: 3-6
-    pub fn with_authorized_operations(mut self, value: i32) -> Self {
+    pub fn with_authorized_operations(mut self, value: i32) -> Self
+    {
         self.authorized_operations = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -352,10 +349,7 @@ impl Encodable for DescribedGroup {
         if version >= 5 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -394,8 +388,7 @@ impl Encodable for DescribedGroup {
             total_size += types::String.compute_size(&self.protocol_data)?;
         }
         if version >= 5 {
-            total_size +=
-                types::CompactArray(types::Struct { version }).compute_size(&self.members)?;
+            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.members)?;
         } else {
             total_size += types::Array(types::Struct { version }).compute_size(&self.members)?;
         }
@@ -409,10 +402,7 @@ impl Encodable for DescribedGroup {
         if version >= 5 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -512,34 +502,35 @@ impl Message for DescribedGroup {
 /// Valid versions: 0-6
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DescribedGroupMember {
     /// The member id.
-    ///
+    /// 
     /// Supported API versions: 0-6
     pub member_id: StrBytes,
 
     /// The unique identifier of the consumer instance provided by end user.
-    ///
+    /// 
     /// Supported API versions: 4-6
     pub group_instance_id: Option<StrBytes>,
 
     /// The client ID used in the member's latest join group request.
-    ///
+    /// 
     /// Supported API versions: 0-6
     pub client_id: StrBytes,
 
     /// The client host.
-    ///
+    /// 
     /// Supported API versions: 0-6
     pub client_host: StrBytes,
 
     /// The metadata corresponding to the current group protocol in use.
-    ///
+    /// 
     /// Supported API versions: 0-6
     pub member_metadata: Bytes,
 
     /// The current assignment provided by the group leader.
-    ///
+    /// 
     /// Supported API versions: 0-6
     pub member_assignment: Bytes,
 
@@ -549,66 +540,67 @@ pub struct DescribedGroupMember {
 
 impl DescribedGroupMember {
     /// Sets `member_id` to the passed value.
-    ///
+    /// 
     /// The member id.
-    ///
+    /// 
     /// Supported API versions: 0-6
-    pub fn with_member_id(mut self, value: StrBytes) -> Self {
+    pub fn with_member_id(mut self, value: StrBytes) -> Self
+    {
         self.member_id = value;
         self
-    }
-    /// Sets `group_instance_id` to the passed value.
-    ///
+    }/// Sets `group_instance_id` to the passed value.
+    /// 
     /// The unique identifier of the consumer instance provided by end user.
-    ///
+    /// 
     /// Supported API versions: 4-6
-    pub fn with_group_instance_id(mut self, value: Option<StrBytes>) -> Self {
+    pub fn with_group_instance_id(mut self, value: Option<StrBytes>) -> Self
+    {
         self.group_instance_id = value;
         self
-    }
-    /// Sets `client_id` to the passed value.
-    ///
+    }/// Sets `client_id` to the passed value.
+    /// 
     /// The client ID used in the member's latest join group request.
-    ///
+    /// 
     /// Supported API versions: 0-6
-    pub fn with_client_id(mut self, value: StrBytes) -> Self {
+    pub fn with_client_id(mut self, value: StrBytes) -> Self
+    {
         self.client_id = value;
         self
-    }
-    /// Sets `client_host` to the passed value.
-    ///
+    }/// Sets `client_host` to the passed value.
+    /// 
     /// The client host.
-    ///
+    /// 
     /// Supported API versions: 0-6
-    pub fn with_client_host(mut self, value: StrBytes) -> Self {
+    pub fn with_client_host(mut self, value: StrBytes) -> Self
+    {
         self.client_host = value;
         self
-    }
-    /// Sets `member_metadata` to the passed value.
-    ///
+    }/// Sets `member_metadata` to the passed value.
+    /// 
     /// The metadata corresponding to the current group protocol in use.
-    ///
+    /// 
     /// Supported API versions: 0-6
-    pub fn with_member_metadata(mut self, value: Bytes) -> Self {
+    pub fn with_member_metadata(mut self, value: Bytes) -> Self
+    {
         self.member_metadata = value;
         self
-    }
-    /// Sets `member_assignment` to the passed value.
-    ///
+    }/// Sets `member_assignment` to the passed value.
+    /// 
     /// The current assignment provided by the group leader.
-    ///
+    /// 
     /// Supported API versions: 0-6
-    pub fn with_member_assignment(mut self, value: Bytes) -> Self {
+    pub fn with_member_assignment(mut self, value: Bytes) -> Self
+    {
         self.member_assignment = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -655,10 +647,7 @@ impl Encodable for DescribedGroupMember {
         if version >= 5 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -703,10 +692,7 @@ impl Encodable for DescribedGroupMember {
         if version >= 5 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -806,3 +792,4 @@ impl HeaderVersion for DescribeGroupsResponse {
         }
     }
 }
+

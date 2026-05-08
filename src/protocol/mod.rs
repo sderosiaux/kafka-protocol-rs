@@ -124,6 +124,29 @@ mod str_bytes {
             self.as_bytes()
         }
     }
+
+    // Kapture fork: StrBytes is the foundational string type every
+    // generated message uses. We hand-roll Serialize/Deserialize so
+    // it round-trips through JSON as a plain string (mirrors Display)
+    // — the alternative (default Bytes serialization, which emits a
+    // byte array) would explode every message body's JSON size and
+    // hide topic/group names behind opaque arrays. Gated on the
+    // `serde` feature so a downstream consumer that doesn't pull serde
+    // pays nothing.
+    #[cfg(feature = "serde")]
+    impl serde::Serialize for StrBytes {
+        fn serialize<S: serde::Serializer>(&self, ser: S) -> Result<S::Ok, S::Error> {
+            ser.serialize_str(self.as_str())
+        }
+    }
+
+    #[cfg(feature = "serde")]
+    impl<'de> serde::Deserialize<'de> for StrBytes {
+        fn deserialize<D: serde::Deserializer<'de>>(de: D) -> Result<Self, D::Error> {
+            let s = String::deserialize(de)?;
+            Ok(Self::from_string(s))
+        }
+    }
 }
 
 pub use str_bytes::StrBytes;
@@ -148,6 +171,7 @@ pub(crate) trait Decoder<Value> {
 
 /// The range of versions (min, max) allowed for agiven message.
 #[derive(Debug, Copy, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct VersionRange {
     /// The minimum version in the range.
     pub min: i16,

@@ -7,37 +7,38 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 0-1
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct BeginQuorumEpochRequest {
     /// The cluster id.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub cluster_id: Option<StrBytes>,
 
     /// The replica id of the voter receiving the request.
-    ///
+    /// 
     /// Supported API versions: 1
     pub voter_id: super::BrokerId,
 
     /// The topics.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub topics: Vec<TopicData>,
 
     /// Endpoints for the leader.
-    ///
+    /// 
     /// Supported API versions: 1
     pub leader_endpoints: Vec<LeaderEndpoint>,
 
@@ -47,48 +48,49 @@ pub struct BeginQuorumEpochRequest {
 
 impl BeginQuorumEpochRequest {
     /// Sets `cluster_id` to the passed value.
-    ///
+    /// 
     /// The cluster id.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_cluster_id(mut self, value: Option<StrBytes>) -> Self {
+    pub fn with_cluster_id(mut self, value: Option<StrBytes>) -> Self
+    {
         self.cluster_id = value;
         self
-    }
-    /// Sets `voter_id` to the passed value.
-    ///
+    }/// Sets `voter_id` to the passed value.
+    /// 
     /// The replica id of the voter receiving the request.
-    ///
+    /// 
     /// Supported API versions: 1
-    pub fn with_voter_id(mut self, value: super::BrokerId) -> Self {
+    pub fn with_voter_id(mut self, value: super::BrokerId) -> Self
+    {
         self.voter_id = value;
         self
-    }
-    /// Sets `topics` to the passed value.
-    ///
+    }/// Sets `topics` to the passed value.
+    /// 
     /// The topics.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_topics(mut self, value: Vec<TopicData>) -> Self {
+    pub fn with_topics(mut self, value: Vec<TopicData>) -> Self
+    {
         self.topics = value;
         self
-    }
-    /// Sets `leader_endpoints` to the passed value.
-    ///
+    }/// Sets `leader_endpoints` to the passed value.
+    /// 
     /// Endpoints for the leader.
-    ///
+    /// 
     /// Supported API versions: 1
-    pub fn with_leader_endpoints(mut self, value: Vec<LeaderEndpoint>) -> Self {
+    pub fn with_leader_endpoints(mut self, value: Vec<LeaderEndpoint>) -> Self
+    {
         self.leader_endpoints = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -119,10 +121,7 @@ impl Encodable for BeginQuorumEpochRequest {
         if version >= 1 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -141,22 +140,17 @@ impl Encodable for BeginQuorumEpochRequest {
             total_size += types::Int32.compute_size(&self.voter_id)?;
         }
         if version >= 1 {
-            total_size +=
-                types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
+            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
         } else {
             total_size += types::Array(types::Struct { version }).compute_size(&self.topics)?;
         }
         if version >= 1 {
-            total_size += types::CompactArray(types::Struct { version })
-                .compute_size(&self.leader_endpoints)?;
+            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.leader_endpoints)?;
         }
         if version >= 1 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -232,19 +226,20 @@ impl Message for BeginQuorumEpochRequest {
 /// Valid versions: 0-1
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct LeaderEndpoint {
     /// The name of the endpoint.
-    ///
+    /// 
     /// Supported API versions: 1
     pub name: StrBytes,
 
     /// The node's hostname.
-    ///
+    /// 
     /// Supported API versions: 1
     pub host: StrBytes,
 
     /// The node's port.
-    ///
+    /// 
     /// Supported API versions: 1
     pub port: u16,
 
@@ -254,39 +249,40 @@ pub struct LeaderEndpoint {
 
 impl LeaderEndpoint {
     /// Sets `name` to the passed value.
-    ///
+    /// 
     /// The name of the endpoint.
-    ///
+    /// 
     /// Supported API versions: 1
-    pub fn with_name(mut self, value: StrBytes) -> Self {
+    pub fn with_name(mut self, value: StrBytes) -> Self
+    {
         self.name = value;
         self
-    }
-    /// Sets `host` to the passed value.
-    ///
+    }/// Sets `host` to the passed value.
+    /// 
     /// The node's hostname.
-    ///
+    /// 
     /// Supported API versions: 1
-    pub fn with_host(mut self, value: StrBytes) -> Self {
+    pub fn with_host(mut self, value: StrBytes) -> Self
+    {
         self.host = value;
         self
-    }
-    /// Sets `port` to the passed value.
-    ///
+    }/// Sets `port` to the passed value.
+    /// 
     /// The node's port.
-    ///
+    /// 
     /// Supported API versions: 1
-    pub fn with_port(mut self, value: u16) -> Self {
+    pub fn with_port(mut self, value: u16) -> Self
+    {
         self.port = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -322,10 +318,7 @@ impl Encodable for LeaderEndpoint {
         if version >= 1 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -359,10 +352,7 @@ impl Encodable for LeaderEndpoint {
         if version >= 1 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -431,24 +421,25 @@ impl Message for LeaderEndpoint {
 /// Valid versions: 0-1
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct PartitionData {
     /// The partition index.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub partition_index: i32,
 
     /// The directory id of the receiving replica.
-    ///
+    /// 
     /// Supported API versions: 1
     pub voter_directory_id: Uuid,
 
     /// The ID of the newly elected leader.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub leader_id: super::BrokerId,
 
     /// The epoch of the newly elected leader.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub leader_epoch: i32,
 
@@ -458,48 +449,49 @@ pub struct PartitionData {
 
 impl PartitionData {
     /// Sets `partition_index` to the passed value.
-    ///
+    /// 
     /// The partition index.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_partition_index(mut self, value: i32) -> Self {
+    pub fn with_partition_index(mut self, value: i32) -> Self
+    {
         self.partition_index = value;
         self
-    }
-    /// Sets `voter_directory_id` to the passed value.
-    ///
+    }/// Sets `voter_directory_id` to the passed value.
+    /// 
     /// The directory id of the receiving replica.
-    ///
+    /// 
     /// Supported API versions: 1
-    pub fn with_voter_directory_id(mut self, value: Uuid) -> Self {
+    pub fn with_voter_directory_id(mut self, value: Uuid) -> Self
+    {
         self.voter_directory_id = value;
         self
-    }
-    /// Sets `leader_id` to the passed value.
-    ///
+    }/// Sets `leader_id` to the passed value.
+    /// 
     /// The ID of the newly elected leader.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_leader_id(mut self, value: super::BrokerId) -> Self {
+    pub fn with_leader_id(mut self, value: super::BrokerId) -> Self
+    {
         self.leader_id = value;
         self
-    }
-    /// Sets `leader_epoch` to the passed value.
-    ///
+    }/// Sets `leader_epoch` to the passed value.
+    /// 
     /// The epoch of the newly elected leader.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_leader_epoch(mut self, value: i32) -> Self {
+    pub fn with_leader_epoch(mut self, value: i32) -> Self
+    {
         self.leader_epoch = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -520,10 +512,7 @@ impl Encodable for PartitionData {
         if version >= 1 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -542,10 +531,7 @@ impl Encodable for PartitionData {
         if version >= 1 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -609,14 +595,15 @@ impl Message for PartitionData {
 /// Valid versions: 0-1
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TopicData {
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub topic_name: super::TopicName,
 
     /// The partitions.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub partitions: Vec<PartitionData>,
 
@@ -626,30 +613,31 @@ pub struct TopicData {
 
 impl TopicData {
     /// Sets `topic_name` to the passed value.
-    ///
+    /// 
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_topic_name(mut self, value: super::TopicName) -> Self {
+    pub fn with_topic_name(mut self, value: super::TopicName) -> Self
+    {
         self.topic_name = value;
         self
-    }
-    /// Sets `partitions` to the passed value.
-    ///
+    }/// Sets `partitions` to the passed value.
+    /// 
     /// The partitions.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_partitions(mut self, value: Vec<PartitionData>) -> Self {
+    pub fn with_partitions(mut self, value: Vec<PartitionData>) -> Self
+    {
         self.partitions = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -674,10 +662,7 @@ impl Encodable for TopicData {
         if version >= 1 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -693,18 +678,14 @@ impl Encodable for TopicData {
             total_size += types::String.compute_size(&self.topic_name)?;
         }
         if version >= 1 {
-            total_size +=
-                types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
+            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
         } else {
             total_size += types::Array(types::Struct { version }).compute_size(&self.partitions)?;
         }
         if version >= 1 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -772,3 +753,4 @@ impl HeaderVersion for BeginQuorumEpochRequest {
         }
     }
 }
+

@@ -7,47 +7,48 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 0-1
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AddRaftVoterRequest {
     /// The cluster id.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub cluster_id: Option<StrBytes>,
 
     /// The maximum time to wait for the request to complete before returning.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub timeout_ms: i32,
 
     /// The replica id of the voter getting added to the topic partition.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub voter_id: i32,
 
     /// The directory id of the voter getting added to the topic partition.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub voter_directory_id: Uuid,
 
     /// The endpoints that can be used to communicate with the voter.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub listeners: Vec<Listener>,
 
     /// When true, return a response after the new voter set is committed. Otherwise, return after the leader writes the changes locally.
-    ///
+    /// 
     /// Supported API versions: 1
     pub ack_when_committed: bool,
 
@@ -57,66 +58,67 @@ pub struct AddRaftVoterRequest {
 
 impl AddRaftVoterRequest {
     /// Sets `cluster_id` to the passed value.
-    ///
+    /// 
     /// The cluster id.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_cluster_id(mut self, value: Option<StrBytes>) -> Self {
+    pub fn with_cluster_id(mut self, value: Option<StrBytes>) -> Self
+    {
         self.cluster_id = value;
         self
-    }
-    /// Sets `timeout_ms` to the passed value.
-    ///
+    }/// Sets `timeout_ms` to the passed value.
+    /// 
     /// The maximum time to wait for the request to complete before returning.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_timeout_ms(mut self, value: i32) -> Self {
+    pub fn with_timeout_ms(mut self, value: i32) -> Self
+    {
         self.timeout_ms = value;
         self
-    }
-    /// Sets `voter_id` to the passed value.
-    ///
+    }/// Sets `voter_id` to the passed value.
+    /// 
     /// The replica id of the voter getting added to the topic partition.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_voter_id(mut self, value: i32) -> Self {
+    pub fn with_voter_id(mut self, value: i32) -> Self
+    {
         self.voter_id = value;
         self
-    }
-    /// Sets `voter_directory_id` to the passed value.
-    ///
+    }/// Sets `voter_directory_id` to the passed value.
+    /// 
     /// The directory id of the voter getting added to the topic partition.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_voter_directory_id(mut self, value: Uuid) -> Self {
+    pub fn with_voter_directory_id(mut self, value: Uuid) -> Self
+    {
         self.voter_directory_id = value;
         self
-    }
-    /// Sets `listeners` to the passed value.
-    ///
+    }/// Sets `listeners` to the passed value.
+    /// 
     /// The endpoints that can be used to communicate with the voter.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_listeners(mut self, value: Vec<Listener>) -> Self {
+    pub fn with_listeners(mut self, value: Vec<Listener>) -> Self
+    {
         self.listeners = value;
         self
-    }
-    /// Sets `ack_when_committed` to the passed value.
-    ///
+    }/// Sets `ack_when_committed` to the passed value.
+    /// 
     /// When true, return a response after the new voter set is committed. Otherwise, return after the leader writes the changes locally.
-    ///
+    /// 
     /// Supported API versions: 1
-    pub fn with_ack_when_committed(mut self, value: bool) -> Self {
+    pub fn with_ack_when_committed(mut self, value: bool) -> Self
+    {
         self.ack_when_committed = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -142,10 +144,7 @@ impl Encodable for AddRaftVoterRequest {
         }
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -158,8 +157,7 @@ impl Encodable for AddRaftVoterRequest {
         total_size += types::Int32.compute_size(&self.timeout_ms)?;
         total_size += types::Int32.compute_size(&self.voter_id)?;
         total_size += types::Uuid.compute_size(&self.voter_directory_id)?;
-        total_size +=
-            types::CompactArray(types::Struct { version }).compute_size(&self.listeners)?;
+        total_size += types::CompactArray(types::Struct { version }).compute_size(&self.listeners)?;
         if version >= 1 {
             total_size += types::Boolean.compute_size(&self.ack_when_committed)?;
         } else {
@@ -169,10 +167,7 @@ impl Encodable for AddRaftVoterRequest {
         }
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -239,19 +234,20 @@ impl Message for AddRaftVoterRequest {
 /// Valid versions: 0-1
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Listener {
     /// The name of the endpoint.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub name: StrBytes,
 
     /// The hostname.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub host: StrBytes,
 
     /// The port.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub port: u16,
 
@@ -261,39 +257,40 @@ pub struct Listener {
 
 impl Listener {
     /// Sets `name` to the passed value.
-    ///
+    /// 
     /// The name of the endpoint.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_name(mut self, value: StrBytes) -> Self {
+    pub fn with_name(mut self, value: StrBytes) -> Self
+    {
         self.name = value;
         self
-    }
-    /// Sets `host` to the passed value.
-    ///
+    }/// Sets `host` to the passed value.
+    /// 
     /// The hostname.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_host(mut self, value: StrBytes) -> Self {
+    pub fn with_host(mut self, value: StrBytes) -> Self
+    {
         self.host = value;
         self
-    }
-    /// Sets `port` to the passed value.
-    ///
+    }/// Sets `port` to the passed value.
+    /// 
     /// The port.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_port(mut self, value: u16) -> Self {
+    pub fn with_port(mut self, value: u16) -> Self
+    {
         self.port = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -310,10 +307,7 @@ impl Encodable for Listener {
         types::UInt16.encode(buf, &self.port)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -327,10 +321,7 @@ impl Encodable for Listener {
         total_size += types::UInt16.compute_size(&self.port)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -386,3 +377,4 @@ impl HeaderVersion for AddRaftVoterRequest {
         2
     }
 }
+

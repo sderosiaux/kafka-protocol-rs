@@ -7,37 +7,38 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 0-2
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ListTransactionsRequest {
     /// The transaction states to filter by: if empty, all transactions are returned; if non-empty, then only transactions matching one of the filtered states will be returned.
-    ///
+    /// 
     /// Supported API versions: 0-2
     pub state_filters: Vec<StrBytes>,
 
     /// The producerIds to filter by: if empty, all transactions will be returned; if non-empty, only transactions which match one of the filtered producerIds will be returned.
-    ///
+    /// 
     /// Supported API versions: 0-2
     pub producer_id_filters: Vec<super::ProducerId>,
 
     /// Duration (in millis) to filter by: if < 0, all transactions will be returned; otherwise, only transactions running longer than this duration will be returned.
-    ///
+    /// 
     /// Supported API versions: 1-2
     pub duration_filter: i64,
 
     /// The transactional ID regular expression pattern to filter by: if it is empty or null, all transactions are returned; Otherwise then only the transactions matching the given regular expression will be returned.
-    ///
+    /// 
     /// Supported API versions: 2
     pub transactional_id_pattern: Option<StrBytes>,
 
@@ -47,48 +48,49 @@ pub struct ListTransactionsRequest {
 
 impl ListTransactionsRequest {
     /// Sets `state_filters` to the passed value.
-    ///
+    /// 
     /// The transaction states to filter by: if empty, all transactions are returned; if non-empty, then only transactions matching one of the filtered states will be returned.
-    ///
+    /// 
     /// Supported API versions: 0-2
-    pub fn with_state_filters(mut self, value: Vec<StrBytes>) -> Self {
+    pub fn with_state_filters(mut self, value: Vec<StrBytes>) -> Self
+    {
         self.state_filters = value;
         self
-    }
-    /// Sets `producer_id_filters` to the passed value.
-    ///
+    }/// Sets `producer_id_filters` to the passed value.
+    /// 
     /// The producerIds to filter by: if empty, all transactions will be returned; if non-empty, only transactions which match one of the filtered producerIds will be returned.
-    ///
+    /// 
     /// Supported API versions: 0-2
-    pub fn with_producer_id_filters(mut self, value: Vec<super::ProducerId>) -> Self {
+    pub fn with_producer_id_filters(mut self, value: Vec<super::ProducerId>) -> Self
+    {
         self.producer_id_filters = value;
         self
-    }
-    /// Sets `duration_filter` to the passed value.
-    ///
+    }/// Sets `duration_filter` to the passed value.
+    /// 
     /// Duration (in millis) to filter by: if < 0, all transactions will be returned; otherwise, only transactions running longer than this duration will be returned.
-    ///
+    /// 
     /// Supported API versions: 1-2
-    pub fn with_duration_filter(mut self, value: i64) -> Self {
+    pub fn with_duration_filter(mut self, value: i64) -> Self
+    {
         self.duration_filter = value;
         self
-    }
-    /// Sets `transactional_id_pattern` to the passed value.
-    ///
+    }/// Sets `transactional_id_pattern` to the passed value.
+    /// 
     /// The transactional ID regular expression pattern to filter by: if it is empty or null, all transactions are returned; Otherwise then only the transactions matching the given regular expression will be returned.
-    ///
+    /// 
     /// Supported API versions: 2
-    pub fn with_transactional_id_pattern(mut self, value: Option<StrBytes>) -> Self {
+    pub fn with_transactional_id_pattern(mut self, value: Option<StrBytes>) -> Self
+    {
         self.transactional_id_pattern = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -118,10 +120,7 @@ impl Encodable for ListTransactionsRequest {
         }
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -130,8 +129,7 @@ impl Encodable for ListTransactionsRequest {
     }
     fn compute_size(&self, version: i16) -> Result<usize> {
         let mut total_size = 0;
-        total_size +=
-            types::CompactArray(types::CompactString).compute_size(&self.state_filters)?;
+        total_size += types::CompactArray(types::CompactString).compute_size(&self.state_filters)?;
         total_size += types::CompactArray(types::Int64).compute_size(&self.producer_id_filters)?;
         if version >= 1 {
             total_size += types::Int64.compute_size(&self.duration_filter)?;
@@ -149,10 +147,7 @@ impl Encodable for ListTransactionsRequest {
         }
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -219,3 +214,4 @@ impl HeaderVersion for ListTransactionsRequest {
         2
     }
 }
+

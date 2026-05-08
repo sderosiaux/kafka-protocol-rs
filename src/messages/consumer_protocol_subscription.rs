@@ -7,89 +7,92 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 0-3
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ConsumerProtocolSubscription {
     /// The topics that the member wants to consume.
-    ///
+    /// 
     /// Supported API versions: 0-3
     pub topics: Vec<StrBytes>,
 
     /// User data that will be passed back to the consumer.
-    ///
+    /// 
     /// Supported API versions: 0-3
     pub user_data: Option<Bytes>,
 
     /// The partitions that the member owns.
-    ///
+    /// 
     /// Supported API versions: 1-3
     pub owned_partitions: Vec<TopicPartition>,
 
     /// The generation id of the member.
-    ///
+    /// 
     /// Supported API versions: 2-3
     pub generation_id: i32,
 
     /// The rack id of the member.
-    ///
+    /// 
     /// Supported API versions: 3
     pub rack_id: Option<StrBytes>,
+
 }
 
 impl ConsumerProtocolSubscription {
     /// Sets `topics` to the passed value.
-    ///
+    /// 
     /// The topics that the member wants to consume.
-    ///
+    /// 
     /// Supported API versions: 0-3
-    pub fn with_topics(mut self, value: Vec<StrBytes>) -> Self {
+    pub fn with_topics(mut self, value: Vec<StrBytes>) -> Self
+    {
         self.topics = value;
         self
-    }
-    /// Sets `user_data` to the passed value.
-    ///
+    }/// Sets `user_data` to the passed value.
+    /// 
     /// User data that will be passed back to the consumer.
-    ///
+    /// 
     /// Supported API versions: 0-3
-    pub fn with_user_data(mut self, value: Option<Bytes>) -> Self {
+    pub fn with_user_data(mut self, value: Option<Bytes>) -> Self
+    {
         self.user_data = value;
         self
-    }
-    /// Sets `owned_partitions` to the passed value.
-    ///
+    }/// Sets `owned_partitions` to the passed value.
+    /// 
     /// The partitions that the member owns.
-    ///
+    /// 
     /// Supported API versions: 1-3
-    pub fn with_owned_partitions(mut self, value: Vec<TopicPartition>) -> Self {
+    pub fn with_owned_partitions(mut self, value: Vec<TopicPartition>) -> Self
+    {
         self.owned_partitions = value;
         self
-    }
-    /// Sets `generation_id` to the passed value.
-    ///
+    }/// Sets `generation_id` to the passed value.
+    /// 
     /// The generation id of the member.
-    ///
+    /// 
     /// Supported API versions: 2-3
-    pub fn with_generation_id(mut self, value: i32) -> Self {
+    pub fn with_generation_id(mut self, value: i32) -> Self
+    {
         self.generation_id = value;
         self
-    }
-    /// Sets `rack_id` to the passed value.
-    ///
+    }/// Sets `rack_id` to the passed value.
+    /// 
     /// The rack id of the member.
-    ///
+    /// 
     /// Supported API versions: 3
-    pub fn with_rack_id(mut self, value: Option<StrBytes>) -> Self {
+    pub fn with_rack_id(mut self, value: Option<StrBytes>) -> Self
+    {
         self.rack_id = value;
         self
     }
@@ -119,8 +122,7 @@ impl Encodable for ConsumerProtocolSubscription {
         total_size += types::Array(types::String).compute_size(&self.topics)?;
         total_size += types::Bytes.compute_size(&self.user_data)?;
         if version >= 1 {
-            total_size +=
-                types::Array(types::Struct { version }).compute_size(&self.owned_partitions)?;
+            total_size += types::Array(types::Struct { version }).compute_size(&self.owned_partitions)?;
         }
         if version >= 2 {
             total_size += types::Int32.compute_size(&self.generation_id)?;
@@ -185,34 +187,37 @@ impl Message for ConsumerProtocolSubscription {
 /// Valid versions: 0-3
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TopicPartition {
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 1-3
     pub topic: super::TopicName,
 
     /// The partition ids.
-    ///
+    /// 
     /// Supported API versions: 1-3
     pub partitions: Vec<i32>,
+
 }
 
 impl TopicPartition {
     /// Sets `topic` to the passed value.
-    ///
+    /// 
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 1-3
-    pub fn with_topic(mut self, value: super::TopicName) -> Self {
+    pub fn with_topic(mut self, value: super::TopicName) -> Self
+    {
         self.topic = value;
         self
-    }
-    /// Sets `partitions` to the passed value.
-    ///
+    }/// Sets `partitions` to the passed value.
+    /// 
     /// The partition ids.
-    ///
+    /// 
     /// Supported API versions: 1-3
-    pub fn with_partitions(mut self, value: Vec<i32>) -> Self {
+    pub fn with_partitions(mut self, value: Vec<i32>) -> Self
+    {
         self.partitions = value;
         self
     }
@@ -276,7 +281,10 @@ impl Decodable for TopicPartition {
         } else {
             Default::default()
         };
-        Ok(Self { topic, partitions })
+        Ok(Self {
+            topic,
+            partitions,
+        })
     }
 }
 
@@ -293,3 +301,4 @@ impl Message for TopicPartition {
     const VERSIONS: VersionRange = VersionRange { min: 0, max: 3 };
     const DEPRECATED_VERSIONS: Option<VersionRange> = None;
 }
+

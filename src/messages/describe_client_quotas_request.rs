@@ -7,32 +7,33 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 0-1
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ComponentData {
     /// The entity type that the filter component applies to.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub entity_type: StrBytes,
 
     /// How to match the entity {0 = exact name, 1 = default name, 2 = any specified name}.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub match_type: i8,
 
     /// The string to match against, or null if unused for the match type.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub _match: Option<StrBytes>,
 
@@ -42,39 +43,40 @@ pub struct ComponentData {
 
 impl ComponentData {
     /// Sets `entity_type` to the passed value.
-    ///
+    /// 
     /// The entity type that the filter component applies to.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_entity_type(mut self, value: StrBytes) -> Self {
+    pub fn with_entity_type(mut self, value: StrBytes) -> Self
+    {
         self.entity_type = value;
         self
-    }
-    /// Sets `match_type` to the passed value.
-    ///
+    }/// Sets `match_type` to the passed value.
+    /// 
     /// How to match the entity {0 = exact name, 1 = default name, 2 = any specified name}.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_match_type(mut self, value: i8) -> Self {
+    pub fn with_match_type(mut self, value: i8) -> Self
+    {
         self.match_type = value;
         self
-    }
-    /// Sets `_match` to the passed value.
-    ///
+    }/// Sets `_match` to the passed value.
+    /// 
     /// The string to match against, or null if unused for the match type.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_match(mut self, value: Option<StrBytes>) -> Self {
+    pub fn with_match(mut self, value: Option<StrBytes>) -> Self
+    {
         self._match = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -100,10 +102,7 @@ impl Encodable for ComponentData {
         if version >= 1 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -127,10 +126,7 @@ impl Encodable for ComponentData {
         if version >= 1 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -195,14 +191,15 @@ impl Message for ComponentData {
 /// Valid versions: 0-1
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DescribeClientQuotasRequest {
     /// Filter components to apply to quota entities.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub components: Vec<ComponentData>,
 
     /// Whether the match is strict, i.e. should exclude entities with unspecified entity types.
-    ///
+    /// 
     /// Supported API versions: 0-1
     pub strict: bool,
 
@@ -212,30 +209,31 @@ pub struct DescribeClientQuotasRequest {
 
 impl DescribeClientQuotasRequest {
     /// Sets `components` to the passed value.
-    ///
+    /// 
     /// Filter components to apply to quota entities.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_components(mut self, value: Vec<ComponentData>) -> Self {
+    pub fn with_components(mut self, value: Vec<ComponentData>) -> Self
+    {
         self.components = value;
         self
-    }
-    /// Sets `strict` to the passed value.
-    ///
+    }/// Sets `strict` to the passed value.
+    /// 
     /// Whether the match is strict, i.e. should exclude entities with unspecified entity types.
-    ///
+    /// 
     /// Supported API versions: 0-1
-    pub fn with_strict(mut self, value: bool) -> Self {
+    pub fn with_strict(mut self, value: bool) -> Self
+    {
         self.strict = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -256,10 +254,7 @@ impl Encodable for DescribeClientQuotasRequest {
         if version >= 1 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -270,8 +265,7 @@ impl Encodable for DescribeClientQuotasRequest {
     fn compute_size(&self, version: i16) -> Result<usize> {
         let mut total_size = 0;
         if version >= 1 {
-            total_size +=
-                types::CompactArray(types::Struct { version }).compute_size(&self.components)?;
+            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.components)?;
         } else {
             total_size += types::Array(types::Struct { version }).compute_size(&self.components)?;
         }
@@ -279,10 +273,7 @@ impl Encodable for DescribeClientQuotasRequest {
         if version >= 1 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -346,3 +337,4 @@ impl HeaderVersion for DescribeClientQuotasRequest {
         }
     }
 }
+

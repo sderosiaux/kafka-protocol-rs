@@ -7,27 +7,28 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 0
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DeleteShareGroupOffsetsRequest {
     /// The group identifier.
-    ///
+    /// 
     /// Supported API versions: 0
     pub group_id: super::GroupId,
 
     /// The topics to delete offsets for.
-    ///
+    /// 
     /// Supported API versions: 0
     pub topics: Vec<DeleteShareGroupOffsetsRequestTopic>,
 
@@ -37,30 +38,31 @@ pub struct DeleteShareGroupOffsetsRequest {
 
 impl DeleteShareGroupOffsetsRequest {
     /// Sets `group_id` to the passed value.
-    ///
+    /// 
     /// The group identifier.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_group_id(mut self, value: super::GroupId) -> Self {
+    pub fn with_group_id(mut self, value: super::GroupId) -> Self
+    {
         self.group_id = value;
         self
-    }
-    /// Sets `topics` to the passed value.
-    ///
+    }/// Sets `topics` to the passed value.
+    /// 
     /// The topics to delete offsets for.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_topics(mut self, value: Vec<DeleteShareGroupOffsetsRequestTopic>) -> Self {
+    pub fn with_topics(mut self, value: Vec<DeleteShareGroupOffsetsRequestTopic>) -> Self
+    {
         self.topics = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -76,10 +78,7 @@ impl Encodable for DeleteShareGroupOffsetsRequest {
         types::CompactArray(types::Struct { version }).encode(buf, &self.topics)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -92,10 +91,7 @@ impl Encodable for DeleteShareGroupOffsetsRequest {
         total_size += types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -146,9 +142,10 @@ impl Message for DeleteShareGroupOffsetsRequest {
 /// Valid versions: 0
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DeleteShareGroupOffsetsRequestTopic {
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 0
     pub topic_name: super::TopicName,
 
@@ -158,21 +155,22 @@ pub struct DeleteShareGroupOffsetsRequestTopic {
 
 impl DeleteShareGroupOffsetsRequestTopic {
     /// Sets `topic_name` to the passed value.
-    ///
+    /// 
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_topic_name(mut self, value: super::TopicName) -> Self {
+    pub fn with_topic_name(mut self, value: super::TopicName) -> Self
+    {
         self.topic_name = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -187,10 +185,7 @@ impl Encodable for DeleteShareGroupOffsetsRequestTopic {
         types::CompactString.encode(buf, &self.topic_name)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -202,10 +197,7 @@ impl Encodable for DeleteShareGroupOffsetsRequestTopic {
         total_size += types::CompactString.compute_size(&self.topic_name)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -255,3 +247,4 @@ impl HeaderVersion for DeleteShareGroupOffsetsRequest {
         2
     }
 }
+

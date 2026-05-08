@@ -7,32 +7,33 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 0
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct RemoveRaftVoterRequest {
     /// The cluster id of the request.
-    ///
+    /// 
     /// Supported API versions: 0
     pub cluster_id: Option<StrBytes>,
 
     /// The replica id of the voter getting removed from the topic partition.
-    ///
+    /// 
     /// Supported API versions: 0
     pub voter_id: i32,
 
     /// The directory id of the voter getting removed from the topic partition.
-    ///
+    /// 
     /// Supported API versions: 0
     pub voter_directory_id: Uuid,
 
@@ -42,39 +43,40 @@ pub struct RemoveRaftVoterRequest {
 
 impl RemoveRaftVoterRequest {
     /// Sets `cluster_id` to the passed value.
-    ///
+    /// 
     /// The cluster id of the request.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_cluster_id(mut self, value: Option<StrBytes>) -> Self {
+    pub fn with_cluster_id(mut self, value: Option<StrBytes>) -> Self
+    {
         self.cluster_id = value;
         self
-    }
-    /// Sets `voter_id` to the passed value.
-    ///
+    }/// Sets `voter_id` to the passed value.
+    /// 
     /// The replica id of the voter getting removed from the topic partition.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_voter_id(mut self, value: i32) -> Self {
+    pub fn with_voter_id(mut self, value: i32) -> Self
+    {
         self.voter_id = value;
         self
-    }
-    /// Sets `voter_directory_id` to the passed value.
-    ///
+    }/// Sets `voter_directory_id` to the passed value.
+    /// 
     /// The directory id of the voter getting removed from the topic partition.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_voter_directory_id(mut self, value: Uuid) -> Self {
+    pub fn with_voter_directory_id(mut self, value: Uuid) -> Self
+    {
         self.voter_directory_id = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -91,10 +93,7 @@ impl Encodable for RemoveRaftVoterRequest {
         types::Uuid.encode(buf, &self.voter_directory_id)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -108,10 +107,7 @@ impl Encodable for RemoveRaftVoterRequest {
         total_size += types::Uuid.compute_size(&self.voter_directory_id)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -167,3 +163,4 @@ impl HeaderVersion for RemoveRaftVoterRequest {
         2
     }
 }
+

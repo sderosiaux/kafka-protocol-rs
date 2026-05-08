@@ -1054,6 +1054,10 @@ impl PreparedStruct {
         writeln!(w, "/// Valid versions: {}", self.valid_versions)?;
         writeln!(w, "#[non_exhaustive]")?;
         writeln!(w, "#[derive(Debug, Clone, PartialEq)]")?;
+        writeln!(
+            w,
+            "#[cfg_attr(feature = \"serde\", derive(serde::Serialize, serde::Deserialize))]"
+        )?;
         write!(w, "pub struct {} ", self.name)?;
         w.block(|w| {
             for prepared_field in &self.prepared_fields {

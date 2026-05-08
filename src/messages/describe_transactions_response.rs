@@ -7,27 +7,28 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 0
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DescribeTransactionsResponse {
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    ///
+    /// 
     /// Supported API versions: 0
     pub throttle_time_ms: i32,
 
     /// The current state of the transaction.
-    ///
+    /// 
     /// Supported API versions: 0
     pub transaction_states: Vec<TransactionState>,
 
@@ -37,30 +38,31 @@ pub struct DescribeTransactionsResponse {
 
 impl DescribeTransactionsResponse {
     /// Sets `throttle_time_ms` to the passed value.
-    ///
+    /// 
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_throttle_time_ms(mut self, value: i32) -> Self {
+    pub fn with_throttle_time_ms(mut self, value: i32) -> Self
+    {
         self.throttle_time_ms = value;
         self
-    }
-    /// Sets `transaction_states` to the passed value.
-    ///
+    }/// Sets `transaction_states` to the passed value.
+    /// 
     /// The current state of the transaction.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_transaction_states(mut self, value: Vec<TransactionState>) -> Self {
+    pub fn with_transaction_states(mut self, value: Vec<TransactionState>) -> Self
+    {
         self.transaction_states = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -76,10 +78,7 @@ impl Encodable for DescribeTransactionsResponse {
         types::CompactArray(types::Struct { version }).encode(buf, &self.transaction_states)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -89,14 +88,10 @@ impl Encodable for DescribeTransactionsResponse {
     fn compute_size(&self, version: i16) -> Result<usize> {
         let mut total_size = 0;
         total_size += types::Int32.compute_size(&self.throttle_time_ms)?;
-        total_size += types::CompactArray(types::Struct { version })
-            .compute_size(&self.transaction_states)?;
+        total_size += types::CompactArray(types::Struct { version }).compute_size(&self.transaction_states)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -147,14 +142,15 @@ impl Message for DescribeTransactionsResponse {
 /// Valid versions: 0
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TopicData {
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 0
     pub topic: super::TopicName,
 
     /// The partition ids included in the current transaction.
-    ///
+    /// 
     /// Supported API versions: 0
     pub partitions: Vec<i32>,
 
@@ -164,30 +160,31 @@ pub struct TopicData {
 
 impl TopicData {
     /// Sets `topic` to the passed value.
-    ///
+    /// 
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_topic(mut self, value: super::TopicName) -> Self {
+    pub fn with_topic(mut self, value: super::TopicName) -> Self
+    {
         self.topic = value;
         self
-    }
-    /// Sets `partitions` to the passed value.
-    ///
+    }/// Sets `partitions` to the passed value.
+    /// 
     /// The partition ids included in the current transaction.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_partitions(mut self, value: Vec<i32>) -> Self {
+    pub fn with_partitions(mut self, value: Vec<i32>) -> Self
+    {
         self.partitions = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -203,10 +200,7 @@ impl Encodable for TopicData {
         types::CompactArray(types::Int32).encode(buf, &self.partitions)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -219,10 +213,7 @@ impl Encodable for TopicData {
         total_size += types::CompactArray(types::Int32).compute_size(&self.partitions)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -273,44 +264,45 @@ impl Message for TopicData {
 /// Valid versions: 0
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TransactionState {
     /// The error code.
-    ///
+    /// 
     /// Supported API versions: 0
     pub error_code: i16,
 
     /// The transactional id.
-    ///
+    /// 
     /// Supported API versions: 0
     pub transactional_id: super::TransactionalId,
 
     /// The current transaction state of the producer.
-    ///
+    /// 
     /// Supported API versions: 0
     pub transaction_state: StrBytes,
 
     /// The timeout in milliseconds for the transaction.
-    ///
+    /// 
     /// Supported API versions: 0
     pub transaction_timeout_ms: i32,
 
     /// The start time of the transaction in milliseconds.
-    ///
+    /// 
     /// Supported API versions: 0
     pub transaction_start_time_ms: i64,
 
     /// The current producer id associated with the transaction.
-    ///
+    /// 
     /// Supported API versions: 0
     pub producer_id: super::ProducerId,
 
     /// The current epoch associated with the producer id.
-    ///
+    /// 
     /// Supported API versions: 0
     pub producer_epoch: i16,
 
     /// The set of partitions included in the current transaction (if active). When a transaction is preparing to commit or abort, this will include only partitions which do not have markers.
-    ///
+    /// 
     /// Supported API versions: 0
     pub topics: Vec<TopicData>,
 
@@ -320,84 +312,85 @@ pub struct TransactionState {
 
 impl TransactionState {
     /// Sets `error_code` to the passed value.
-    ///
+    /// 
     /// The error code.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_error_code(mut self, value: i16) -> Self {
+    pub fn with_error_code(mut self, value: i16) -> Self
+    {
         self.error_code = value;
         self
-    }
-    /// Sets `transactional_id` to the passed value.
-    ///
+    }/// Sets `transactional_id` to the passed value.
+    /// 
     /// The transactional id.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_transactional_id(mut self, value: super::TransactionalId) -> Self {
+    pub fn with_transactional_id(mut self, value: super::TransactionalId) -> Self
+    {
         self.transactional_id = value;
         self
-    }
-    /// Sets `transaction_state` to the passed value.
-    ///
+    }/// Sets `transaction_state` to the passed value.
+    /// 
     /// The current transaction state of the producer.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_transaction_state(mut self, value: StrBytes) -> Self {
+    pub fn with_transaction_state(mut self, value: StrBytes) -> Self
+    {
         self.transaction_state = value;
         self
-    }
-    /// Sets `transaction_timeout_ms` to the passed value.
-    ///
+    }/// Sets `transaction_timeout_ms` to the passed value.
+    /// 
     /// The timeout in milliseconds for the transaction.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_transaction_timeout_ms(mut self, value: i32) -> Self {
+    pub fn with_transaction_timeout_ms(mut self, value: i32) -> Self
+    {
         self.transaction_timeout_ms = value;
         self
-    }
-    /// Sets `transaction_start_time_ms` to the passed value.
-    ///
+    }/// Sets `transaction_start_time_ms` to the passed value.
+    /// 
     /// The start time of the transaction in milliseconds.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_transaction_start_time_ms(mut self, value: i64) -> Self {
+    pub fn with_transaction_start_time_ms(mut self, value: i64) -> Self
+    {
         self.transaction_start_time_ms = value;
         self
-    }
-    /// Sets `producer_id` to the passed value.
-    ///
+    }/// Sets `producer_id` to the passed value.
+    /// 
     /// The current producer id associated with the transaction.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_producer_id(mut self, value: super::ProducerId) -> Self {
+    pub fn with_producer_id(mut self, value: super::ProducerId) -> Self
+    {
         self.producer_id = value;
         self
-    }
-    /// Sets `producer_epoch` to the passed value.
-    ///
+    }/// Sets `producer_epoch` to the passed value.
+    /// 
     /// The current epoch associated with the producer id.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_producer_epoch(mut self, value: i16) -> Self {
+    pub fn with_producer_epoch(mut self, value: i16) -> Self
+    {
         self.producer_epoch = value;
         self
-    }
-    /// Sets `topics` to the passed value.
-    ///
+    }/// Sets `topics` to the passed value.
+    /// 
     /// The set of partitions included in the current transaction (if active). When a transaction is preparing to commit or abort, this will include only partitions which do not have markers.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_topics(mut self, value: Vec<TopicData>) -> Self {
+    pub fn with_topics(mut self, value: Vec<TopicData>) -> Self
+    {
         self.topics = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -419,10 +412,7 @@ impl Encodable for TransactionState {
         types::CompactArray(types::Struct { version }).encode(buf, &self.topics)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -441,10 +431,7 @@ impl Encodable for TransactionState {
         total_size += types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -515,3 +502,4 @@ impl HeaderVersion for DescribeTransactionsResponse {
         1
     }
 }
+

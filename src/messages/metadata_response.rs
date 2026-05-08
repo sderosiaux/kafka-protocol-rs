@@ -7,52 +7,53 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 0-13
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct MetadataResponse {
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    ///
+    /// 
     /// Supported API versions: 3-13
     pub throttle_time_ms: i32,
 
     /// A list of brokers present in the cluster.
-    ///
+    /// 
     /// Supported API versions: 0-13
     pub brokers: Vec<MetadataResponseBroker>,
 
     /// The cluster ID that responding broker belongs to.
-    ///
+    /// 
     /// Supported API versions: 2-13
     pub cluster_id: Option<StrBytes>,
 
     /// The ID of the controller broker.
-    ///
+    /// 
     /// Supported API versions: 1-13
     pub controller_id: super::BrokerId,
 
     /// Each topic in the response.
-    ///
+    /// 
     /// Supported API versions: 0-13
     pub topics: Vec<MetadataResponseTopic>,
 
     /// 32-bit bitfield to represent authorized operations for this cluster.
-    ///
+    /// 
     /// Supported API versions: 8-10
     pub cluster_authorized_operations: i32,
 
     /// The top-level error code, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 13
     pub error_code: i16,
 
@@ -62,75 +63,76 @@ pub struct MetadataResponse {
 
 impl MetadataResponse {
     /// Sets `throttle_time_ms` to the passed value.
-    ///
+    /// 
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    ///
+    /// 
     /// Supported API versions: 3-13
-    pub fn with_throttle_time_ms(mut self, value: i32) -> Self {
+    pub fn with_throttle_time_ms(mut self, value: i32) -> Self
+    {
         self.throttle_time_ms = value;
         self
-    }
-    /// Sets `brokers` to the passed value.
-    ///
+    }/// Sets `brokers` to the passed value.
+    /// 
     /// A list of brokers present in the cluster.
-    ///
+    /// 
     /// Supported API versions: 0-13
-    pub fn with_brokers(mut self, value: Vec<MetadataResponseBroker>) -> Self {
+    pub fn with_brokers(mut self, value: Vec<MetadataResponseBroker>) -> Self
+    {
         self.brokers = value;
         self
-    }
-    /// Sets `cluster_id` to the passed value.
-    ///
+    }/// Sets `cluster_id` to the passed value.
+    /// 
     /// The cluster ID that responding broker belongs to.
-    ///
+    /// 
     /// Supported API versions: 2-13
-    pub fn with_cluster_id(mut self, value: Option<StrBytes>) -> Self {
+    pub fn with_cluster_id(mut self, value: Option<StrBytes>) -> Self
+    {
         self.cluster_id = value;
         self
-    }
-    /// Sets `controller_id` to the passed value.
-    ///
+    }/// Sets `controller_id` to the passed value.
+    /// 
     /// The ID of the controller broker.
-    ///
+    /// 
     /// Supported API versions: 1-13
-    pub fn with_controller_id(mut self, value: super::BrokerId) -> Self {
+    pub fn with_controller_id(mut self, value: super::BrokerId) -> Self
+    {
         self.controller_id = value;
         self
-    }
-    /// Sets `topics` to the passed value.
-    ///
+    }/// Sets `topics` to the passed value.
+    /// 
     /// Each topic in the response.
-    ///
+    /// 
     /// Supported API versions: 0-13
-    pub fn with_topics(mut self, value: Vec<MetadataResponseTopic>) -> Self {
+    pub fn with_topics(mut self, value: Vec<MetadataResponseTopic>) -> Self
+    {
         self.topics = value;
         self
-    }
-    /// Sets `cluster_authorized_operations` to the passed value.
-    ///
+    }/// Sets `cluster_authorized_operations` to the passed value.
+    /// 
     /// 32-bit bitfield to represent authorized operations for this cluster.
-    ///
+    /// 
     /// Supported API versions: 8-10
-    pub fn with_cluster_authorized_operations(mut self, value: i32) -> Self {
+    pub fn with_cluster_authorized_operations(mut self, value: i32) -> Self
+    {
         self.cluster_authorized_operations = value;
         self
-    }
-    /// Sets `error_code` to the passed value.
-    ///
+    }/// Sets `error_code` to the passed value.
+    /// 
     /// The top-level error code, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 13
-    pub fn with_error_code(mut self, value: i16) -> Self {
+    pub fn with_error_code(mut self, value: i16) -> Self
+    {
         self.error_code = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -178,10 +180,7 @@ impl Encodable for MetadataResponse {
         if version >= 9 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -195,8 +194,7 @@ impl Encodable for MetadataResponse {
             total_size += types::Int32.compute_size(&self.throttle_time_ms)?;
         }
         if version >= 9 {
-            total_size +=
-                types::CompactArray(types::Struct { version }).compute_size(&self.brokers)?;
+            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.brokers)?;
         } else {
             total_size += types::Array(types::Struct { version }).compute_size(&self.brokers)?;
         }
@@ -211,8 +209,7 @@ impl Encodable for MetadataResponse {
             total_size += types::Int32.compute_size(&self.controller_id)?;
         }
         if version >= 9 {
-            total_size +=
-                types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
+            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
         } else {
             total_size += types::Array(types::Struct { version }).compute_size(&self.topics)?;
         }
@@ -229,10 +226,7 @@ impl Encodable for MetadataResponse {
         if version >= 9 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -333,24 +327,25 @@ impl Message for MetadataResponse {
 /// Valid versions: 0-13
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct MetadataResponseBroker {
     /// The broker ID.
-    ///
+    /// 
     /// Supported API versions: 0-13
     pub node_id: super::BrokerId,
 
     /// The broker hostname.
-    ///
+    /// 
     /// Supported API versions: 0-13
     pub host: StrBytes,
 
     /// The broker port.
-    ///
+    /// 
     /// Supported API versions: 0-13
     pub port: i32,
 
     /// The rack of the broker, or null if it has not been assigned to a rack.
-    ///
+    /// 
     /// Supported API versions: 1-13
     pub rack: Option<StrBytes>,
 
@@ -360,48 +355,49 @@ pub struct MetadataResponseBroker {
 
 impl MetadataResponseBroker {
     /// Sets `node_id` to the passed value.
-    ///
+    /// 
     /// The broker ID.
-    ///
+    /// 
     /// Supported API versions: 0-13
-    pub fn with_node_id(mut self, value: super::BrokerId) -> Self {
+    pub fn with_node_id(mut self, value: super::BrokerId) -> Self
+    {
         self.node_id = value;
         self
-    }
-    /// Sets `host` to the passed value.
-    ///
+    }/// Sets `host` to the passed value.
+    /// 
     /// The broker hostname.
-    ///
+    /// 
     /// Supported API versions: 0-13
-    pub fn with_host(mut self, value: StrBytes) -> Self {
+    pub fn with_host(mut self, value: StrBytes) -> Self
+    {
         self.host = value;
         self
-    }
-    /// Sets `port` to the passed value.
-    ///
+    }/// Sets `port` to the passed value.
+    /// 
     /// The broker port.
-    ///
+    /// 
     /// Supported API versions: 0-13
-    pub fn with_port(mut self, value: i32) -> Self {
+    pub fn with_port(mut self, value: i32) -> Self
+    {
         self.port = value;
         self
-    }
-    /// Sets `rack` to the passed value.
-    ///
+    }/// Sets `rack` to the passed value.
+    /// 
     /// The rack of the broker, or null if it has not been assigned to a rack.
-    ///
+    /// 
     /// Supported API versions: 1-13
-    pub fn with_rack(mut self, value: Option<StrBytes>) -> Self {
+    pub fn with_rack(mut self, value: Option<StrBytes>) -> Self
+    {
         self.rack = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -430,10 +426,7 @@ impl Encodable for MetadataResponseBroker {
         if version >= 9 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -460,10 +453,7 @@ impl Encodable for MetadataResponseBroker {
         if version >= 9 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -535,39 +525,40 @@ impl Message for MetadataResponseBroker {
 /// Valid versions: 0-13
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct MetadataResponsePartition {
     /// The partition error, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 0-13
     pub error_code: i16,
 
     /// The partition index.
-    ///
+    /// 
     /// Supported API versions: 0-13
     pub partition_index: i32,
 
     /// The ID of the leader broker.
-    ///
+    /// 
     /// Supported API versions: 0-13
     pub leader_id: super::BrokerId,
 
     /// The leader epoch of this partition.
-    ///
+    /// 
     /// Supported API versions: 7-13
     pub leader_epoch: i32,
 
     /// The set of all nodes that host this partition.
-    ///
+    /// 
     /// Supported API versions: 0-13
     pub replica_nodes: Vec<super::BrokerId>,
 
     /// The set of nodes that are in sync with the leader for this partition.
-    ///
+    /// 
     /// Supported API versions: 0-13
     pub isr_nodes: Vec<super::BrokerId>,
 
     /// The set of offline replicas of this partition.
-    ///
+    /// 
     /// Supported API versions: 5-13
     pub offline_replicas: Vec<super::BrokerId>,
 
@@ -577,75 +568,76 @@ pub struct MetadataResponsePartition {
 
 impl MetadataResponsePartition {
     /// Sets `error_code` to the passed value.
-    ///
+    /// 
     /// The partition error, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 0-13
-    pub fn with_error_code(mut self, value: i16) -> Self {
+    pub fn with_error_code(mut self, value: i16) -> Self
+    {
         self.error_code = value;
         self
-    }
-    /// Sets `partition_index` to the passed value.
-    ///
+    }/// Sets `partition_index` to the passed value.
+    /// 
     /// The partition index.
-    ///
+    /// 
     /// Supported API versions: 0-13
-    pub fn with_partition_index(mut self, value: i32) -> Self {
+    pub fn with_partition_index(mut self, value: i32) -> Self
+    {
         self.partition_index = value;
         self
-    }
-    /// Sets `leader_id` to the passed value.
-    ///
+    }/// Sets `leader_id` to the passed value.
+    /// 
     /// The ID of the leader broker.
-    ///
+    /// 
     /// Supported API versions: 0-13
-    pub fn with_leader_id(mut self, value: super::BrokerId) -> Self {
+    pub fn with_leader_id(mut self, value: super::BrokerId) -> Self
+    {
         self.leader_id = value;
         self
-    }
-    /// Sets `leader_epoch` to the passed value.
-    ///
+    }/// Sets `leader_epoch` to the passed value.
+    /// 
     /// The leader epoch of this partition.
-    ///
+    /// 
     /// Supported API versions: 7-13
-    pub fn with_leader_epoch(mut self, value: i32) -> Self {
+    pub fn with_leader_epoch(mut self, value: i32) -> Self
+    {
         self.leader_epoch = value;
         self
-    }
-    /// Sets `replica_nodes` to the passed value.
-    ///
+    }/// Sets `replica_nodes` to the passed value.
+    /// 
     /// The set of all nodes that host this partition.
-    ///
+    /// 
     /// Supported API versions: 0-13
-    pub fn with_replica_nodes(mut self, value: Vec<super::BrokerId>) -> Self {
+    pub fn with_replica_nodes(mut self, value: Vec<super::BrokerId>) -> Self
+    {
         self.replica_nodes = value;
         self
-    }
-    /// Sets `isr_nodes` to the passed value.
-    ///
+    }/// Sets `isr_nodes` to the passed value.
+    /// 
     /// The set of nodes that are in sync with the leader for this partition.
-    ///
+    /// 
     /// Supported API versions: 0-13
-    pub fn with_isr_nodes(mut self, value: Vec<super::BrokerId>) -> Self {
+    pub fn with_isr_nodes(mut self, value: Vec<super::BrokerId>) -> Self
+    {
         self.isr_nodes = value;
         self
-    }
-    /// Sets `offline_replicas` to the passed value.
-    ///
+    }/// Sets `offline_replicas` to the passed value.
+    /// 
     /// The set of offline replicas of this partition.
-    ///
+    /// 
     /// Supported API versions: 5-13
-    pub fn with_offline_replicas(mut self, value: Vec<super::BrokerId>) -> Self {
+    pub fn with_offline_replicas(mut self, value: Vec<super::BrokerId>) -> Self
+    {
         self.offline_replicas = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -683,10 +675,7 @@ impl Encodable for MetadataResponsePartition {
         if version >= 9 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -714,8 +703,7 @@ impl Encodable for MetadataResponsePartition {
         }
         if version >= 5 {
             if version >= 9 {
-                total_size +=
-                    types::CompactArray(types::Int32).compute_size(&self.offline_replicas)?;
+                total_size += types::CompactArray(types::Int32).compute_size(&self.offline_replicas)?;
             } else {
                 total_size += types::Array(types::Int32).compute_size(&self.offline_replicas)?;
             }
@@ -723,10 +711,7 @@ impl Encodable for MetadataResponsePartition {
         if version >= 9 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -815,34 +800,35 @@ impl Message for MetadataResponsePartition {
 /// Valid versions: 0-13
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct MetadataResponseTopic {
     /// The topic error, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 0-13
     pub error_code: i16,
 
     /// The topic name. Null for non-existing topics queried by ID. This is never null when ErrorCode is zero. One of Name and TopicId is always populated.
-    ///
+    /// 
     /// Supported API versions: 0-13
     pub name: Option<super::TopicName>,
 
     /// The topic id. Zero for non-existing topics queried by name. This is never zero when ErrorCode is zero. One of Name and TopicId is always populated.
-    ///
+    /// 
     /// Supported API versions: 10-13
     pub topic_id: Uuid,
 
     /// True if the topic is internal.
-    ///
+    /// 
     /// Supported API versions: 1-13
     pub is_internal: bool,
 
     /// Each partition in the topic.
-    ///
+    /// 
     /// Supported API versions: 0-13
     pub partitions: Vec<MetadataResponsePartition>,
 
     /// 32-bit bitfield to represent authorized operations for this topic.
-    ///
+    /// 
     /// Supported API versions: 8-13
     pub topic_authorized_operations: i32,
 
@@ -852,66 +838,67 @@ pub struct MetadataResponseTopic {
 
 impl MetadataResponseTopic {
     /// Sets `error_code` to the passed value.
-    ///
+    /// 
     /// The topic error, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 0-13
-    pub fn with_error_code(mut self, value: i16) -> Self {
+    pub fn with_error_code(mut self, value: i16) -> Self
+    {
         self.error_code = value;
         self
-    }
-    /// Sets `name` to the passed value.
-    ///
+    }/// Sets `name` to the passed value.
+    /// 
     /// The topic name. Null for non-existing topics queried by ID. This is never null when ErrorCode is zero. One of Name and TopicId is always populated.
-    ///
+    /// 
     /// Supported API versions: 0-13
-    pub fn with_name(mut self, value: Option<super::TopicName>) -> Self {
+    pub fn with_name(mut self, value: Option<super::TopicName>) -> Self
+    {
         self.name = value;
         self
-    }
-    /// Sets `topic_id` to the passed value.
-    ///
+    }/// Sets `topic_id` to the passed value.
+    /// 
     /// The topic id. Zero for non-existing topics queried by name. This is never zero when ErrorCode is zero. One of Name and TopicId is always populated.
-    ///
+    /// 
     /// Supported API versions: 10-13
-    pub fn with_topic_id(mut self, value: Uuid) -> Self {
+    pub fn with_topic_id(mut self, value: Uuid) -> Self
+    {
         self.topic_id = value;
         self
-    }
-    /// Sets `is_internal` to the passed value.
-    ///
+    }/// Sets `is_internal` to the passed value.
+    /// 
     /// True if the topic is internal.
-    ///
+    /// 
     /// Supported API versions: 1-13
-    pub fn with_is_internal(mut self, value: bool) -> Self {
+    pub fn with_is_internal(mut self, value: bool) -> Self
+    {
         self.is_internal = value;
         self
-    }
-    /// Sets `partitions` to the passed value.
-    ///
+    }/// Sets `partitions` to the passed value.
+    /// 
     /// Each partition in the topic.
-    ///
+    /// 
     /// Supported API versions: 0-13
-    pub fn with_partitions(mut self, value: Vec<MetadataResponsePartition>) -> Self {
+    pub fn with_partitions(mut self, value: Vec<MetadataResponsePartition>) -> Self
+    {
         self.partitions = value;
         self
-    }
-    /// Sets `topic_authorized_operations` to the passed value.
-    ///
+    }/// Sets `topic_authorized_operations` to the passed value.
+    /// 
     /// 32-bit bitfield to represent authorized operations for this topic.
-    ///
+    /// 
     /// Supported API versions: 8-13
-    pub fn with_topic_authorized_operations(mut self, value: i32) -> Self {
+    pub fn with_topic_authorized_operations(mut self, value: i32) -> Self
+    {
         self.topic_authorized_operations = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -950,10 +937,7 @@ impl Encodable for MetadataResponseTopic {
         if version >= 9 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -976,8 +960,7 @@ impl Encodable for MetadataResponseTopic {
             total_size += types::Boolean.compute_size(&self.is_internal)?;
         }
         if version >= 9 {
-            total_size +=
-                types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
+            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
         } else {
             total_size += types::Array(types::Struct { version }).compute_size(&self.partitions)?;
         }
@@ -991,10 +974,7 @@ impl Encodable for MetadataResponseTopic {
         if version >= 9 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -1086,3 +1066,4 @@ impl HeaderVersion for MetadataResponse {
         }
     }
 }
+

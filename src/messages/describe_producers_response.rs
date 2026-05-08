@@ -7,27 +7,28 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 0
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DescribeProducersResponse {
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    ///
+    /// 
     /// Supported API versions: 0
     pub throttle_time_ms: i32,
 
     /// Each topic in the response.
-    ///
+    /// 
     /// Supported API versions: 0
     pub topics: Vec<TopicResponse>,
 
@@ -37,30 +38,31 @@ pub struct DescribeProducersResponse {
 
 impl DescribeProducersResponse {
     /// Sets `throttle_time_ms` to the passed value.
-    ///
+    /// 
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_throttle_time_ms(mut self, value: i32) -> Self {
+    pub fn with_throttle_time_ms(mut self, value: i32) -> Self
+    {
         self.throttle_time_ms = value;
         self
-    }
-    /// Sets `topics` to the passed value.
-    ///
+    }/// Sets `topics` to the passed value.
+    /// 
     /// Each topic in the response.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_topics(mut self, value: Vec<TopicResponse>) -> Self {
+    pub fn with_topics(mut self, value: Vec<TopicResponse>) -> Self
+    {
         self.topics = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -76,10 +78,7 @@ impl Encodable for DescribeProducersResponse {
         types::CompactArray(types::Struct { version }).encode(buf, &self.topics)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -92,10 +91,7 @@ impl Encodable for DescribeProducersResponse {
         total_size += types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -146,24 +142,25 @@ impl Message for DescribeProducersResponse {
 /// Valid versions: 0
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct PartitionResponse {
     /// The partition index.
-    ///
+    /// 
     /// Supported API versions: 0
     pub partition_index: i32,
 
     /// The partition error code, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 0
     pub error_code: i16,
 
     /// The partition error message, which may be null if no additional details are available.
-    ///
+    /// 
     /// Supported API versions: 0
     pub error_message: Option<StrBytes>,
 
     /// The active producers for the partition.
-    ///
+    /// 
     /// Supported API versions: 0
     pub active_producers: Vec<ProducerState>,
 
@@ -173,48 +170,49 @@ pub struct PartitionResponse {
 
 impl PartitionResponse {
     /// Sets `partition_index` to the passed value.
-    ///
+    /// 
     /// The partition index.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_partition_index(mut self, value: i32) -> Self {
+    pub fn with_partition_index(mut self, value: i32) -> Self
+    {
         self.partition_index = value;
         self
-    }
-    /// Sets `error_code` to the passed value.
-    ///
+    }/// Sets `error_code` to the passed value.
+    /// 
     /// The partition error code, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_error_code(mut self, value: i16) -> Self {
+    pub fn with_error_code(mut self, value: i16) -> Self
+    {
         self.error_code = value;
         self
-    }
-    /// Sets `error_message` to the passed value.
-    ///
+    }/// Sets `error_message` to the passed value.
+    /// 
     /// The partition error message, which may be null if no additional details are available.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_error_message(mut self, value: Option<StrBytes>) -> Self {
+    pub fn with_error_message(mut self, value: Option<StrBytes>) -> Self
+    {
         self.error_message = value;
         self
-    }
-    /// Sets `active_producers` to the passed value.
-    ///
+    }/// Sets `active_producers` to the passed value.
+    /// 
     /// The active producers for the partition.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_active_producers(mut self, value: Vec<ProducerState>) -> Self {
+    pub fn with_active_producers(mut self, value: Vec<ProducerState>) -> Self
+    {
         self.active_producers = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -232,10 +230,7 @@ impl Encodable for PartitionResponse {
         types::CompactArray(types::Struct { version }).encode(buf, &self.active_producers)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -247,14 +242,10 @@ impl Encodable for PartitionResponse {
         total_size += types::Int32.compute_size(&self.partition_index)?;
         total_size += types::Int16.compute_size(&self.error_code)?;
         total_size += types::CompactString.compute_size(&self.error_message)?;
-        total_size +=
-            types::CompactArray(types::Struct { version }).compute_size(&self.active_producers)?;
+        total_size += types::CompactArray(types::Struct { version }).compute_size(&self.active_producers)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -311,34 +302,35 @@ impl Message for PartitionResponse {
 /// Valid versions: 0
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ProducerState {
     /// The producer id.
-    ///
+    /// 
     /// Supported API versions: 0
     pub producer_id: super::ProducerId,
 
     /// The producer epoch.
-    ///
+    /// 
     /// Supported API versions: 0
     pub producer_epoch: i32,
 
     /// The last sequence number sent by the producer.
-    ///
+    /// 
     /// Supported API versions: 0
     pub last_sequence: i32,
 
     /// The last timestamp sent by the producer.
-    ///
+    /// 
     /// Supported API versions: 0
     pub last_timestamp: i64,
 
     /// The current epoch of the producer group.
-    ///
+    /// 
     /// Supported API versions: 0
     pub coordinator_epoch: i32,
 
     /// The current transaction start offset of the producer.
-    ///
+    /// 
     /// Supported API versions: 0
     pub current_txn_start_offset: i64,
 
@@ -348,66 +340,67 @@ pub struct ProducerState {
 
 impl ProducerState {
     /// Sets `producer_id` to the passed value.
-    ///
+    /// 
     /// The producer id.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_producer_id(mut self, value: super::ProducerId) -> Self {
+    pub fn with_producer_id(mut self, value: super::ProducerId) -> Self
+    {
         self.producer_id = value;
         self
-    }
-    /// Sets `producer_epoch` to the passed value.
-    ///
+    }/// Sets `producer_epoch` to the passed value.
+    /// 
     /// The producer epoch.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_producer_epoch(mut self, value: i32) -> Self {
+    pub fn with_producer_epoch(mut self, value: i32) -> Self
+    {
         self.producer_epoch = value;
         self
-    }
-    /// Sets `last_sequence` to the passed value.
-    ///
+    }/// Sets `last_sequence` to the passed value.
+    /// 
     /// The last sequence number sent by the producer.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_last_sequence(mut self, value: i32) -> Self {
+    pub fn with_last_sequence(mut self, value: i32) -> Self
+    {
         self.last_sequence = value;
         self
-    }
-    /// Sets `last_timestamp` to the passed value.
-    ///
+    }/// Sets `last_timestamp` to the passed value.
+    /// 
     /// The last timestamp sent by the producer.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_last_timestamp(mut self, value: i64) -> Self {
+    pub fn with_last_timestamp(mut self, value: i64) -> Self
+    {
         self.last_timestamp = value;
         self
-    }
-    /// Sets `coordinator_epoch` to the passed value.
-    ///
+    }/// Sets `coordinator_epoch` to the passed value.
+    /// 
     /// The current epoch of the producer group.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_coordinator_epoch(mut self, value: i32) -> Self {
+    pub fn with_coordinator_epoch(mut self, value: i32) -> Self
+    {
         self.coordinator_epoch = value;
         self
-    }
-    /// Sets `current_txn_start_offset` to the passed value.
-    ///
+    }/// Sets `current_txn_start_offset` to the passed value.
+    /// 
     /// The current transaction start offset of the producer.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_current_txn_start_offset(mut self, value: i64) -> Self {
+    pub fn with_current_txn_start_offset(mut self, value: i64) -> Self
+    {
         self.current_txn_start_offset = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -427,10 +420,7 @@ impl Encodable for ProducerState {
         types::Int64.encode(buf, &self.current_txn_start_offset)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -447,10 +437,7 @@ impl Encodable for ProducerState {
         total_size += types::Int64.compute_size(&self.current_txn_start_offset)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -513,14 +500,15 @@ impl Message for ProducerState {
 /// Valid versions: 0
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TopicResponse {
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 0
     pub name: super::TopicName,
 
     /// Each partition in the response.
-    ///
+    /// 
     /// Supported API versions: 0
     pub partitions: Vec<PartitionResponse>,
 
@@ -530,30 +518,31 @@ pub struct TopicResponse {
 
 impl TopicResponse {
     /// Sets `name` to the passed value.
-    ///
+    /// 
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_name(mut self, value: super::TopicName) -> Self {
+    pub fn with_name(mut self, value: super::TopicName) -> Self
+    {
         self.name = value;
         self
-    }
-    /// Sets `partitions` to the passed value.
-    ///
+    }/// Sets `partitions` to the passed value.
+    /// 
     /// Each partition in the response.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_partitions(mut self, value: Vec<PartitionResponse>) -> Self {
+    pub fn with_partitions(mut self, value: Vec<PartitionResponse>) -> Self
+    {
         self.partitions = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -569,10 +558,7 @@ impl Encodable for TopicResponse {
         types::CompactArray(types::Struct { version }).encode(buf, &self.partitions)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -582,14 +568,10 @@ impl Encodable for TopicResponse {
     fn compute_size(&self, version: i16) -> Result<usize> {
         let mut total_size = 0;
         total_size += types::CompactString.compute_size(&self.name)?;
-        total_size +=
-            types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
+        total_size += types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -642,3 +624,4 @@ impl HeaderVersion for DescribeProducersResponse {
         1
     }
 }
+

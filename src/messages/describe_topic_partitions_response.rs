@@ -7,27 +7,28 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 0
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Cursor {
     /// The name for the first topic to process.
-    ///
+    /// 
     /// Supported API versions: 0
     pub topic_name: super::TopicName,
 
     /// The partition index to start with.
-    ///
+    /// 
     /// Supported API versions: 0
     pub partition_index: i32,
 
@@ -37,30 +38,31 @@ pub struct Cursor {
 
 impl Cursor {
     /// Sets `topic_name` to the passed value.
-    ///
+    /// 
     /// The name for the first topic to process.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_topic_name(mut self, value: super::TopicName) -> Self {
+    pub fn with_topic_name(mut self, value: super::TopicName) -> Self
+    {
         self.topic_name = value;
         self
-    }
-    /// Sets `partition_index` to the passed value.
-    ///
+    }/// Sets `partition_index` to the passed value.
+    /// 
     /// The partition index to start with.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_partition_index(mut self, value: i32) -> Self {
+    pub fn with_partition_index(mut self, value: i32) -> Self
+    {
         self.partition_index = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -76,10 +78,7 @@ impl Encodable for Cursor {
         types::Int32.encode(buf, &self.partition_index)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -92,10 +91,7 @@ impl Encodable for Cursor {
         total_size += types::Int32.compute_size(&self.partition_index)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -146,19 +142,20 @@ impl Message for Cursor {
 /// Valid versions: 0
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DescribeTopicPartitionsResponse {
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    ///
+    /// 
     /// Supported API versions: 0
     pub throttle_time_ms: i32,
 
     /// Each topic in the response.
-    ///
+    /// 
     /// Supported API versions: 0
     pub topics: Vec<DescribeTopicPartitionsResponseTopic>,
 
     /// The next topic and partition index to fetch details for.
-    ///
+    /// 
     /// Supported API versions: 0
     pub next_cursor: Option<Cursor>,
 
@@ -168,39 +165,40 @@ pub struct DescribeTopicPartitionsResponse {
 
 impl DescribeTopicPartitionsResponse {
     /// Sets `throttle_time_ms` to the passed value.
-    ///
+    /// 
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_throttle_time_ms(mut self, value: i32) -> Self {
+    pub fn with_throttle_time_ms(mut self, value: i32) -> Self
+    {
         self.throttle_time_ms = value;
         self
-    }
-    /// Sets `topics` to the passed value.
-    ///
+    }/// Sets `topics` to the passed value.
+    /// 
     /// Each topic in the response.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_topics(mut self, value: Vec<DescribeTopicPartitionsResponseTopic>) -> Self {
+    pub fn with_topics(mut self, value: Vec<DescribeTopicPartitionsResponseTopic>) -> Self
+    {
         self.topics = value;
         self
-    }
-    /// Sets `next_cursor` to the passed value.
-    ///
+    }/// Sets `next_cursor` to the passed value.
+    /// 
     /// The next topic and partition index to fetch details for.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_next_cursor(mut self, value: Option<Cursor>) -> Self {
+    pub fn with_next_cursor(mut self, value: Option<Cursor>) -> Self
+    {
         self.next_cursor = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -217,10 +215,7 @@ impl Encodable for DescribeTopicPartitionsResponse {
         types::OptionStruct { version }.encode(buf, &self.next_cursor)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -234,10 +229,7 @@ impl Encodable for DescribeTopicPartitionsResponse {
         total_size += types::OptionStruct { version }.compute_size(&self.next_cursor)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -291,49 +283,50 @@ impl Message for DescribeTopicPartitionsResponse {
 /// Valid versions: 0
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DescribeTopicPartitionsResponsePartition {
     /// The partition error, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 0
     pub error_code: i16,
 
     /// The partition index.
-    ///
+    /// 
     /// Supported API versions: 0
     pub partition_index: i32,
 
     /// The ID of the leader broker.
-    ///
+    /// 
     /// Supported API versions: 0
     pub leader_id: super::BrokerId,
 
     /// The leader epoch of this partition.
-    ///
+    /// 
     /// Supported API versions: 0
     pub leader_epoch: i32,
 
     /// The set of all nodes that host this partition.
-    ///
+    /// 
     /// Supported API versions: 0
     pub replica_nodes: Vec<super::BrokerId>,
 
     /// The set of nodes that are in sync with the leader for this partition.
-    ///
+    /// 
     /// Supported API versions: 0
     pub isr_nodes: Vec<super::BrokerId>,
 
     /// The new eligible leader replicas otherwise.
-    ///
+    /// 
     /// Supported API versions: 0
     pub eligible_leader_replicas: Option<Vec<super::BrokerId>>,
 
     /// The last known ELR.
-    ///
+    /// 
     /// Supported API versions: 0
     pub last_known_elr: Option<Vec<super::BrokerId>>,
 
     /// The set of offline replicas of this partition.
-    ///
+    /// 
     /// Supported API versions: 0
     pub offline_replicas: Vec<super::BrokerId>,
 
@@ -343,93 +336,94 @@ pub struct DescribeTopicPartitionsResponsePartition {
 
 impl DescribeTopicPartitionsResponsePartition {
     /// Sets `error_code` to the passed value.
-    ///
+    /// 
     /// The partition error, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_error_code(mut self, value: i16) -> Self {
+    pub fn with_error_code(mut self, value: i16) -> Self
+    {
         self.error_code = value;
         self
-    }
-    /// Sets `partition_index` to the passed value.
-    ///
+    }/// Sets `partition_index` to the passed value.
+    /// 
     /// The partition index.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_partition_index(mut self, value: i32) -> Self {
+    pub fn with_partition_index(mut self, value: i32) -> Self
+    {
         self.partition_index = value;
         self
-    }
-    /// Sets `leader_id` to the passed value.
-    ///
+    }/// Sets `leader_id` to the passed value.
+    /// 
     /// The ID of the leader broker.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_leader_id(mut self, value: super::BrokerId) -> Self {
+    pub fn with_leader_id(mut self, value: super::BrokerId) -> Self
+    {
         self.leader_id = value;
         self
-    }
-    /// Sets `leader_epoch` to the passed value.
-    ///
+    }/// Sets `leader_epoch` to the passed value.
+    /// 
     /// The leader epoch of this partition.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_leader_epoch(mut self, value: i32) -> Self {
+    pub fn with_leader_epoch(mut self, value: i32) -> Self
+    {
         self.leader_epoch = value;
         self
-    }
-    /// Sets `replica_nodes` to the passed value.
-    ///
+    }/// Sets `replica_nodes` to the passed value.
+    /// 
     /// The set of all nodes that host this partition.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_replica_nodes(mut self, value: Vec<super::BrokerId>) -> Self {
+    pub fn with_replica_nodes(mut self, value: Vec<super::BrokerId>) -> Self
+    {
         self.replica_nodes = value;
         self
-    }
-    /// Sets `isr_nodes` to the passed value.
-    ///
+    }/// Sets `isr_nodes` to the passed value.
+    /// 
     /// The set of nodes that are in sync with the leader for this partition.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_isr_nodes(mut self, value: Vec<super::BrokerId>) -> Self {
+    pub fn with_isr_nodes(mut self, value: Vec<super::BrokerId>) -> Self
+    {
         self.isr_nodes = value;
         self
-    }
-    /// Sets `eligible_leader_replicas` to the passed value.
-    ///
+    }/// Sets `eligible_leader_replicas` to the passed value.
+    /// 
     /// The new eligible leader replicas otherwise.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_eligible_leader_replicas(mut self, value: Option<Vec<super::BrokerId>>) -> Self {
+    pub fn with_eligible_leader_replicas(mut self, value: Option<Vec<super::BrokerId>>) -> Self
+    {
         self.eligible_leader_replicas = value;
         self
-    }
-    /// Sets `last_known_elr` to the passed value.
-    ///
+    }/// Sets `last_known_elr` to the passed value.
+    /// 
     /// The last known ELR.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_last_known_elr(mut self, value: Option<Vec<super::BrokerId>>) -> Self {
+    pub fn with_last_known_elr(mut self, value: Option<Vec<super::BrokerId>>) -> Self
+    {
         self.last_known_elr = value;
         self
-    }
-    /// Sets `offline_replicas` to the passed value.
-    ///
+    }/// Sets `offline_replicas` to the passed value.
+    /// 
     /// The set of offline replicas of this partition.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_offline_replicas(mut self, value: Vec<super::BrokerId>) -> Self {
+    pub fn with_offline_replicas(mut self, value: Vec<super::BrokerId>) -> Self
+    {
         self.offline_replicas = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -452,10 +446,7 @@ impl Encodable for DescribeTopicPartitionsResponsePartition {
         types::CompactArray(types::Int32).encode(buf, &self.offline_replicas)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -470,16 +461,12 @@ impl Encodable for DescribeTopicPartitionsResponsePartition {
         total_size += types::Int32.compute_size(&self.leader_epoch)?;
         total_size += types::CompactArray(types::Int32).compute_size(&self.replica_nodes)?;
         total_size += types::CompactArray(types::Int32).compute_size(&self.isr_nodes)?;
-        total_size +=
-            types::CompactArray(types::Int32).compute_size(&self.eligible_leader_replicas)?;
+        total_size += types::CompactArray(types::Int32).compute_size(&self.eligible_leader_replicas)?;
         total_size += types::CompactArray(types::Int32).compute_size(&self.last_known_elr)?;
         total_size += types::CompactArray(types::Int32).compute_size(&self.offline_replicas)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -551,34 +538,35 @@ impl Message for DescribeTopicPartitionsResponsePartition {
 /// Valid versions: 0
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DescribeTopicPartitionsResponseTopic {
     /// The topic error, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 0
     pub error_code: i16,
 
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 0
     pub name: Option<super::TopicName>,
 
     /// The topic id.
-    ///
+    /// 
     /// Supported API versions: 0
     pub topic_id: Uuid,
 
     /// True if the topic is internal.
-    ///
+    /// 
     /// Supported API versions: 0
     pub is_internal: bool,
 
     /// Each partition in the topic.
-    ///
+    /// 
     /// Supported API versions: 0
     pub partitions: Vec<DescribeTopicPartitionsResponsePartition>,
 
     /// 32-bit bitfield to represent authorized operations for this topic.
-    ///
+    /// 
     /// Supported API versions: 0
     pub topic_authorized_operations: i32,
 
@@ -588,66 +576,67 @@ pub struct DescribeTopicPartitionsResponseTopic {
 
 impl DescribeTopicPartitionsResponseTopic {
     /// Sets `error_code` to the passed value.
-    ///
+    /// 
     /// The topic error, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_error_code(mut self, value: i16) -> Self {
+    pub fn with_error_code(mut self, value: i16) -> Self
+    {
         self.error_code = value;
         self
-    }
-    /// Sets `name` to the passed value.
-    ///
+    }/// Sets `name` to the passed value.
+    /// 
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_name(mut self, value: Option<super::TopicName>) -> Self {
+    pub fn with_name(mut self, value: Option<super::TopicName>) -> Self
+    {
         self.name = value;
         self
-    }
-    /// Sets `topic_id` to the passed value.
-    ///
+    }/// Sets `topic_id` to the passed value.
+    /// 
     /// The topic id.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_topic_id(mut self, value: Uuid) -> Self {
+    pub fn with_topic_id(mut self, value: Uuid) -> Self
+    {
         self.topic_id = value;
         self
-    }
-    /// Sets `is_internal` to the passed value.
-    ///
+    }/// Sets `is_internal` to the passed value.
+    /// 
     /// True if the topic is internal.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_is_internal(mut self, value: bool) -> Self {
+    pub fn with_is_internal(mut self, value: bool) -> Self
+    {
         self.is_internal = value;
         self
-    }
-    /// Sets `partitions` to the passed value.
-    ///
+    }/// Sets `partitions` to the passed value.
+    /// 
     /// Each partition in the topic.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_partitions(mut self, value: Vec<DescribeTopicPartitionsResponsePartition>) -> Self {
+    pub fn with_partitions(mut self, value: Vec<DescribeTopicPartitionsResponsePartition>) -> Self
+    {
         self.partitions = value;
         self
-    }
-    /// Sets `topic_authorized_operations` to the passed value.
-    ///
+    }/// Sets `topic_authorized_operations` to the passed value.
+    /// 
     /// 32-bit bitfield to represent authorized operations for this topic.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_topic_authorized_operations(mut self, value: i32) -> Self {
+    pub fn with_topic_authorized_operations(mut self, value: i32) -> Self
+    {
         self.topic_authorized_operations = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -667,10 +656,7 @@ impl Encodable for DescribeTopicPartitionsResponseTopic {
         types::Int32.encode(buf, &self.topic_authorized_operations)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -683,15 +669,11 @@ impl Encodable for DescribeTopicPartitionsResponseTopic {
         total_size += types::CompactString.compute_size(&self.name)?;
         total_size += types::Uuid.compute_size(&self.topic_id)?;
         total_size += types::Boolean.compute_size(&self.is_internal)?;
-        total_size +=
-            types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
+        total_size += types::CompactArray(types::Struct { version }).compute_size(&self.partitions)?;
         total_size += types::Int32.compute_size(&self.topic_authorized_operations)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -756,3 +738,4 @@ impl HeaderVersion for DescribeTopicPartitionsResponse {
         1
     }
 }
+

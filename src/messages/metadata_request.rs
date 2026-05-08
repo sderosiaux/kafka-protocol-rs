@@ -7,37 +7,38 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 0-13
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct MetadataRequest {
     /// The topics to fetch metadata for.
-    ///
+    /// 
     /// Supported API versions: 0-13
     pub topics: Option<Vec<MetadataRequestTopic>>,
 
     /// If this is true, the broker may auto-create topics that we requested which do not already exist, if it is configured to do so.
-    ///
+    /// 
     /// Supported API versions: 4-13
     pub allow_auto_topic_creation: bool,
 
     /// Whether to include cluster authorized operations.
-    ///
+    /// 
     /// Supported API versions: 8-10
     pub include_cluster_authorized_operations: bool,
 
     /// Whether to include topic authorized operations.
-    ///
+    /// 
     /// Supported API versions: 8-13
     pub include_topic_authorized_operations: bool,
 
@@ -47,48 +48,49 @@ pub struct MetadataRequest {
 
 impl MetadataRequest {
     /// Sets `topics` to the passed value.
-    ///
+    /// 
     /// The topics to fetch metadata for.
-    ///
+    /// 
     /// Supported API versions: 0-13
-    pub fn with_topics(mut self, value: Option<Vec<MetadataRequestTopic>>) -> Self {
+    pub fn with_topics(mut self, value: Option<Vec<MetadataRequestTopic>>) -> Self
+    {
         self.topics = value;
         self
-    }
-    /// Sets `allow_auto_topic_creation` to the passed value.
-    ///
+    }/// Sets `allow_auto_topic_creation` to the passed value.
+    /// 
     /// If this is true, the broker may auto-create topics that we requested which do not already exist, if it is configured to do so.
-    ///
+    /// 
     /// Supported API versions: 4-13
-    pub fn with_allow_auto_topic_creation(mut self, value: bool) -> Self {
+    pub fn with_allow_auto_topic_creation(mut self, value: bool) -> Self
+    {
         self.allow_auto_topic_creation = value;
         self
-    }
-    /// Sets `include_cluster_authorized_operations` to the passed value.
-    ///
+    }/// Sets `include_cluster_authorized_operations` to the passed value.
+    /// 
     /// Whether to include cluster authorized operations.
-    ///
+    /// 
     /// Supported API versions: 8-10
-    pub fn with_include_cluster_authorized_operations(mut self, value: bool) -> Self {
+    pub fn with_include_cluster_authorized_operations(mut self, value: bool) -> Self
+    {
         self.include_cluster_authorized_operations = value;
         self
-    }
-    /// Sets `include_topic_authorized_operations` to the passed value.
-    ///
+    }/// Sets `include_topic_authorized_operations` to the passed value.
+    /// 
     /// Whether to include topic authorized operations.
-    ///
+    /// 
     /// Supported API versions: 8-13
-    pub fn with_include_topic_authorized_operations(mut self, value: bool) -> Self {
+    pub fn with_include_topic_authorized_operations(mut self, value: bool) -> Self
+    {
         self.include_topic_authorized_operations = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -129,10 +131,7 @@ impl Encodable for MetadataRequest {
         if version >= 9 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -143,8 +142,7 @@ impl Encodable for MetadataRequest {
     fn compute_size(&self, version: i16) -> Result<usize> {
         let mut total_size = 0;
         if version >= 9 {
-            total_size +=
-                types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
+            total_size += types::CompactArray(types::Struct { version }).compute_size(&self.topics)?;
         } else {
             total_size += types::Array(types::Struct { version }).compute_size(&self.topics)?;
         }
@@ -156,8 +154,7 @@ impl Encodable for MetadataRequest {
             }
         }
         if version >= 8 && version <= 10 {
-            total_size +=
-                types::Boolean.compute_size(&self.include_cluster_authorized_operations)?;
+            total_size += types::Boolean.compute_size(&self.include_cluster_authorized_operations)?;
         } else {
             if self.include_cluster_authorized_operations {
                 bail!("A field is set that is not available on the selected protocol version");
@@ -173,10 +170,7 @@ impl Encodable for MetadataRequest {
         if version >= 9 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -252,14 +246,15 @@ impl Message for MetadataRequest {
 /// Valid versions: 0-13
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct MetadataRequestTopic {
     /// The topic id.
-    ///
+    /// 
     /// Supported API versions: 10-13
     pub topic_id: Uuid,
 
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 0-13
     pub name: Option<super::TopicName>,
 
@@ -269,30 +264,31 @@ pub struct MetadataRequestTopic {
 
 impl MetadataRequestTopic {
     /// Sets `topic_id` to the passed value.
-    ///
+    /// 
     /// The topic id.
-    ///
+    /// 
     /// Supported API versions: 10-13
-    pub fn with_topic_id(mut self, value: Uuid) -> Self {
+    pub fn with_topic_id(mut self, value: Uuid) -> Self
+    {
         self.topic_id = value;
         self
-    }
-    /// Sets `name` to the passed value.
-    ///
+    }/// Sets `name` to the passed value.
+    /// 
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 0-13
-    pub fn with_name(mut self, value: Option<super::TopicName>) -> Self {
+    pub fn with_name(mut self, value: Option<super::TopicName>) -> Self
+    {
         self.name = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -315,10 +311,7 @@ impl Encodable for MetadataRequestTopic {
         if version >= 9 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -339,10 +332,7 @@ impl Encodable for MetadataRequestTopic {
         if version >= 9 {
             let num_tagged_fields = self.unknown_tagged_fields.len();
             if num_tagged_fields > std::u32::MAX as usize {
-                bail!(
-                    "Too many tagged fields to encode ({} fields)",
-                    num_tagged_fields
-                );
+                bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
             }
             total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -410,3 +400,4 @@ impl HeaderVersion for MetadataRequest {
         }
     }
 }
+

@@ -7,61 +7,64 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 0
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct OffsetDeleteResponse {
     /// The top-level error code, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 0
     pub error_code: i16,
 
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    ///
+    /// 
     /// Supported API versions: 0
     pub throttle_time_ms: i32,
 
     /// The responses for each topic.
-    ///
+    /// 
     /// Supported API versions: 0
     pub topics: Vec<OffsetDeleteResponseTopic>,
+
 }
 
 impl OffsetDeleteResponse {
     /// Sets `error_code` to the passed value.
-    ///
+    /// 
     /// The top-level error code, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_error_code(mut self, value: i16) -> Self {
+    pub fn with_error_code(mut self, value: i16) -> Self
+    {
         self.error_code = value;
         self
-    }
-    /// Sets `throttle_time_ms` to the passed value.
-    ///
+    }/// Sets `throttle_time_ms` to the passed value.
+    /// 
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_throttle_time_ms(mut self, value: i32) -> Self {
+    pub fn with_throttle_time_ms(mut self, value: i32) -> Self
+    {
         self.throttle_time_ms = value;
         self
-    }
-    /// Sets `topics` to the passed value.
-    ///
+    }/// Sets `topics` to the passed value.
+    /// 
     /// The responses for each topic.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_topics(mut self, value: Vec<OffsetDeleteResponseTopic>) -> Self {
+    pub fn with_topics(mut self, value: Vec<OffsetDeleteResponseTopic>) -> Self
+    {
         self.topics = value;
         self
     }
@@ -124,34 +127,37 @@ impl Message for OffsetDeleteResponse {
 /// Valid versions: 0
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct OffsetDeleteResponsePartition {
     /// The partition index.
-    ///
+    /// 
     /// Supported API versions: 0
     pub partition_index: i32,
 
     /// The error code, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 0
     pub error_code: i16,
+
 }
 
 impl OffsetDeleteResponsePartition {
     /// Sets `partition_index` to the passed value.
-    ///
+    /// 
     /// The partition index.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_partition_index(mut self, value: i32) -> Self {
+    pub fn with_partition_index(mut self, value: i32) -> Self
+    {
         self.partition_index = value;
         self
-    }
-    /// Sets `error_code` to the passed value.
-    ///
+    }/// Sets `error_code` to the passed value.
+    /// 
     /// The error code, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_error_code(mut self, value: i16) -> Self {
+    pub fn with_error_code(mut self, value: i16) -> Self
+    {
         self.error_code = value;
         self
     }
@@ -209,34 +215,37 @@ impl Message for OffsetDeleteResponsePartition {
 /// Valid versions: 0
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct OffsetDeleteResponseTopic {
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 0
     pub name: super::TopicName,
 
     /// The responses for each partition in the topic.
-    ///
+    /// 
     /// Supported API versions: 0
     pub partitions: Vec<OffsetDeleteResponsePartition>,
+
 }
 
 impl OffsetDeleteResponseTopic {
     /// Sets `name` to the passed value.
-    ///
+    /// 
     /// The topic name.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_name(mut self, value: super::TopicName) -> Self {
+    pub fn with_name(mut self, value: super::TopicName) -> Self
+    {
         self.name = value;
         self
-    }
-    /// Sets `partitions` to the passed value.
-    ///
+    }/// Sets `partitions` to the passed value.
+    /// 
     /// The responses for each partition in the topic.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_partitions(mut self, value: Vec<OffsetDeleteResponsePartition>) -> Self {
+    pub fn with_partitions(mut self, value: Vec<OffsetDeleteResponsePartition>) -> Self
+    {
         self.partitions = value;
         self
     }
@@ -270,7 +279,10 @@ impl Decodable for OffsetDeleteResponseTopic {
         }
         let name = types::String.decode(buf)?;
         let partitions = types::Array(types::Struct { version }).decode(buf)?;
-        Ok(Self { name, partitions })
+        Ok(Self {
+            name,
+            partitions,
+        })
     }
 }
 
@@ -293,3 +305,4 @@ impl HeaderVersion for OffsetDeleteResponse {
         0
     }
 }
+

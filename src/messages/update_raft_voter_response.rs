@@ -7,37 +7,38 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
 use bytes::Bytes;
 use uuid::Uuid;
+use anyhow::{bail, Result};
 
 use crate::protocol::{
-    buf::{ByteBuf, ByteBufMut},
-    compute_unknown_tagged_fields_size, types, write_unknown_tagged_fields, Decodable, Decoder,
-    Encodable, Encoder, HeaderVersion, Message, StrBytes, VersionRange,
+    Encodable, Decodable, Encoder, Decoder, Message, HeaderVersion, VersionRange,
+    types, write_unknown_tagged_fields, compute_unknown_tagged_fields_size, StrBytes, buf::{ByteBuf, ByteBufMut}
 };
+
 
 /// Valid versions: 0
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CurrentLeader {
     /// The replica id of the current leader or -1 if the leader is unknown.
-    ///
+    /// 
     /// Supported API versions: 0
     pub leader_id: super::BrokerId,
 
     /// The latest known leader epoch.
-    ///
+    /// 
     /// Supported API versions: 0
     pub leader_epoch: i32,
 
     /// The node's hostname.
-    ///
+    /// 
     /// Supported API versions: 0
     pub host: StrBytes,
 
     /// The node's port.
-    ///
+    /// 
     /// Supported API versions: 0
     pub port: i32,
 
@@ -47,48 +48,49 @@ pub struct CurrentLeader {
 
 impl CurrentLeader {
     /// Sets `leader_id` to the passed value.
-    ///
+    /// 
     /// The replica id of the current leader or -1 if the leader is unknown.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_leader_id(mut self, value: super::BrokerId) -> Self {
+    pub fn with_leader_id(mut self, value: super::BrokerId) -> Self
+    {
         self.leader_id = value;
         self
-    }
-    /// Sets `leader_epoch` to the passed value.
-    ///
+    }/// Sets `leader_epoch` to the passed value.
+    /// 
     /// The latest known leader epoch.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_leader_epoch(mut self, value: i32) -> Self {
+    pub fn with_leader_epoch(mut self, value: i32) -> Self
+    {
         self.leader_epoch = value;
         self
-    }
-    /// Sets `host` to the passed value.
-    ///
+    }/// Sets `host` to the passed value.
+    /// 
     /// The node's hostname.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_host(mut self, value: StrBytes) -> Self {
+    pub fn with_host(mut self, value: StrBytes) -> Self
+    {
         self.host = value;
         self
-    }
-    /// Sets `port` to the passed value.
-    ///
+    }/// Sets `port` to the passed value.
+    /// 
     /// The node's port.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_port(mut self, value: i32) -> Self {
+    pub fn with_port(mut self, value: i32) -> Self
+    {
         self.port = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -106,10 +108,7 @@ impl Encodable for CurrentLeader {
         types::Int32.encode(buf, &self.port)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
 
@@ -124,10 +123,7 @@ impl Encodable for CurrentLeader {
         total_size += types::Int32.compute_size(&self.port)?;
         let num_tagged_fields = self.unknown_tagged_fields.len();
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
 
@@ -184,19 +180,20 @@ impl Message for CurrentLeader {
 /// Valid versions: 0
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct UpdateRaftVoterResponse {
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    ///
+    /// 
     /// Supported API versions: 0
     pub throttle_time_ms: i32,
 
     /// The error code, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 0
     pub error_code: i16,
 
     /// Details of the current Raft cluster leader.
-    ///
+    /// 
     /// Supported API versions: 0
     pub current_leader: CurrentLeader,
 
@@ -206,39 +203,40 @@ pub struct UpdateRaftVoterResponse {
 
 impl UpdateRaftVoterResponse {
     /// Sets `throttle_time_ms` to the passed value.
-    ///
+    /// 
     /// The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_throttle_time_ms(mut self, value: i32) -> Self {
+    pub fn with_throttle_time_ms(mut self, value: i32) -> Self
+    {
         self.throttle_time_ms = value;
         self
-    }
-    /// Sets `error_code` to the passed value.
-    ///
+    }/// Sets `error_code` to the passed value.
+    /// 
     /// The error code, or 0 if there was no error.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_error_code(mut self, value: i16) -> Self {
+    pub fn with_error_code(mut self, value: i16) -> Self
+    {
         self.error_code = value;
         self
-    }
-    /// Sets `current_leader` to the passed value.
-    ///
+    }/// Sets `current_leader` to the passed value.
+    /// 
     /// Details of the current Raft cluster leader.
-    ///
+    /// 
     /// Supported API versions: 0
-    pub fn with_current_leader(mut self, value: CurrentLeader) -> Self {
+    pub fn with_current_leader(mut self, value: CurrentLeader) -> Self
+    {
         self.current_leader = value;
         self
-    }
-    /// Sets unknown_tagged_fields to the passed value.
-    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self {
+    }/// Sets unknown_tagged_fields to the passed value.
+    pub fn with_unknown_tagged_fields(mut self, value: BTreeMap<i32, Bytes>) -> Self
+    {
         self.unknown_tagged_fields = value;
         self
-    }
-    /// Inserts an entry into unknown_tagged_fields.
-    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self {
+    }/// Inserts an entry into unknown_tagged_fields.
+    pub fn with_unknown_tagged_field(mut self, key: i32, value: Bytes) -> Self
+    {
         self.unknown_tagged_fields.insert(key, value);
         self
     }
@@ -257,19 +255,13 @@ impl Encodable for UpdateRaftVoterResponse {
             num_tagged_fields += 1;
         }
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         types::UnsignedVarInt.encode(buf, num_tagged_fields as u32)?;
         if &self.current_leader != &Default::default() {
             let computed_size = types::Struct { version }.compute_size(&self.current_leader)?;
             if computed_size > std::u32::MAX as usize {
-                bail!(
-                    "Tagged field is too large to encode ({} bytes)",
-                    computed_size
-                );
+                bail!("Tagged field is too large to encode ({} bytes)", computed_size);
             }
             types::UnsignedVarInt.encode(buf, 0)?;
             types::UnsignedVarInt.encode(buf, computed_size as u32)?;
@@ -288,19 +280,13 @@ impl Encodable for UpdateRaftVoterResponse {
             num_tagged_fields += 1;
         }
         if num_tagged_fields > std::u32::MAX as usize {
-            bail!(
-                "Too many tagged fields to encode ({} fields)",
-                num_tagged_fields
-            );
+            bail!("Too many tagged fields to encode ({} fields)", num_tagged_fields);
         }
         total_size += types::UnsignedVarInt.compute_size(num_tagged_fields as u32)?;
         if &self.current_leader != &Default::default() {
             let computed_size = types::Struct { version }.compute_size(&self.current_leader)?;
             if computed_size > std::u32::MAX as usize {
-                bail!(
-                    "Tagged field is too large to encode ({} bytes)",
-                    computed_size
-                );
+                bail!("Tagged field is too large to encode ({} bytes)", computed_size);
             }
             total_size += types::UnsignedVarInt.compute_size(0)?;
             total_size += types::UnsignedVarInt.compute_size(computed_size as u32)?;
@@ -329,7 +315,7 @@ impl Decodable for UpdateRaftVoterResponse {
             match tag {
                 0 => {
                     current_leader = types::Struct { version }.decode(buf)?;
-                }
+                },
                 _ => {
                     let unknown_value = buf.try_get_bytes(size as usize)?;
                     unknown_tagged_fields.insert(tag as i32, unknown_value);
@@ -366,3 +352,4 @@ impl HeaderVersion for UpdateRaftVoterResponse {
         1
     }
 }
+
