@@ -38,8 +38,8 @@
 //!         }
 //!  }
 //! ```
-use anyhow::{anyhow, bail, Result};
-use bytes::{Bytes, BytesMut};
+use anyhow::{anyhow, bail, ensure, Result};
+use bytes::{Buf, Bytes, BytesMut};
 use crc::{Crc, CRC_32_ISO_HDLC};
 use crc32c::crc32c;
 use indexmap::IndexMap;
@@ -837,6 +837,13 @@ impl Record {
             bail!("Unexpected negative record header count: {num_headers}");
         }
         let num_headers = num_headers as usize;
+        // Every header occupies at least one byte on the wire. Reject an impossible count
+        // before using its untrusted value as an allocation capacity.
+        ensure!(
+            num_headers <= buf.remaining(),
+            "Record header count ({num_headers}) exceeds the remaining record size ({})",
+            buf.remaining()
+        );
 
         let mut headers = IndexMap::with_capacity(num_headers);
         for _ in 0..num_headers {
@@ -917,6 +924,30 @@ mod tests {
                 .as_ref()
                 .expect("value is present")
         );
+    }
+
+    #[test]
+    fn decode_record_rejects_header_count_larger_than_the_record() {
+        // A record of 10 bytes: attributes, timestamp and offset deltas, null key and value,
+        // then a header count of i32::MAX.
+        let mut buf: &[u8] = &[0x14, 0, 0, 0, 1, 1, 0xfe, 0xff, 0xff, 0xff, 0x0f];
+        let result = Record::decode_new(
+            &mut buf,
+            &BatchDecodeInfo {
+                record_count: 1,
+                timestamp_type: TimestampType::Creation,
+                min_offset: 0,
+                min_timestamp: 0,
+                base_sequence: 0,
+                transactional: false,
+                control: false,
+                partition_leader_epoch: 0,
+                producer_id: 0,
+                producer_epoch: 0,
+            },
+            2,
+        );
+        assert!(result.is_err());
     }
 
     #[test]
