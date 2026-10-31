@@ -8,7 +8,23 @@ for an example of protocol schema.
 
 ## Versioning
 
-Protocol messages are generated against a recent stable Kafka release, currently [4.1.0](https://github.com/apache/kafka/releases/tag/4.1.0).
+This is the Kapture fork (branch `kapture`). Its messages are generated from apache/kafka trunk at
+[`5e6150c`](https://github.com/apache/kafka/commit/5e6150caf7bde2e111c41f949b85c44c291a866c) (2026-05-06,
+`4.4.0-SNAPSHOT`, after the 4.3 branch cut), not from a release tag. The pin lives in `protocol_codegen/src/main.rs`.
+
+Unlike upstream, the codegen keeps the latest version of a message even when its schema marks it
+`latestVersionUnstable`: an inspector has to decode whatever a client puts on the wire. The crate therefore carries
+two versions that no release up to 4.3.1 defines: ApiVersions v5 (adds `ClusterId` and `NodeId`) and TxnOffsetCommit v6
+(adds `TopicId`).
+
+Checked against Kafka 4.3.1 on 2026-10-31: every API that has valid versions in 4.3.1 is generated, its version range
+covers the 4.3.1 one, and fields are identical on every version both define. One difference changes no byte on the
+wire: TxnOffsetCommit's `GenerationId` is named `GenerationIdOrMemberEpoch` here, as on trunk. LeaderAndIsr,
+StopReplica, UpdateMetadata and ControlledShutdown have no valid version in 4.x and are not generated. Error codes
+match 4.3.1 (-1 to 133).
+
+Before moving the pin, diff the JSON schemas between the old and the new commit, fields included: a version that was
+unstable at the old pin can change shape before it ships.
 
 Although the Kafka protocol remains relatively stable and strives to be backwards compatible, new fields are occasionally 
 added. In order to ensure forward compatibility with the protocol, this crate marks all exported items as `#[non-exhaustive]`.
